@@ -1,0 +1,408 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>Infobasar</title>
+</head>
+<body>
+<h1>Infobasar</h1>
+<p>Autor: Hamatoma<br>
+Letzte &Auml;nderung: 2004.02.08<br>
+</p>
+<h2>Zielsetzung</h2>
+Ein einfaches Content-Managementsystem, das die Erfordernisse zum
+Beispiel eines Vereins erf&uuml;llt.<br>
+<h2>F&auml;higkeiten</h2>
+<ul>
+  <li>Seiten k&ouml;nnen WikiWiki sein:<br>
+    <ul>
+      <li>Einfache Textformatierung<br>
+      </li>
+      <li>Jeder Berechtigte kann die
+Seiten &auml;ndern.</li>
+      <li>Eine Historie wird gespeichert, so dass ein
+Zur&uuml;cksetzen jederzeit m&ouml;glich ist.</li>
+      <li>Ein Anzeigen der Unterschiede zwischen den Versionen ist
+m&ouml;glich.<br>
+      </li>
+      <li>Es k&ouml;nnen die ge&auml;nderten Seiten angezeigt werden.</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>Seitenquelltext kann HTML sein. (Einfacher Import)</li>
+  <li>Forum:<br>
+    <ul>
+      <li>Verschiedene Wissensgebiete</li>
+      <li>Berechtigte k&ouml;nnen ein Thema eintragen</li>
+      <li>Berechtigte k&ouml;nnen darauf Antworten</li>
+      <li>Es gilt die Wiki-Syntax (einfache Formatierung)<br>
+      </li>
+    </ul>
+  </li>
+  <li>Download/Upload von Dateien</li>
+  <li>Kalender<br>
+  </li>
+  <li>Userverwaltung<br>
+  </li>
+  <li>Einfache Installation</li>
+  <li>Wenig Dateien, damit der Infobasar auch auf Sytemen eingesetzt
+werden kann, die keinen FTP-Zugang erlauben</li>
+</ul>
+<h2>Voraussetzungen</h2>
+PHP<br>
+MySQL<br>
+<h2>Wiki-Syntax</h2>
+<p>Die Basis von WikiWiki-Seiten sind Texte, die bestimmte
+Formatierungskonstrukte enthalten k&ouml;nnen. Diese werden bei der
+Ausgabe in HTML umgesetzt.</p>
+<h3>Absatzformatierung:</h3>
+Folgende Formatierungen beziehen sich auf einen kompletten Absatz. Das
+erste Zeichen der Zeile kennzeichnet den Absatztyp.<br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Konstrukt</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Syntax</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiel</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&Uuml;berschrift 1<br>
+      </td>
+      <td style="vertical-align: top;">!text<br>
+      </td>
+      <td style="vertical-align: top;">!Beschreibung<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">&Uuml;berschrift 4<br>
+      </td>
+      <td style="vertical-align: top;">!!!!text<br>
+      </td>
+      <td style="vertical-align: top;">!!!!Beispiel<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Tabelle<br>
+      </td>
+      <td style="vertical-align: top;">|spalte1|spalte2 ...<br>
+      </td>
+      <td style="vertical-align: top;">|Nr|Name|Tel<br>
+|1|M&uuml;ller|0123-4567<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Aufz&auml;hlung mit Punkten<br>
+      </td>
+      <td style="vertical-align: top;">*<br>
+      </td>
+      <td style="vertical-align: top;">* Grandios<br>
+* Billig<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Aufz&auml;hlung nummeriert<br>
+      </td>
+      <td style="vertical-align: top;">#<br>
+      </td>
+      <td style="vertical-align: top;"># Einleitung<br>
+# Hauptteil<br>
+#Schluss<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Einr&uuml;cken<br>
+      </td>
+      <td style="vertical-align: top;">blank text<br>
+blank blank text<br>
+...<br>
+      </td>
+      <td style="vertical-align: top;">&nbsp;Eine Stufe einger&uuml;ckt<br>
+&nbsp; Zwei Stufen einger&uuml;ckt<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Absatzende<br>
+      </td>
+      <td style="vertical-align: top;">leerzeile<br>
+      </td>
+      <td style="vertical-align: top;">Dies ist ein Absatz<br>
+      <br>
+Und jetzt ein weiterer Absatz<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Horizontale Linie<br>
+      <br>
+      </td>
+      <td style="vertical-align: top;">---<br>
+----<br>
+...<br>
+      </td>
+      <td style="vertical-align: top;">---<br>
+Je mehr Striche, desto dicker.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3>Zeichenformatierung:</h3>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Konstrukt</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Syntax</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiel</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Zitat <br>
+Darstellung <span style="font-style: italic;">kursiv</span><br>
+      </td>
+      <td style="vertical-align: top;">''text''<br>
+Jeweils 2 ' (neben dem &auml;)<br>
+      </td>
+      <td style="vertical-align: top;">Jonny meinte: ''Alles Quatsch''<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Wichtig<br>
+Darstellung <span style="font-weight: bold;">fett</span><br>
+      </td>
+      <td style="vertical-align: top;">'''text'''<br>
+Jeweils 3 mal ' (neben dem &auml;)<br>
+      </td>
+      <td style="vertical-align: top;">Bitte kommt '''alle'''!<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Kleine Schrift<br>
+      </td>
+      <td style="vertical-align: top;">[small]text[/small]<br>
+      </td>
+      <td style="vertical-align: top;">Allgemeine
+Gesch&auml;ftsbedingungen: [small]1. Wir haben immer recht[/small]<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Gro&szlig;e Schrift<br>
+      </td>
+      <td style="vertical-align: top;">[big]text[/big]<br>
+      </td>
+      <td style="vertical-align: top;">Er ist der [big]Chef[/big]!<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Ein Zeichen<br>
+Umgehung der Sonderbedeutung von Zeichen<br>
+      </td>
+      <td style="vertical-align: top;">[z]<br>
+      </td>
+      <td style="vertical-align: top;">Hier kommen 2 Apostrophe: [']'
+und 2 Klammern [[][[]<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3>Verweise:</h3>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Konstrukt</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Syntax</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiel</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Wikiname<br>
+      </td>
+      <td style="vertical-align: top;">WikiName<br>
+Im Name mindestens ein zweiter Gro&szlig;buchstabe<br>
+      </td>
+      <td style="vertical-align: top;">MeineSeite<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Verweis<br>
+      </td>
+      <td style="vertical-align: top;">[[link text]]<br>
+oder [[link]]<br>
+      </td>
+      <td style="vertical-align: top;">Hier finden Sie
+[[http://www.tdh-muenchen.de Terres des hommes]]!<br>
+Meine Seite hei&szlig;t [[Schlumpi]]<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Kein Wikiname<br>
+      </td>
+      <td style="vertical-align: top;">!KeinWikiName<br>
+      </td>
+      <td style="vertical-align: top;">Schick mir ne !EMail<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Bilder<br>
+      </td>
+      <td style="vertical-align: top;">[img]link[/img]<br>
+Verweis mit einem Link, der auf .jpg .png .gif endet<br>
+      </td>
+      <td style="vertical-align: top;">[img]http://x.de/Logo.jpg[/img]<br>
+[[http://x.de/Logo.jpg]]<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3>Makros:</h3>
+Folgende Makros gestatten einfachen Zugriff auf dynamische Inhalte:<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Makro</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiel</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[PageName]<br>
+      </td>
+      <td style="vertical-align: top;">Name der Seite<br>
+      </td>
+      <td style="vertical-align: top;">In Vor- oder Nachspann einer
+Seite (Themes)<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[PageChangedAt]<br>
+      </td>
+      <td style="vertical-align: top;">&Auml;nderungsdatum der Seite<br>
+      </td>
+      <td style="vertical-align: top;">Letzte &Auml;nderung am
+[PageChangedAt]
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[PageChangedBy]<br>
+      </td>
+      <td style="vertical-align: top;">Autor der letzten &Auml;nderung
+der Seite<br>
+      </td>
+      <td style="vertical-align: top;">Letzte &Auml;nderung von
+[PageChangedBy]<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[Newline]<br>
+      </td>
+      <td style="vertical-align: top;">Neue Zeile, z.B. in
+&Uuml;berschriften<br>
+      </td>
+      <td style="vertical-align: top;">!&Uuml;bersicht &uuml;ber
+WikiWiki[Newline]oder[Newline]Struktur im Chaos<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[User]<br>
+      </td>
+      <td style="vertical-align: top;">Eingeloggter User<br>
+      </td>
+      <td style="vertical-align: top;">Hallo [User]!<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[Date]<br>
+      </td>
+      <td style="vertical-align: top;">Aktuelles Datum<br>
+      </td>
+      <td style="vertical-align: top;">Heute ist der [Date].<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">[DateTime]<br>
+      </td>
+      <td style="vertical-align: top;">Aktuelles Datum und Zeit<br>
+      </td>
+      <td style="vertical-align: top;">Angezeigt am [DateTime].<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h2>Datenbank</h2>
+create domain T_STAMP timestamp;<br>
+create domain T_IDENT integer;<br>
+create domain T_USER VARCHAR(64);<br>
+create domain T_BOOL CHAR(1); /* Y(es), N(o) */<br>
+<br>
+create table infobasar_page (<br>
+&nbsp;&nbsp;&nbsp; id T_IDENT autoincrement primary key,<br>
+&nbsp;&nbsp;&nbsp; name VARCHAR(128),<br>
+&nbsp;&nbsp;&nbsp; type CHAR(1), /* w(iki) h(tml) */<br>
+&nbsp;&nbsp;&nbsp; createdat T_STAMP,<br>
+&nbsp;&nbsp;&nbsp; readgroup T_IDENT,<br>
+&nbsp;&nbsp;&nbsp; writegroup T_IDENT, &nbsp; <br>
+&nbsp;&nbsp;&nbsp; );<br>
+<br>
+create infobasar_text (<br>
+&nbsp;&nbsp;&nbsp; id T_IDENT autoincrement primary key,<br>
+&nbsp;&nbsp;&nbsp; page T_IDENT, /* Bezug auf wikipage */<br>
+&nbsp;&nbsp;&nbsp; type CHAR(1), /* w(iki) h(tml) */<br>
+&nbsp;&nbsp;&nbsp; size integer,<br>
+&nbsp;&nbsp;&nbsp; text T_TEXT,<br>
+&nbsp;&nbsp;&nbsp; createdat T_STAMP,<br>
+&nbsp;&nbsp;&nbsp; createdby T_USER,<br>
+&nbsp;&nbsp;&nbsp; );<br>
+create table infobasar_user (<br>
+&nbsp;&nbsp;&nbsp; id T_IDENT autoincrement primary key,<br>
+&nbsp;&nbsp;&nbsp; createdat T_STAMP,<br>
+&nbsp;&nbsp;&nbsp; name VARCHAR(128),<br>
+&nbsp;&nbsp;&nbsp; code VARCHAR(64),<br>
+&nbsp;&nbsp;&nbsp; email VARCHAR(128),<br>
+&nbsp;&nbsp;&nbsp; locked T_BOOL<br>
+&nbsp;&nbsp;&nbsp; );<br>
+create table infobasar_group (<br>
+&nbsp;&nbsp;&nbsp; id T_IDENT autoincrement primary key,<br>
+&nbsp;&nbsp;&nbsp; name VARCHAR(32),<br>
+&nbsp;&nbsp;&nbsp; description VARCHAR(255)<br>
+&nbsp;&nbsp;&nbsp; );<br>
+create table infobasar_user_group (<br>
+&nbsp;&nbsp;&nbsp; id T_IDENT autoincrement primary key,<br>
+&nbsp;&nbsp;&nbsp; group T_IDENT,<br>
+&nbsp;&nbsp;&nbsp; user T_IDENT,<br>
+&nbsp;&nbsp;&nbsp; );<br>
+create table infobasar_download (<br>
+&nbsp;&nbsp;&nbsp; id T_IDENT autoincrement primary key,<br>
+&nbsp;&nbsp;&nbsp; area VARCHAR(128),<br>
+&nbsp;&nbsp;&nbsp; file VARCHAR(255),<br>
+&nbsp;&nbsp;&nbsp; description VARCHAR(255)<br>
+&nbsp;&nbsp;&nbsp; );<br>
+commit;<br>
+delete from infobasar_group;<br>
+insert into infobasar_group (id, name, description) values (1,"Gast",
+"Alle Besucher");<br>
+insert into infobasar_group (id, name, description) values
+(2,"Registriert", "Alle registrierten&nbsp; Benutzer");<br>
+insert into infobasar_group (id, name, description) values (3,
+"Moderator", "Moderatoren");<br>
+insert into infobasar_group (id, name, description) values (4,
+"Administratoren", "Administratoren");<br>
+<br>
+delete from infobasar_user;<br>
+insert into infobasar_user (id, name)<br>
+&nbsp;&nbsp;&nbsp; <br>
+<br>
+</body>
+</html>
