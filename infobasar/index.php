@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.21 2004/12/31 01:34:06 hamatoma Exp $
+// $Id: index.php,v 1.22 2005/01/04 23:34:37 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.6.1 (2004.12.25)');
+define ('PHP_ModuleVersion', '0.7.0 (2005.01.03)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
