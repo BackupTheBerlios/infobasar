@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.12 2004/10/29 23:26:03 hamatoma Exp $
+// $Id: index.php,v 1.13 2004/10/30 10:43:53 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -219,21 +219,24 @@ function baseLogin (&$session, $message) {
 		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
 		guiParagraph ($session, $message, false);
 	}
-	echo "<table border=\"0\">\n<tr><td>Benutzername:</td><td>";
-	guiTextField ("login_user", $login_user, 32, 32);
-	echo "</td></tr>\n<tr><td>Passwort:</td><td>";
-	guiPasswordField ("login_code", "", 32, 32);
-	echo "</td></tr>\n<tr><td></td><td>";
-	guiButton ("but_login", "Anmelden");
-	echo "</td></tr>\n</table>\n";
+	outTableAndRecord ();
+	outTableTextField ('Benutzername:', 'login_user', $login_user, 32, 32);
+	outTableRecordDelim();
+	outTablePasswordField ('Passwort:', 'login_code', "", 32, 32);
+	outTableRecordDelim();
+	outTableButton (' ', 'but_login', 'Anmelden');
+	outTableAndRecordEnd ();
 	guiLine ($session, 2);
-	guiParagraph ($session, "Passwort vergessen? ", false);
-	echo "<table border=\"0\">\n<tr><td>EMail-Adresse:</td><td>";
-	guiTextField ('login_email', $login_email, 32, 0);
-	echo "</td></tr>\n<tr><td></td><td>";
-	guiButton ('but_forget', 'Passwort ändern');
-	echo '<br/>(Das neue Passwort wird dann zugeschickt)';
-	echo "</td></tr>\n</table>\n";
+	guiParagraph ($session, 'Passwort vergessen?', false);
+	outTableAndRecord();
+	outTableTextField ('EMail-Adresse:', 'login_email', $login_email, 32, 0);
+	outTableRecordDelim();
+	outTableButton (' ', 'but_forget', 'Passwort ändern');
+	outTableAndRecordEnd();
+	echo '(Das neue Passwort wird dann zugeschickt.)';
+	outNewline();
+	outStrong('Achtung:');
+	echo 'Benutzername muss ausgefüllt sein!';
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_LoginBodyEnd);
 	return 1;
@@ -337,28 +340,34 @@ function baseAccount (&$session, $message) {
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiStartForm ($session, 'account', P_Account);
-	echo "<table border=\"0\">\n<tr><td>Benutzername:</td><td>";
+	outTableAndRecord();
+	outTableCell ('Benutzername');
+	outTableDelim();
 	guiHiddenField ('account_user', $account_user);
 	guiHeadline ($session, 2, $account_user);
-	echo '</td></tr>' . "\n" . '<tr><td>Passwort:</td><td>';
-	guiPasswordField ('account_code', '', 64, 32);
-	echo '</td></tr>' . "\n" . '<tr><td>Wiederholung:</td><td>';
-	guiPasswordField ('account_code2', '', 64, 32);
-	echo '</td></tr>' . "\n" . '<tr><td>EMail:</td><td>';
-	guiTextField ('account_email', $account_email, 64, 64);
-	echo "</td></tr>\n<tr><td>Gesperrt:</td><td>";
-	guiCheckBox ("account_locked", "Gesperrt", $account_locked == C_CHECKBOX_TRUE);
-	echo "</td></tr>\n<tr><td>Design:</td><td>";
+	outTableDelimEnd();
+	outTableRecordDelim();
+	outTablePasswordField ('Passwort:', 'account_code', '', 64, 32);
+	outTableRecordDelim ();
+	outTablePasswordField ('Wiederholung:', 'account_code2', '', 64, 32);
+	outTableRecordDelim ();
+	outTableTextField ('EMail:', 'account_email', $account_email, 64, 64);
+	outTableRecordDelim ();
+	outTableCheckBox ('Gesperrt', 'account_locked', 'Gesperrt',
+		$account_locked == C_CHECKBOX_TRUE);
+	outTableRecordDelim ();
 	dbGetThemes ($session, $theme_names, $theme_numbers);
-	guiComboBox ('account_theme', $theme_names, $theme_numbers, 
+	outTableComboBox ('Design:', 'account_theme', $theme_names, $theme_numbers, 
 		array_search ($account_theme, $theme_numbers));
-	echo "</td></tr>\n<tr><td>Eingabefeldbreite:</td><td>";
-	guiTextField ("account_width", $account_width, 64, 3);
-	echo "</td></tr>\n<tr><td>Eingabefeldh&ouml;he:</td><td>";
-	guiTextField ("account_height", $account_height, 64, 3);
-	echo "</td></tr>\n<tr><td>Zahl Suchergebnisse:</td><td>";
-	guiTextField ("account_maxhits", $account_maxhits, 64, 3);
-	echo "</td></tr><tr><td>\nStartseite:</td><td>";
+	outTableRecordDelim ();
+	outTableTextField ('Eingabefeldbreite:', 'account_width', $account_width, 64, 3);
+	outTableRecordDelim ();
+	outTableTextField ('Eingabefeldhöhe:', 'account_height',
+		$account_height, 64, 3);
+	outTableRecordDelim ();
+	outTableTextField ('Zahl Suchergebnisse:', 'account_maxhits', 
+		$account_maxhits, 64, 3);
+	outTableRecordDelim ();
 	$names = array ('WikiSeite:', 'Übersicht', 'Einstellungen',
 			'Wikisuche', 'Letze Änderungen', 'StartSeite', 'Hilfe');
 	$values = array ('', P_Home, P_Account, 
@@ -367,16 +376,19 @@ function baseAccount (&$session, $message) {
 		$ix = array_search ($account_startpage, $values);
 	else
 		$ix = 0;
+	outTableCell ('Startseite:');
+	outTableDelim ();
 	guiComboBox ('account_startpageoffer', $names, $values, $ix);
 	echo ' ';
-	guiTextField ("account_startpage", $account_startpage, 32, 128);
-	echo "</td></tr>\n";
+	guiTextField ("account_startpage", $account_startpage, 45, 128);
+	outTableDelimAndRecordEnd ();
 	modUserTableData ($session, $id);
-	echo "</table>\n";
+	outTableEnd();
 	modUserOwnData ($session, $id);
-	echo "<br>\n";
+	outNewline();
 	guiButton ("account_change", "&Auml;ndern");
-	echo "<br>\n<br>\n";
+	outNewline();
+	outNewline();
 	
 	$change = $session->hasRight (R_User, R_Put);
 	$new = $session->hasRight (R_User, R_New);
@@ -384,16 +396,21 @@ function baseAccount (&$session, $message) {
 	$change = $new;
 	if ($change || $new){
 		guiLine ($session, 2);
-		echo "<table border=\"0\"></td></tr><tr></tr>\n<tr><td>Name:</td><td>";
-		guiTextField ("account_user2", $account_user2, 32, 32);
-		echo "</td></tr>\n<tr><td></td><td>";
+		outTable ();
+		outTableRecord();
+		outTableRecordEnd();
+		outTableTextField ('Name:', "account_user2", $account_user2, 32, 32);
+		outTableRecordDelim();
+		outTableCell ('');
+		outTableDelim();
 		if ($change)
 			guiButton ("account_other", "Benutzer wechseln");
 		if ($new){
 			echo " "; guiButton ("account_new", "Neu");
 		}
 	}
-	echo "</td></tr>\n</table>\n";
+	outTableDelimEnd();
+	outTableAndRecordEnd();
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
@@ -749,7 +766,7 @@ function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 	if (isset ($alterpage_preview)) {
 		guiHeadline ($session, 1, 'Vorschau');
 		guiFormatPage ($session, $alterpage_mime, $alterpage_content);
-		guiLine (1);
+		guiLine ($session, 1);
 	}
 	if (isset ($alterpage_appendtemplate)){
 		$page_id = dbPageId ($session,  $alterpage_template);
