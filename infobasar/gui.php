@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.20 2005/01/04 23:34:16 hamatoma Exp $
+// $Id: gui.php,v 1.21 2005/01/05 05:27:21 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -333,6 +333,8 @@ function guiTextArea ($name, $content, $width, $height){
 	echo TAGA_APO_ROWS;
 	echo $height;
 	echo TAG_APO_SUFFIX_NEWLINE;
+	if ($content == null && isset ($_POST [$name]))
+		$content = $_POST [$name];
 	echo $content;
 	echo TAG_TEXTAREA_END;
 }
@@ -342,6 +344,12 @@ function guiButton ($name, $text){
 	echo TAGA_APO_VALUE;
 	echo $text;
 	echo TAGA_SUBMIT_END;
+}
+function guiButton2 ($name, $text, $delim, $name2, $text2){
+	guiButton ($name, $text);
+	if (! empty ($delim))
+		echo $delim;
+	guiButton ($name2, $text2);
 }
 function guiLinkAsButton (&$session, $command, $text){
 	guiInternLink ($session, encodeWikiName ($session, $session->fPageName) 
