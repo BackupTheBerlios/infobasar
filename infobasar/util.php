@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.22 2005/01/06 12:05:02 hamatoma Exp $
+// $Id: util.php,v 1.23 2005/01/06 17:02:33 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de M¸nchen
@@ -141,7 +141,7 @@ function writePlugin ($name, $param, &$status) {
 
 function writeWikiName ($name, $text, &$status) {
 	$status->trace (TC_Util2, "WriteWikiName: $name / $text");
-	if ($text == '')
+	if (empty ($text))
 		$text = $name;
 	if (substr ($name, 0, 1) == "!")
 		echo htmlentities (substr ($name, 1));
@@ -161,83 +161,90 @@ function showArray (&$array, $start){
 	}
 	return $rc;
 }
-		// Klammer 0: Vorspann Klammer 1: Muster, das evt. ersetzt wird
+		// Klammer 1: Vorspann Klammer 2: Muster, das evt. ersetzt wird
 		// unterstrichen, (kursiv, fett, kursiv-fett),
-define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
-		//  Extern-Link
-		// Klammer 2: [[...]] Klammer 3: Text
-		. '|\[\[([a-z]+:[^|\]]+)(\|[^]]*)?\]\]'
-		// http-Link, ftp-Link, mailto
-		// Klammer 4: Protokollname
-		. '|(https?|ftp):\/\/\S+'
-		// (Nicht-)Wiki-Name
-		. '|!?' . CC_WikiName_Uppercase . '+' . CC_WikiName_Lowercase . '+[' . CC_WikiName_Uppercase
-			. CC_WikiName . '*'
+define ('IB_REG_EXPR', '/^(.*?)(__|\'{2,4}'
+		//  Extern-Link Klammer 3: Text
+		. '|\[\[[a-z]+:[^]|]+(\|[^\]]*)?\]\]'
+		// http-Link, ftp-Link, mailto: // Klammer 4: Potokoll
+		. '|(https?:\/\/|ftp:\/\/|mailto:\w+@)\S+'
+		// (Nicht-)Wiki-Name: Klammer 5: Wiki-Name
+		. '|!?(' . CC_WikiName_Uppercase . '+' . CC_WikiName_Lowercase . '+' . CC_WikiName_Uppercase
+			. CC_WikiName . '*)'
 		// Genau ein Zeichen:
 		. '|\[\[.\]\]'
-		// Klammer 5: Makros
-		. '|\[(newline|\/?big|\/?small)\]'	// TM_Newline
+		// Klammer 6: Makros
+		. '|\[(newline|\/?big|\/?small|\/?su[pb]erscript|\/?teletype|\/?tt|\/?su[bp])\]'	// TM_Newline
 		// Wiki-Verweis
-		// Klammer 6: Wikiname Klammer 7: Text
-		# '|\[\[([A-Za-zƒ÷‹‰‰ˆ¸]+[-‰ˆ¸ﬂa-zA-Z_0-9]+)\s*([^]]*)?\]\]'
-		. '|\[\[(' . CC_WikiName . '+)\|([^]]*)?\]\]'
+		// Klammer 7: Wikiname Klammer 8: |Text
+		. '|\["(' . CC_WikiName . '+)"(\|[^]]*)?\]'
 		// Plugin
-		// Klammer 8: Plugin-Name Klammer 9: Parameter
+		// Klammer 9: Plugin-Name Klammer 10: Parameter
 		. '|<\?plugin\s+(\w+)(.*)\?>'
 		// Hex-Anzeige:
-		// Klammer 10:  Hexdumplbereich
+		// Klammer 11:  Hexdumplbereich
 		. '|%hex\((.*?)\)'
 		. ')/');
 function writeText ($body, &$status) {
 	$status->trace (TC_Util2, "writeText: $body");
 	$count = 0;
-	while (strlen ($body) > 0
-		&& preg_match (ib_reg_expr,
-			$body, $match)) {
+	while (strlen ($body) > 0 && preg_match (IB_REG_EXPR, $body, $match)) {
 		$args = count ($match);
 		$count++;
 		if ($match[1] != '')
 			echo htmlentities ($match[1]);
 		#$status->trace (TC_X, "writeText-2:" . showArray ($match, 2));
-			
-		switch ($match [2]){
-		case '__': $status->handleEmphasis ('u'); break;
-		case '\'\'': $status->handleEmphasis ('i'); break;
-		case '\'\'\'': $status->handleEmphasis ('b'); break;
-		case '\'\'\'\'': $status->handleEmphasis ('x'); break;
-		default:
-			if (strpos ($match [2], "hex(") == 1){
-				for ($ii = 5; $ii < strlen ($match [2]) - 1; $ii++){
-					printf ("%02x ", ord (substr ($match [2], $ii, 1)));
-				}
-			} elseif ($args == 9 &&  $match [7] != '')
-				writeWikiName ($match [7], $match [8], $status);
-			elseif ($args > 4 && $match [4] != '')
-				writeExternLink ($match [3], substr ($match [4], 1), $status);
-			elseif ($args > 3 && $match [3] != '')
-				writeExternLink ($match [3], '', $status);
-			elseif ( ($pos = strpos ($match [2], '[')) == 0 && is_int ($pos)) {
-				if ($args == 3 && strlen ($match [2]) == 5)
+		// Alle Ausdr¸cke ohne Klammern:	
+		if ($args == 3){
+			switch ($match [2]){
+			case '__': $status->handleEmphasis ('u'); break;
+			case '\'\'': $status->handleEmphasis ('i'); break;
+			case '\'\'\'': $status->handleEmphasis ('b'); break;
+			case '\'\'\'\'': $status->handleEmphasis ('x'); break;
+			case '%%%': outNewline (); break;
+			default:
+				if (strpos ($match [2], "hex(") == 1){
+					for ($ii = 5; $ii < strlen ($match [2]) - 1; $ii++)
+						printf ("%02x ", ord (substr ($match [2], $ii, 1)));
+				} elseif (strlen ($match [2]) == 5 && getPos ($match [2], '[[') == 0)
 					echo substr ($match [2], 2, 1);
-				elseif ($args <= 7){
-					switch ($match [6]){
-					case 'newline': echo '<br />'; break;
-					case 'big': case '/big': case 'small': case '/small': 
-						echo TAG_PREFIX;
-						echo $match [6];
-						echo TAG_SUFFIX;
-						break;
-					default:
-						echo $match [2]; break;
-					}
-				} else
-					writeExternLink ($match [3], substr ($match [4], 1), $status);
-			} elseif ($args > 9 && ($pos = strpos ($match [2], '<?')) == 0 && is_int ($pos))
-				writePlugin ($match [8], $match [9], $status);
+				else
+					echo htmlentities ($match [2]);
+			}
+		} else {
+			if ($args == 9 &&  $match [7] != '')
+				writeWikiName ($match [7], substr ($match [8], 1), $status);
+			elseif ($args == 5) // Direkter Verweis (ohne [[]]:
+				writeExternLink ($match [2], null, $status);
+			elseif ($args == 4){ // [[Verweis]]: 
+				$len = strpos ($match [2], '|') - 2;
+				writeExternLink (substr ($match [2], 2, $len > 0 ? $len : strlen ($match [2])),
+					substr ($match [3], 1), $status);
+			} elseif ($args == 6 && $match [5] != '')
+				writeWikiName ($match [2], null, $status);
+			elseif ($args == 7){
+				switch ($match [6]){
+				case 'newline': echo '<br />'; break;
+				case 'big': case '/big': case 'small': case '/small':
+				case 'sub': case '/sub': case 'sup': case '/sup': case 'tt': case '/tt': 
+					echo TAG_PREFIX;
+					echo $match [6];
+					echo TAG_SUFFIX;
+					break;
+				case 'subscript':	echo TAG_SUB; break;
+				case 'superscript':	echo TAG_SUP; break;
+				case '/subscript':  echo TAG_SUP_END; break;
+				case '/superscript':	echo TAG_SUP_END; break;
+				case '/teletype':	echo TAG_TT; break; 
+				case 'teletype':	echo TAG_TT_END; break;
+				default:
+					echo $match [2]; break;
+				}
+			} elseif ($args == 11)
+				writePlugin ($match [9], $match [10], $status);
 			else
 				echo $match [2];
-			break;
-		} // switch
+		} // args != 3
 
 		$body = substr ($body, strlen ($match [1]) + strlen ($match [2]));
 	}
@@ -534,5 +541,48 @@ function textTypeToMime ($type){
 }
 function getPostVar ($name){
 	return isset ($_POST [$name]) ? $_POST [$name] : '';
+}
+function sessionStart (){
+	session_start();
+	if (!session_is_registered("session_user")) {
+		session_register("session_user");
+		session_register("session_start");
+		session_register("session_no");
+		$_SESSION ['session_user'] = $_SESSION ['session_start'] = $_SESSION ['session_no'] = null;
+ 	}
+	return session_id();
+}
+function successfullLogin (&$session){
+	dbOpen($session);
+
+	if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
+		&& dbCheckUser ($session, $user, $code) == ''){
+	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
+	}
+	$rc = dbCheckSession ($session);
+	$do_login = false;
+	#$session->dumpVars ("Init");
+	if ($rc != null) {
+		$session->trace (TC_Init, 'keine Session gefunden: ' . $rc . ' ' 
+			. (empty($_POST ['login_user']) ? "-" : '>' . $_POST ['login_user']));
+		$do_login = true;
+	} else {
+		$session->trace (TC_Init, 'login_user: ' . getPostVar ('login_user')); 
+		if (isset ($_POST ['login_user']))
+			$do_login = guiLoginAnswer ($session, $rc);
+		else {
+			$known_user = $session->fSessionUser != null && $session->fSessionUser > 0; 
+			$do_login = $session->fPageName == P_Login || ! $known_user;
+			$session->trace (TC_Init, 'known_user: ' . ($known_user ? 't' : 'f'));
+		}
+	}
+	$session->trace (TC_Init, "session_no: do_login: " . ($do_login ? "t" : "f"));
+	if ($do_login){
+		clearLoginCookie ($session);
+		guiLogin ($session, $rc);
+	} else {
+		$session->storeSession ();
+	}
+	return ! $do_login;
 }
 ?>
