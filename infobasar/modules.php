@@ -7,18 +7,18 @@ class ModuleForum {
 	function userTableData (&$session, $id){
 		$session->trace (TC_Gui3, 'forum.UserTableData');
 		$name = "forum";
-		echo '<tr><td><br><strong>Modul ';
-		echo $name;
-		echo ":</strong></td><td> </td</tr>\n"; 
-		echo '<tr><td>Beitr&auml;ge je Seite:</td><td>';
+		outTableRecord();
+		outNewline();
+		outTableCellStrong ('Modul ' . $name);
 		$rec = dbGetRecordById ($session, T_User, $id,
 			'postingsperpage,threadsperpage,postings');
-		guiTextField ('forum_postingsperpage' , $rec [0], 3, 3);
-		echo "</td></tr><tr><td>Forumsinhalt: Themen je Seite:</td><td>\n";
-		guiTextField ('forum_threadsperpage' , $rec [1], 3, 3);
-		echo "</td></tr>\n<tr><td>Bisher erstellte Forumsbeiträge:</td><td>";
-		echo $rec [2];
-		echo "</td></tr>\n";
+		outTableRecordDelim();
+		outTableTextField ('Beiträge je Seite:', 'forum_postingsperpage',
+			 $rec [0], 3, 3);
+		outTableRecordDelim();
+		outTableTextField ('Forumsinhalt: Themen je Seite:', 'forum_threadsperpage' , $rec [1], 3, 3);
+		outTableRecordEnd();
+		outTableRecordCells ('Bisher erstellte Forumsbeiträge:', $rec [2]);		
 	}
 	function userOwnData (&$session, $id) {
 		$session->trace (TC_Gui3, 'forum.UserOwnData');
@@ -43,12 +43,14 @@ class ModuleForum {
 	}
 	function overview(&$session){
 		$session->trace (TC_Gui3, 'forum.overview');
-		echo "<tr><td><br><strong>Modul Foren:</strong></td>\n<td> </td></tr><tr><td>";
-		guiInternLink ($session, 'forumhome', 'Forenübersicht', 'forum');
-		echo "</td><td>Auflistung der existierenden Foren</td></tr>\n";
-		echo '<tr><td>';
-		guiInternLink ($session, 'forumsearch', 'Forensuche', 'forum');
-		echo "</td><td>Suche in den Foren</td></tr>\n";
+		outTableRecord();
+		outNewLine();
+		outTableCellStrong(tagNewline () . 'Modul Foren');
+		outTableRecordEnd();
+		outTableRecordInternLink ($session, 'Auflistung der existierenden Foren.',
+			'forumhome', 'Forenübersicht', 'forum');
+		outTableRecordInternLink ($session, 'Suche in den Foren.',
+			'forumsearch', 'Forensuche', 'forum');
 	}
 } // class module_forum
 class ModuleAddress {
@@ -73,17 +75,14 @@ class ModuleAddress {
 		$session->trace (TC_Gui3, 'address.overview');
 		outTableRecord();
 		outNewLine();
-		outTableCellStrong('Modul Adressen');
-		outTableRecordDelim();
-		outTableInternLink ($session, 'Adressbuch erstellen/ändern:',
-			'editbook', 'Adressbücher', 'address');
-		outTableRecordDelim();
-		outTableInternLink ($session, 'Adresse erstellen/ändern:',
-			'editcard', 'Adresskarte', 'address');
-		outTableRecordDelim();
-		outTableInternLink ($session, 'Adressen suchen:',
-			'showcards', 'Suchen', 'address');
+		outTableCellStrong(tagNewline () . 'Modul Adressen');
 		outTableRecordEnd();
+		outTableRecordInternLink ($session, 'Adressbuch erstellen oder ändern.',
+			'editbook', 'Adressbücher', 'address');
+		outTableRecordInternLink ($session, 'Adresse erstellen oder ändern.',
+			'editcard', 'Adresskarte', 'address');
+		outTableRecordInternLink ($session, 'Adressen suchen, exportieren.',
+			'showcards', 'Suchen', 'address');
 	}
 } // class module_forum
 // EndOfClasses
