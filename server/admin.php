@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.4 2004/06/02 00:03:25 hamatoma Exp $
+// $Id: admin.php,v 1.5 2004/06/13 10:52:28 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -10,6 +10,11 @@ Näheres siehe Datei LICENCE.
 InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
+$start_time = microtime ();
+define ('PHP_ModuleVersion', '0.6.0 (2004.06.13)');
+
+set_magic_quotes_runtime(0);
+error_reporting(E_ALL);
 session_start();
 
  // If this is a new session, then the variable $user_id
@@ -36,16 +41,10 @@ define ('FN_PageExport', 'exp_pages.sql');
 
 include "config.php";
 include "classes.php";
-include "util.php";
-include "gui.php";
-
-if ($db_type == 'MySQL')
-	include "db_mysql.php";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <?php
-$session = new Session ();
-init ($session, $dbType);
+$session = new Session ($start_time);
 
 // All requests require the database
 dbOpen($session);
@@ -58,71 +57,35 @@ if (! empty ($rc)) {
 	else
 		guiLogin ($session, '');
 } else {
-	if (isset ($action)) {
-		switch ($action){
-		case 'edit': break;
-		case 'search':	guiSearch ($session, ''); break;
-		default: break;
-		}
-	} elseif (isset ($std_answer) || ! guiCallStandardPage ($session)) {
-			$session->trace (TC_Init, 'index.php: keine Standardseite'
-				. (isset ($edit_save) ? " ($edit_save)" : ' []'));
-		switch ($session->fPageName) {
-		case A_Param: admParam ($session, ''); break;
-		case A_Admin: admHome($session, ''); break;
-		case A_Forum: admForum($session, '', C_New); break;
-		case A_Backup: admBackup ($session, true, null); break;
-		case A_ExportPages: admExportPages ($session, null); break;
-		case A_Options: admOptions ($session, null); break;
-		case A_PHPInfo: admInfo ($session); break;
-		default:
-			if (substr ($session->fPageName, 0, 1) == ".")
-				guiNewPageReference ($session);
-			if (isset ($param_load))
-				admParamAnswerLoad ($session);
-			elseif (isset ($param_insert))
-				admParamAnswerChange ($session, C_New);
-			elseif (isset ($param_change))
-				admParamAnswerChange ($session, C_Change);
-			elseif (isset ($backup_save))
-				admBackupAnswer ($session);
-			elseif (isset ($forum_change) || isset ($forum_load)
-				|| isset ($forum_insert))
-				admForumAnswer ($session);
-			elseif (isset ($export_export) || isset ($export_preview))
-				admExportPagesAnswer ($session);
-			else admHome ($session);
-		}
+	switch ($session->fPageName) {
+	case A_Param: admParam ($session, ''); break;
+	case A_Admin: admHome($session, ''); break;
+	case A_Forum: admForum($session, '', C_New); break;
+	case A_Backup: admBackup ($session, true, null); break;
+	case A_ExportPages: admExportPages ($session, null); break;
+	case A_Options: admOptions ($session, null); break;
+	case A_PHPInfo: admInfo ($session); break;
+	default:
+		if (substr ($session->fPageName, 0, 1) == ".")
+			guiNewPageReference ($session);
+		if (isset ($param_load))
+			admParamAnswerLoad ($session);
+		elseif (isset ($param_insert))
+			admParamAnswerChange ($session, C_New);
+		elseif (isset ($param_change))
+			admParamAnswerChange ($session, C_Change);
+		elseif (isset ($backup_save))
+			admBackupAnswer ($session);
+		elseif (isset ($forum_change) || isset ($forum_load)
+			|| isset ($forum_insert))
+			admForumAnswer ($session);
+		elseif (isset ($export_export) || isset ($export_preview))
+			admExportPagesAnswer ($session);
+		else admHome ($session);
 	}
 }
 // --------------------------------------------------------------------
-function init (&$session, $dbType) {
-	global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
-	global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 
-	$session->fTraceFlags
-		= 0 * TC_Util1 + 1 * TC_Util2 + 0 * TC_Util1
-		+ 1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3
-		+ 0 * TC_Db1 + 0 * TC_Db2 + 0 * TC_Db3
-		+ 0 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
-		+ 0 * TC_Layout1
-		+ 1 * TC_Update + 0 * TC_Insert + 1 * TC_Query
-		+ 0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2
-		+ TC_Error + TC_Warning + TC_X;
-	$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
-	# $session->fTraceFlags = TC_All;
-
-	// MySQL
-	if ($dbType == 'MySQL') {
-		// MySQL server host:
-		$session->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
-	} // mysql
-	// Basisverzeichnis relativ zu html_root
-	$session->setScriptBase ("http://$HTTP_HOST$PHP_SELF", $SCRIPT_FILENAME);
-
-} // Config
-
-// --------------------------------------------------------------------
 function admHome (&$session){
 	global $session_id, $session_user;
 	guiHeader ($session, 'Adminstration-Startseite f&uuml;r ' . $session->fUserName);
@@ -494,7 +457,7 @@ function admBackup (&$session, $with_header, $message){
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	if (empty ($backup_file))
-		$backup_file = $session->fDbPrefix
+		$backup_file = $session->fDbTablePrefix
 			. strftime ("_%Y_%m_%d") . '.sql';
 	guiHeadLine ($session, 1, 'Backup');;
 	guiStartForm ($session, "backup", A_Backup);
@@ -544,7 +507,7 @@ function admBackupAnswer (&$session){
 			? 'compress.zlib://' .  $session->fFileSystemBase . '/' . $filename
 			: $session->fFileSystemBase . '/' . $filename;
 		$file = fopen ($open_name, $backup_compressed  ? 'wb9' : 'wb');
-		fwrite ($file, '# InfoBasar: SQL Dump / Version: ' . PHP_Version
+		fwrite ($file, '# InfoBasar: SQL Dump / Version: ' . PHP_ClassVersion
 			. " \n# gesichert am " 
 			. strftime ('%Y.%m.%d %H:%M:%S', time ())
 			. "\n");

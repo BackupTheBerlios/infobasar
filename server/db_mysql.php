@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.6 2004/06/02 00:05:12 hamatoma Exp $
+// $Id: db_mysql.php,v 1.7 2004/06/13 10:53:19 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -77,7 +77,7 @@ function dbGetRecordById (&$session, $table, $id, $what){
 	$session->trace (TC_Db2 + TC_Query, "dbGetRecordById: $table, $id, $what");
 	return dbSingleRecord ($session,
 		'select ' . $what . ' from ' . dbTable ($session, $table)
-		. ' where id=' . $id);
+		. ' where id=' . (0+$id));
 }
 function dbGetRecordByClause (&$session, $table, $what, $where){
 	$session->trace (TC_Db2 + TC_Query, "dbGetRecordByClause: $table, $what, $where");

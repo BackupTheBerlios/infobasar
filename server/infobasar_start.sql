@@ -39,6 +39,39 @@ INSERT INTO infobasar_forum VALUES (1, 'Allgemein', 'Was sonst nirgens hinpasst'
 # --------------------------------------------------------
 
 #
+# Tabellenstruktur für Tabelle infobasar_user
+#
+
+DROP TABLE IF EXISTS infobasar_user;
+CREATE TABLE infobasar_user (
+  id int(11) NOT NULL auto_increment,
+  createdat datetime default NULL,
+  changedat datetime NOT NULL default '0000-00-00 00:00:00',
+  name varchar(128) default NULL,
+  code varchar(64) default NULL,
+  email varchar(128) default NULL,
+  locked char(1) default NULL,
+  width int(11) NOT NULL default '70',
+  height int(11) NOT NULL default '20',
+  maxhits int(11) NOT NULL default '30',
+  postingsperpage int(11) NOT NULL default '10',
+  theme int(11) NOT NULL default '10',
+  postings int(11) NOT NULL default '0',
+  avatar varchar(128) default NULL,
+  threadsperpage int(11) NOT NULL default '0',
+  startpage varchar(128) NOT NULL default '',
+  PRIMARY KEY  (id)
+) TYPE=MyISAM AUTO_INCREMENT=9 ;
+
+#
+# Daten für Tabelle infobasar_user
+#
+
+INSERT INTO infobasar_user VALUES (1, '2004-03-12 20:20:57', '2004-04-18 01:04:15', 'admin', 'YpOYO9mCGFLda', NULL, '', 70, 20, 30, 10, 10, 6, NULL, 20, '15');
+INSERT INTO infobasar_user VALUES (2, '2004-03-15 23:09:23', '2004-04-23 00:56:35', 'gast', '', NULL, '', 70, 20, 30, 10, 10, 6, NULL, 2, 'StartSeite');
+INSERT INTO infobasar_user VALUES (3, '2004-03-15 23:09:23', '2004-04-23 00:56:35', 'wk', 'QaDWWvaa6uTkw', NULL, '', 81, 26, 31, 2, 10, 16, NULL, 2, '!forumhome');
+
+#
 # Tabellenstruktur für Tabelle infobasar_group
 #
 
@@ -48,6 +81,10 @@ CREATE TABLE infobasar_group (
   changedat datetime NOT NULL default '0000-00-00 00:00:00',
   name varchar(32) default NULL,
   description varchar(255) default NULL,
+  rights varchar(255) default NULL,
+  users text, /* mit : getrennte Id-Liste. Bsp: :1:1023:7: */
+  pages text, /* mit : getrennte Id-Liste. Bsp: :1:1023:7: */
+  forums text,  /* mit : getrennte Id-Liste. Bsp: :1:1023:7: */
   PRIMARY KEY  (id)
 ) TYPE=MyISAM AUTO_INCREMENT=5 ;
 
@@ -55,10 +92,10 @@ CREATE TABLE infobasar_group (
 # Daten für Tabelle infobasar_group
 #
 
-INSERT INTO infobasar_group VALUES (1, '0000-00-00 00:00:00', 'Gast', 'Alle Besucher');
-INSERT INTO infobasar_group VALUES (2, '0000-00-00 00:00:00', 'Registriert', 'Alle registrierten  Benutzer');
-INSERT INTO infobasar_group VALUES (3, '0000-00-00 00:00:00', 'Moderator', 'Moderatoren');
-INSERT INTO infobasar_group VALUES (4, '0000-00-00 00:00:00', 'Administratoren', 'Administratoren');
+INSERT INTO infobasar_group (id,name,description,rights,users) VALUES (1, 'Gast', 'Alle Besucher', 'forum? pages?', ':2:');
+INSERT INTO infobasar_group (id,name,description,rights,users) VALUES (2, 'Registriert', 'Alle registrierten  Benutzer', 'forum? pages?', '');
+INSERT INTO infobasar_group (id,name,description,rights,users) VALUES (3, 'Moderator', 'Moderatoren', 'forum? pages?', ':3:');
+INSERT INTO infobasar_group (id,name,description,rights,users) VALUES (4, 'Administratoren', 'Administratoren', 'forum+-=?# pages+-=?# ', ':1:');
 
 # --------------------------------------------------------
 
@@ -287,37 +324,3 @@ INSERT INTO infobasar_text VALUES (6, 6, '', 'Absatzformate werden durch ein bes
 INSERT INTO infobasar_text VALUES (7, 7, '', '! Wiki-Namen\r\nWiki-Namen sind die einfachste Möglichkeit eines Verweises: Jedes Wort, das innerhalb des Wortes einen oder mehrere Großbuchstaben enthält, ist ein Wiki-Wort. Ein Wiki-Wort benennt eine Seite: Wird ein Wiki-Name im Text geschrieben, so ist dies automatisch ein Verweis auf die Seite dieses Namens.\r\n\r\n\'\'\'Beispiel\'\'\':\r\n\r\nStartSeite\r\n\r\n!! Wiki-Namen entwerten\r\nSoll ein Wort mit mehreren Großbuchstaben kein Wiki-Namen sein, so wird ein ! vorangestellt:\r\n\r\n\'\'\'Beispiel\'\'\':\r\n\r\nDies ist eine !!GmbH\r\n\r\nwird zu\r\n\r\nDies ist eine !GmbH\r\n\r\n!Externe Links\r\nWird eine korrekte URL im Text eingetragen, so wird daraus automatisch ein Verweis:\r\n\r\n\'\'\'Beispiel\'\'\':\r\n\r\nhttp://www.bewegendepferde.de\r\n\r\nSoll ein Verweis einen anderen Text haben, so gilt die Formatierung: [[]Verweis Text[]]\r\n\r\n\'\'\'Beispiel\'\'\':\r\n\r\nSiehe [[]http://www.bewegendepferde.de Fortbildungszentrum \r\n"Bewegende Pferde"[]]\r\n\r\nwird zu\r\n\r\nSiehe [http://www.bewegendepferde.de Fortbildungszentrum "Bewegende Pferde"]\r\n\r\n\r\n! Seitennamen ohne Wiki-Namen\r\nSoll eine Seite anderst als Wiki-Namen benannt werden, so ist die Bezeichnung in eckige Klammern zu setzen:\r\n\r\n\'\'\'Beispiel\'\'\':\r\n\r\n[[]Wiki[]]\r\n\r\nwird zu\r\n\r\n[Wiki]\r\n\r\n! Bilder\r\nBilder sind einfach externe Verweise, jedoch mit einer URL, die auf .jpg, .png, .gif endet.\r\n\r\n\'\'\'Beispiel\'\'\':\r\n\r\nhttp[:]//home.arcor.de/bewegendepferde/Pic/Logo3d.jpg\r\n\r\nwird zu\r\n\r\nhttp://home.arcor.de/bewegendepferde/Pic/Logo3d.jpg\r\n\r\n----\r\nKategorieHilfe', '2004-04-22 03:25:57', 'wk', '2004-04-22 03:25:57', NULL);
 INSERT INTO infobasar_text VALUES (8, 8, 'w', '! Überschrift\r\nSandKiste\r\nhttp://www.heise.de', '2004-04-08 22:51:54', 'wk', '2004-04-08 22:54:16', NULL);
 
-# --------------------------------------------------------
-
-#
-# Tabellenstruktur für Tabelle infobasar_user
-#
-
-DROP TABLE IF EXISTS infobasar_user;
-CREATE TABLE infobasar_user (
-  id int(11) NOT NULL auto_increment,
-  createdat datetime default NULL,
-  changedat datetime NOT NULL default '0000-00-00 00:00:00',
-  name varchar(128) default NULL,
-  code varchar(64) default NULL,
-  email varchar(128) default NULL,
-  locked char(1) default NULL,
-  rights varchar(255) default NULL,
-  width int(11) NOT NULL default '70',
-  height int(11) NOT NULL default '20',
-  maxhits int(11) NOT NULL default '30',
-  postingsperpage int(11) NOT NULL default '10',
-  theme int(11) NOT NULL default '10',
-  postings int(11) NOT NULL default '0',
-  avatar varchar(128) default NULL,
-  threadsperpage int(11) NOT NULL default '0',
-  startpage varchar(128) NOT NULL default '',
-  PRIMARY KEY  (id)
-) TYPE=MyISAM AUTO_INCREMENT=9 ;
-
-#
-# Daten für Tabelle infobasar_user
-#
-
-INSERT INTO infobasar_user VALUES (1, '2004-03-12 20:20:57', '2004-04-18 01:04:15', 'admin', 'YpOYO9mCGFLda', NULL, '', ':all:uadd:umod:udel:', 70, 20, 30, 10, 10, 6, NULL, 20, '15');
-INSERT INTO infobasar_user VALUES (2, '2004-03-15 23:09:23', '2004-04-23 00:56:35', 'wk', 'QaDWWvaa6uTkw', NULL, '', ':all:', 81, 26, 31, 2, 10, 16, NULL, 2, '!forumhome');
