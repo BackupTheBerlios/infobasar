@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.10 2004/10/28 09:47:34 hamatoma Exp $
+// $Id: index.php,v 1.11 2004/10/28 21:15:41 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -669,12 +669,14 @@ function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 		guiHiddenField ($session, 'alterpage_mime', $alterpage_mime);
 	}
 	if ($mode == C_New){
-		echo "</td></tr>\n<tr><td>Seitenvorlage:</td><td>";
 		$templates = dbColumnList ($session, T_Page, 'name', 
 			'name like ' . dbSqlString ($session, 'Vorlage%'));
-		guiComboBox('alterpage_template', $templates, null);
-		echo (' ');
-		guiButton ('alterpage_appendtemplate', 'Vorlage einkopieren');
+		if (count ($templates) > 0){
+			echo "</td></tr>\n<tr><td>Seitenvorlage:</td><td>";
+			guiComboBox('alterpage_template', $templates, null);
+			echo (' ');
+			guiButton ('alterpage_appendtemplate', 'Vorlage einkopieren');
+		}
 	}
 	echo "</td></tr>\n<tr><td>Inhalt:</td><td>";
 	guiTextArea ("alterpage_content", $alterpage_content,
