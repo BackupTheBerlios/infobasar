@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.7 2004/06/28 22:14:03 hamatoma Exp $
+// $Id: util.php,v 1.8 2004/09/02 21:25:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -389,5 +389,11 @@ function getMicroTime(&$session, $time = null){
 		$time = microtime ();
 	list($usec, $sec) = explode(" ", $time); 
 	return ((float) $usec + (float)$sec); 
-} 
+}
+function setRelativeURL (&$session, $url){
+	header("Location: http://" . $_SERVER['HTTP_HOST']
+	. dirname($_SERVER['PHP_SELF'])                    
+	. "/" . $relative_url);
+}
+
 ?>

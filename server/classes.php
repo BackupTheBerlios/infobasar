@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.9 2004/06/28 22:07:59 hamatoma Exp $
+// $Id: classes.php,v 1.10 2004/09/02 21:25:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 
-define ('PHP_ClassVersion', '0.6.1 (2004.06.28)');
+define ('PHP_ClassVersion', '0.6.2 (2004.09.01)');
 
 define ('PATH_DELIM', '/');
 define ('COOKIE_NAME', 'infobasar');
@@ -36,6 +36,7 @@ define ('T_Param', 'param');
 define ('T_Forum', 'forum');
 define ('T_Posting', 'posting');
 define ('T_Macro', 'macro');
+define ('T_Module', 'module');
 
 // Mime types:
 define ('M_Undef', '?');
@@ -183,7 +184,7 @@ class Session {
 	var $fMacroReplacementKeys; // Liste aller Macros als RegExpr
 	var $fMacroReplacementValues; // Ersatzstrings (mit addslashes()))
 	
-	var $fParamBase; 
+	var $fParamBase; // Basis-Nummer des Moduls in der Param-Tabelle.
 
 	var $fOutputState; // Init Header Body
 	var $fFormExists; // true: Es gab schon ein <form> im Text.
@@ -194,7 +195,8 @@ class Session {
 	var $fScriptFile; // Relativ zu DocumentRoot
 	var $fFileSystemBase; // Absolutpfad im Filesystem des Servers
 	var $fHasHeader; // true: DOCTYPE und <html> ist ausgegeben
-	var $fBodyLines; // null oder auszugebendes HTML (in PutHeader)
+	var $fHasBody; // true: <body> ist ausgegeben
+	var $fBodyLines; // null oder auszugebendes HTML (in guiHeader())
 
 	var $fTraceFlags;
 	var $fPreformated;
@@ -204,17 +206,28 @@ class Session {
 	var $fModuleData; // array "plugin-name" => objekt
 	var $fStartTime; // 
 
+	var $fModules; // array: module_names => Plugin-Klasse (Module<Name>)
+	
 	function Session ($start_time){
 		global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
 		global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
-		
+		$this->fTraceFlags = 0;
 		$this->fStartTime = getMicroTime ($this, $start_time);
 		$this->fHasHeader = false;
+		$this->fHasBody = false; // wird in guiHeader() gesetzt.
 		$this->fOutputState = 'Init';
 		$this->fTraceFlags = 0;
 		$this->fVersion = 400;
 		$this->fModuleData = array ();
-		$fBodyLines = null;
+		$this->fBodyLines = null;
+		$this->fPreformated = false;
+		$this->fLocation = "";
+		$this->fFormExists = false;
+		$this->fPageName = "";
+		$this->fPageChangedAt = "";
+		$this->fPageChangedBy = "";
+		$this->fPageTitle = "";
+		$this->fUserTheme = Theme_Standard;
 		
 		// Basisverzeichnis relativ zu html_root
 		$this->setScriptBase ("http://$HTTP_HOST$PHP_SELF", $SCRIPT_FILENAME);
@@ -228,34 +241,45 @@ class Session {
 			= 0 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1
 			+ 1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3
 			+ 0 * TC_Db1 + 0 * TC_Db2 + 0 * TC_Db3
-			+ 0 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
+			+ 1 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
 			+ 0 * TC_Layout1
-			+ 1 * TC_Update + 1 * TC_Insert + 1 * TC_Query
+			+ 0 * TC_Update + 0 * TC_Insert + 1 * TC_Query
 			+ 0 * TC_Convert + 0 * TC_Init + 0 * TC_Diff2
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
+		$this->fModules = null;
 	}
 	function trace($class, $msg){
-		if (($class & $this->fTraceFlags) != 0){
-			$line = htmlentities ($msg) . ($this->fPreformated ? "\n" : "<br/>\n");
-			if ($this->fHasHeader) {
-				echo $line;
-			} else {
-				if (!$this->fBodyLines)
-					$this->fBodyLines = array ();
-				array_push ($this->fBodyLines, $line);
-			}
+		if (($class & $this->fTraceFlags) != 0)
+			$this->WriteLine (htmlentities ($msg));
+	}
+	function Write ($line){
+		if ($this->fHasBody)
+			echo $line;
+		else {
+			if (!$this->fBodyLines)
+				$this->fBodyLines = array ();
+			array_push ($this->fBodyLines, $line);
 		}
+	}
+	function WriteLine ($line){
+		$this->Write ($line . ($this->fPreformated ? "\n" : "<br/>\n"));
+	}
+	function SetHasBody(){
+		$this->fHasBody = true;
 	}
 	function SetLocation($location){
 		$this->fLocation = $location;
 	}
 	function PutHeader(){
-		global $HOST_NAME;
+		global $_SERVER;
 		if (!$this->fHasHeader){
-			if ($this->fLocation)
-				header ('Location: http:' . $HOST_NAME . $this->fScriptURL . "/" . $this->fLocation);
+			if ($this->fLocation){
+				$uri = $this->fScriptURL . "/" . $this->fLocation;
+				if ($uri != $_SERVER['REQUEST_URI'])
+					header ('Location: http://' . $_SERVER['HTTP_HOST'] . $uri);
+			}
 			echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">';
 			echo "\n<html>\n";
 			$this->fHasHeader = true;
@@ -330,13 +354,17 @@ class Session {
 		$this->trace (TC_Init, 'setPageName: ' . $uri
 			. " last_pagename: ($last_pagename)");
 		$this->fPageName = preg_replace ('/\?.*$/', '', $uri);
-		if (strpos ($this->fPageName, '.php') > 0)
+		if (strpos ($this->fPageName, '.php') > 0){
 			$this->fPageName = empty ($last_pagename)
 				? P_Undef : $last_pagename;
+			if (! empty ($last_pagename))
+				$this->setLocation ($last_pagename);
+		}
 		$this->fPageTitle = $this->fPageName;
 		$this->trace (TC_Init, 'setPageName: PageName: ' . $this->fPageName . '<br>');
 	}
 	function setPageTitle ($title) {
+		$this->trace (TC_Session1, 'setPageTitle: ' . $title);
 		$this->fPageTitle = $title;
 	}
 	function setMacros () {

@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.12 2004/06/28 22:10:39 hamatoma Exp $
+// $Id: gui.php,v 1.13 2004/09/02 21:25:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -109,17 +109,7 @@ function guiFinishBody (&$session, $param_no){
 		echo $text;
 	else {
 		guiLine (1);
-		guiStandardLink ($session, P_Home);
-		echo ' | ';
-		guiStandardLink ($session, P_ForumHome);
-		echo ' | ';
-		guiStandardLink ($session, P_ForumSearch);
-		echo ' | ';
-		guiStandardLink ($session, P_Search);
-		echo ' | ';
-		guiStandardLink ($session, P_Account);
-		echo ' | ';
-		guiStandardLink ($session, P_LastChanges);
+		modStandardLinks ($session);
 		echo "\n</body>\n</html>\n";
 	}
 }
@@ -146,8 +136,9 @@ function guiHeader (&$session, $title) {
 		echo '<link rel="stylesheet" type="text/css" href="' . $value . '">' . "\n";
 	if (! empty ($title))
 		echo "<title>$title</title>\n</head>\n<body>\n";
+	$session->SetHasBody();
 	if ($session->fBodyLines)
-		echo join ("\n", $session->fBodyLines);
+		echo join ("\n", $session->fBodyLines) . "\n";
 }
 function guiHeadline (&$session, $level, $text) {
 	$session->trace (TC_Gui2, 'guiHeadline');
@@ -187,7 +178,16 @@ function guiInternLink (&$session, $link, $text, $module = null) {
 	$session->trace (TC_Gui2, 'guiInternLink');
 	if (empty ($text))
 		$text = $link;
-	guiExternLink ($session, $session->fScriptURL . '/' . $link, $text);
+	if (empty ($module))
+		$module = $session->fScriptURL;
+	else{
+		if (strpos ($module, '.php') > 0)
+			$module = $session->fScriptBase . '/' . $module;
+		else
+			$module = $session->fScriptBase . '/' . $module . '.php';
+	}
+		
+	guiExternLink ($session, $module . '/' . $link, $text);
 }
 function guiInternLinkString (&$session, $link, $text, $module = null) {
 	$session->trace (TC_Gui2, 'guiInternLinkString');
@@ -254,19 +254,11 @@ function guiStandardBodyEnd (&$session, $pos) {
 	if (! empty ($html))
 		echo $session->replaceMacrosNoHTML ($html);
 	else {
-		if ($pos !=  Th_LoginBodyEnd){
+		if (! defined ('Th_LoginBodyEnd'))
+			define ('Th_LoginBodyEnd', 0);
+		if ($pos != Th_LoginBodyEnd){
 			guiLine (1);
-			guiStandardLink ($session, P_Home);
-			echo ' | ';
-			guiStandardLink ($session, P_ForumHome);
-			echo ' | ';
-			guiStandardLink ($session, P_ForumSearch);
-			echo ' | ';
-			guiStandardLink ($session, P_Search);
-			echo ' | ';
-			guiStandardLink ($session, P_Account);
-			echo ' | ';
-			guiStandardLink ($session, P_LastChanges);
+			modStandardLinks ($session);
 			echo '</body>';
 		}
 	}
@@ -373,7 +365,7 @@ function guiShowPage (&$session, $mime, $title, $content) {
 
 // --- Erstellen von Ausgabeseiten ---------------------
 function guiShowPageById (&$session, $page, $text_id) {
-	$session->trace (TC_Gui1, 'guiShowPageById');
+	$session->trace (TC_Gui1, 'guiShowPageById: ' . $page . '/' . $text_id);
 	list ($name, $type, $readgroup) = dbGetRecordById ($session,
 		T_Page, $page, 'name,type,readgroup');
 	if (! empty ($text_id) && $text_id > 0)
@@ -385,21 +377,27 @@ function guiShowPageById (&$session, $page, $text_id) {
 		list ($text_id) = dbGetRecordByClause ($session, T_Text,
 			'max(id)', 'page=' . $page);
 	}
+	$session->trace (TC_Gui1, 'guiShowPageById-2: ' . $count_newer);
 	list ($content, $created_at, $created_by) = dbGetRecordById ($session,
 		T_Text, $text_id, 'text,createdat,createdby');
-	$session->SetPageData ($session->fPageName, $created_at, $created_by);
+	$has_changed = $name != $session->fPageName;
+	$session->SetPageData ($name, $created_at, $created_by);
+	if ($has_changed)
+		$session->SetLocation ($name);
+	$header = $count_newer == 0 ? $session->fPageName 
+		: $session->fPageName . ' (Version ' . $text_id . ')';
 	if ($type == TT_Wiki)
-		guiStandardHeader ($session, $session->fPageName, Th_HeaderWiki,
+		guiStandardHeader ($session, $header, Th_HeaderWiki,
 			Th_BodyStartWiki);
 	else
-		guiStandardHeader ($session, $session->fPageName, Th_HeaderHTML,
+		guiStandardHeader ($session, $header, Th_HeaderHTML,
 			Th_BodyStartHTML);
 	if ($count_newer > 0)
-		if ($count_newer == 1)
 		guiParagraph ($session, 'Achtung: es existier'
 			. ($count_newer == 1 ? 't eine neuere Version'
 			: ('en ' . $count_newer . ' neuere Versionen')), false);
 	guiFormatPage ($session, $type, $content);
 	guiStandardBodyEnd ($session, $type == TT_Wiki ? Th_BodyEndWiki : Th_BodyEndHTML);
 }
+
 ?>

@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.6 2004/06/28 22:06:31 hamatoma Exp $
+// $Id: admin.php,v 1.7 2004/09/02 21:25:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.1 (2004.06.28)');
+define ('PHP_ModuleVersion', '0.6.2 (2004.09.01)');
 
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
@@ -28,13 +28,13 @@ $session_id = session_id();
 define ('ADMIN', true);
 define ('C_ScriptName', 'admin.php');
 // Seitennamen: (Admin-Modus)
-define ('A_Admin', '!admhome');
-define ('A_Param', '!admparam');
-define ('A_Forum', '!admforum');
-define ('A_Backup', '!admbackup');
-define ('A_ExportPages', '!exportpages');
-define ('A_Options', '!admoptions');
-define ('A_PHPInfo', '!adminfo');
+define ('P_Home', 'home');
+define ('P_Param', 'param');
+define ('P_Forum', 'forum');
+define ('P_Backup', 'backup');
+define ('P_ExportPages', 'exportpages');
+define ('P_Options', 'options');
+define ('P_PHPInfo', 'info');
 // Dateinamen
 define ('FN_PageExport', 'exp_pages.sql');
 
@@ -56,13 +56,13 @@ if (! empty ($rc)) {
 		guiLogin ($session, '');
 } else {
 	switch ($session->fPageName) {
-	case A_Param: admParam ($session, ''); break;
-	case A_Admin: admHome($session, ''); break;
-	case A_Forum: admForum($session, '', C_New); break;
-	case A_Backup: admBackup ($session, true, null); break;
-	case A_ExportPages: admExportPages ($session, null); break;
-	case A_Options: admOptions ($session, null); break;
-	case A_PHPInfo: admInfo ($session); break;
+	case P_Param: admParam ($session, ''); break;
+	case P_Home: admHome($session, ''); break;
+	case P_Forum: admForum($session, '', C_New); break;
+	case P_Backup: admBackup ($session, true, null); break;
+	case P_ExportPages: admExportPages ($session, null); break;
+	case P_Options: admOptions ($session, null); break;
+	case P_PHPInfo: admInfo ($session); break;
 	default:
 		if (substr ($session->fPageName, 0, 1) == ".")
 			guiNewPageReference ($session);
@@ -83,18 +83,37 @@ if (! empty ($rc)) {
 	}
 }
 // --------------------------------------------------------------------
+function admStandardLinkString(&$session, $page){
+	$session->trace (TC_Gui3, 'admStandardLink');
+	$rc = null;
+	switch ($page) {
+	case P_Home: $header = 'Übersicht'; break;
+	case P_Param: $header = 'Parameter'; break;
+	case P_Forum: $header = 'Forumsverwaltung'; break;
+	case P_ExportPages: $header = 'Seitenexport'; break;
+	case P_Backup: $header = 'Datensicherung'; break;
+	case P_Options: $header = 'Einstellungen'; break;
+	case P_PHPInfo: $header = 'PHP-Info'; break;
+	default: $header = null; break;
+	}
+	if ($header)
+		$rc = guiInternLinkString ($session, $page, $header);
+	return $rc;
+}
+function admStandardLink(&$session, $page){
+	echo admStandardLinkString ($session, $page);
+}
 
 function admHome (&$session){
 	global $session_id, $session_user;
 	guiHeader ($session, 'Adminstration-Startseite f&uuml;r ' . $session->fUserName);
 	guiParagraph ($session, 'Willkommen ' . $session->fUserName, false);
-	echo '<p>';	guiInternLink ($session, A_Param, "Parameter"); echo '</p>';
-	echo '<p>';	guiInternLink ($session, A_Forum, "Forumsverwaltung"); echo '</p>';
-	echo '<p>';	guiInternLink ($session, A_ExportPages, "Seitenexport"); echo '</p>';
-	echo '<p>';	guiInternLink ($session, A_Backup, "Datensicherung"); echo '</p>';
-	echo '<p>';	guiInternLink ($session, A_Options, "Einstellungen"); echo '</p>';
-	echo '<p>';	guiInternLink ($session, A_PHPInfo, "PHP-Info"); echo '</p>';
-	// echo 'Session-Id: ' . $session_id . ' User: ' . $session_user . '<br>';
+	guiParagraph ($session, admStandardLinkString ($session, P_Param), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_Forum), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_ExportPages), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_Backup), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_Options), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_PHPInfo), false);
 	guiFinishBody ($session, null);
 }
 function admParam (&$session, $message){
@@ -123,7 +142,7 @@ function admParam (&$session, $message){
 	echo '</table>' . "\n";
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-	guiStartForm ($session, "param", A_Param);
+	guiStartForm ($session, "param", P_Param);
 	echo "<table border=\"0\">\n<tr><td>Id:</td><td>";
 	echo $param_id;
 	guiHiddenField ("param_id", $param_id);
@@ -207,7 +226,7 @@ function admForum (&$session, $message, $mode){
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiHeadLine ($session, 1, 'Forumsverwaltung');;
-	guiStartForm ($session, "forum", A_Forum);
+	guiStartForm ($session, "forum", P_Forum);
 	guiHiddenField ('forum_id', $forum_id);
 	guiShowTable ($session, "<h2>Existierende Foren</h2>\n",
 		array ('Id', 'Name', 'Beschreibung'),
@@ -319,7 +338,7 @@ function admExportPages (&$session, $message) {
 	if (isset ($export_exists))
 		guiParagraph ($session, 'Exportdatei: '
 			. guiInternLinkString ($session, $export_exists, null), false);
-	guiStartForm ($session, "export", A_ExportPages);
+	guiStartForm ($session, "export", P_ExportPages);
 	guiHiddenField ('export_exists', $export_exists);
 	echo '<table border="0">';
 	echo '<tr><td>Namensmuster:</td><td>';
@@ -333,7 +352,7 @@ function admExportPages (&$session, $message) {
 	guiButton ('export_export', 'Exportieren');
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session);
-	guiStandardHeader ($session, Th_StandardBodyEnd);
+	guiFinishBody ($session, null);
 }
 function admExportPagesAnswer (&$session){
 	global $export_pattern, $export_exists, $export_type,
@@ -458,7 +477,7 @@ function admBackup (&$session, $with_header, $message){
 		$backup_file = $session->fDbTablePrefix
 			. strftime ("_%Y_%m_%d") . '.sql';
 	guiHeadLine ($session, 1, 'Backup');;
-	guiStartForm ($session, "backup", A_Backup);
+	guiStartForm ($session, "backup", P_Backup);
 	// guiHiddenField ('forum_id', $forum_id);
 	echo "<table border=\"0\">\n";
 	echo "<tr><td>Dateiname:</td><td>";
@@ -528,6 +547,8 @@ function admBackupAnswer (&$session){
 				$file);
 			$bytes += admWriteOneTable ($session, dbTable ($session, T_Text),
 				$file);
+			$bytes += admWriteOneTable ($session, dbTable ($session, T_Module),
+				$file);
 		}
 		fclose ($file);
 		$size = ! $backup_compressed ? $bytes
@@ -557,7 +578,7 @@ function admOptions (&$session, $message){
 		$opt_basarname = $session->fMacroBasarName;
 	if (empty ($opt_css))
 		$opt_css = dbGetText ($session, Th_CSSFile);
-	guiStartForm ($session, 'Form', A_Options);
+	guiStartForm ($session, 'Form', P_Options);
 	echo '<table border="0">';
 	echo '<tr><td>Basarname:</td><td>';
 	guiTextField ('opt_basarname', $opt_basarname, 32, 128);
@@ -567,7 +588,7 @@ function admOptions (&$session, $message){
 	echo '</td></tr></table>' . "\n";
 	guiFinishForm ($session);
 	guiHeadline ($session, 2, 'Dateien:');
-	guiUploadFile ($session, 'Logo:', A_Options);
+	guiUploadFile ($session, 'Logo:', P_Options);
 	guiFinishBody ($session, null);
 }
 
@@ -575,4 +596,18 @@ function admInfo (&$session) {
 	$session->trace (TC_Gui1, 'admInfo');
 	phpinfo ();
 }
+function modStandardLinks (&$session){
+	admStandardLink ($session, P_Home);
+	echo ' | ';
+	admStandardLink ($session, P_Param);
+	echo ' | ';
+	admStandardLink ($session, P_Forum);
+	echo ' | ';
+	admStandardLink ($session, P_ExportPages);
+	echo ' | ';
+	admStandardLink ($session, P_Backup);
+	echo ' | ';
+	admStandardLink ($session, P_Options);
+}
+
 ?>

@@ -7,7 +7,7 @@
 </head>
 <body>
 <h1>Module f&uuml;r den Infobasar</h1>
-$Id: module.html,v 1.3 2004/06/28 22:15:23 hamatoma Exp $<br>
+$Id: module.html,v 1.4 2004/09/02 21:27:10 hamatoma Exp $<br>
 <p>Den Infobasar kann man erweitern. Daf&uuml;r ist eine Schnittstelle
 definiert, die hier beschrieben wird.<br>
 </p>
@@ -31,8 +31,8 @@ Namen von Objekten aus dem Infobasar werden <span
  style="font-style: italic;">kursiv</span> geschrieben, z.B. die
 Tabelle <span style="font-style: italic;">user.</span><br>
 <h2>Begriffe</h2>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Begriff</span><br>
@@ -46,9 +46,10 @@ Tabelle <span style="font-style: italic;">user.</span><br>
       <td style="vertical-align: top;"><a name="Berechtigungsliste"></a>Berechtigungsliste<br>
       </td>
       <td style="vertical-align: top;">Summe aller Objektberechtigungen
-f&uuml;r einen Benutzer (oder Gruppe).<br>
+f&uuml;r einen Benutzer (oder Gruppe). Trennzeichen ist der Doppelpunkt.<br>
       </td>
-      <td style="vertical-align: top;">user?:posting+?=:wiki+-?=#...</td>
+      <td style="vertical-align: top;">myaccount?:posting+?=:wiki+-?=#<br>
+      </td>
     </tr>
     <tr>
       <td style="vertical-align: top;"><a name="Design-Rahmen"></a>Design-Rahmen<br>
@@ -149,8 +150,10 @@ Zusammenfassung bestimmter Eigenschaften mit einem Namen.<br>
 Siehe auch <a href="#Objektklassen_der_Grundversion_des">Objektklassen
 der Grundversion des InfoBasars</a><br>
       </td>
-      <td style="vertical-align: top;">Wiki: User, Page<br>
-Foren: User, Thread, Posting<br>
+      <td style="vertical-align: top;">Basis: myaccount, accounts,
+html,
+wiki<br>
+Foren: thread, posting<br>
       </td>
     </tr>
     <tr>
@@ -162,6 +165,18 @@ Objekteklasse, gespeichert in einer Gruppe<br>
       <td style="vertical-align: top;">user?<br>
 posting+?=<br>
 wiki+-?=#<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Sparte"></a>Sparte<br>
+      </td>
+      <td style="vertical-align: top;">Ordnungskriterium. Jede Sparte
+besitzt eine <a href="#Objektklasse">Objektklasse.</a> Damit ist der
+Zugriff auf Objekte benutzerdefiniert per Recht regelbar. Sparten
+werden vom Benutzer definiert.<br>
+Beispiel: Wiki- und HTML-Seiten k&ouml;nnen Sparten zugeordnet werden.</td>
+      <td style="vertical-align: top;">wikibilanzen<br>
+htmlinfo<br>
       </td>
     </tr>
     <tr>
@@ -244,8 +259,8 @@ Sonst: Anzeige der Termine <br>
 Basismodule (PHP-Code)<br>
 </h3>
 <p>Viele Teilaufgaben sind schon in den Basismodulen programmiert:</p>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Modul</span><br>
@@ -314,7 +329,7 @@ $calendar-&gt;getDaysPerMonth (time());<br>
 Rechte sind an Gruppen gebunden. Damit k&ouml;nnen sie zentral f&uuml;r
 mehrere Benutzer gleichzeitig gepflegt werden. Da die Gruppenanzahl
 nicht begrenzt ist,
-ist das keine Einschr&auml;nkung. Notfalls bekommt halt jeder Benutzer
+ist das keine Einschr&auml;nkung. Notfalls bekommt eben jeder Benutzer
 seine Gruppe.<br>
 Aus Effizenzgr&uuml;nden werden die <a
  href="#effektive_Objektberechtigung">effektiven Objektberechtigungen</a>
@@ -324,29 +339,42 @@ Jedes Modul wei&szlig;, welche Rechte f&uuml;r seine Objekte relevant
 sind und fragt sie entsprechend ab.<br>
 <h3>Beispiel 1: Verwaltung Benutzerkonto:</h3>
 Hier sind zwei Objektklassen relevant: <span
- style="font-style: italic;">user</span> und <span
- style="font-style: italic;">userother.</span> Will ein Benutzer seine
-eigenen Daten &auml;ndern/ansehen, wird die Objektberechtigung von user
-abgefragt, bei anderen Benutzer <span style="font-style: italic;">userother.</span><br>
+ style="font-style: italic;">myaccount</span> und <span
+ style="font-style: italic;">accounts</span>. Will ein Benutzer seine
+eigenen Daten &auml;ndern/ansehen, wird die Objektberechtigung von <span
+ style="font-style: italic;">myaccount</span>
+abgefragt, bei anderen Benutzer <span style="font-style: italic;">accounts.</span><br>
 Die Routine Benutzerkontoverwaltung (BKV) ermittelt die <a
- href="#effektive_Objektberechtigung">effektive Objektberechtigung</a>
-f&uuml;r user. Ist das <a href="#Teilrecht">Teilrecht</a> Lesen
+ href="#effektive_Objektberechtigung">Objektberechtigung</a>
+f&uuml;r <span style="font-style: italic;">myaccount</span>. Ist das <a
+ href="#Teilrecht">Teilrecht</a> Lesen
 gesetzt, werden die Daten angezeigt, sonst nicht.&nbsp; Ist das
 Teilrecht Schreiben gesetzt, sind die Felder edierbaren, sonst nicht.<br>
-Des weiteren ermittelt BKV die effektive Objektberechtigung von <span
- style="font-style: italic;">userother.</span><br>
+Des weiteren ermittelt BKV die Objektberechtigung von <span
+ style="font-style: italic;">accounts.</span><br>
 Ist das Teilrecht Erzeugen gesetzt, wird der Button "Hinzuf&uuml;gen"
 angeboten.<br>
 ...<br>
-<h3>Beispiel 2: Anzeige Wiki-Seite:<br>
+<h3><a name="Beispiel_2"></a>Beispiel 2: Anzeige Wiki- bzw. HTML-Seite:<br>
 </h3>
-Siehe <a href="#Beispiel_einer_Gruppe_mit_usergroup">Beispiel einer
-Gruppe mit usergroup</a><br>
+F&uuml;r alle Wiki-Seiten gilt die Objektklasse <span
+ style="font-style: italic;">wiki</span>, f&uuml;r HTML-Seiten die
+Objektklasse <span style="font-style: italic;">html</span>.<br>
+Eine Wiki-Seite kann einer oder mehreren <a href="#Sparte">Sparten</a>
+zugeordnet werden, die dann zus&auml;tzlich das Zugriffsrecht regelt.<br>
+Eine Seite wird nur angezeigt, wenn der Benutzer f&uuml;r eine dieser
+Sparte (bzw. wenn keine Spartenzuordnung vorliegt in <span
+ style="font-style: italic;">wiki</span> oder <span
+ style="font-style: italic;">html)</span> Leserecht hat. Ein
+&Auml;ndern der Seite ist nur m&ouml;glich bei Schreibberechtigung.<br>
+<p>Die M&ouml;glichkeit der Neuerstellung besteht nur bei
+Erzeugungsrecht in <span style="font-style: italic;">wiki</span> oder <span
+ style="font-style: italic;">html.</span></p>
 <h2><a name="Gruppen"></a>Gruppen</h2>
 In Gruppen werden haupts&auml;chlich Rechte definiert. Eine Gruppe hat
 folgende Eigenschaften:<br>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Eigenschaft</span><br>
@@ -359,8 +387,7 @@ folgende Eigenschaften:<br>
     <tr>
       <td style="vertical-align: top;">name<br>
       </td>
-      <td style="vertical-align: top;">Name, der nur innerhalb einer
-Objektklasse eindeutig sein muss.<br>
+      <td style="vertical-align: top;">Name, der eindeutig sein muss.<br>
       </td>
       <td style="vertical-align: top;">admin<br>
       </td>
@@ -370,24 +397,15 @@ Objektklasse eindeutig sein muss.<br>
       </td>
       <td style="vertical-align: top;">Beschreibung<br>
       </td>
-      <td style="vertical-align: top;">Berechtigung f&uuml;r andere
-Benutzerkonten<br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">class<br>
-      </td>
-      <td style="vertical-align: top;"><a href="#Objektklasse">Objektklasse</a><br>
-      </td>
-      <td style="vertical-align: top;">userother<br>
+      <td style="vertical-align: top;">Administrator mit allen Rechten<br>
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">rights<br>
       </td>
-      <td style="vertical-align: top;">Liste der <a href="#Teilrecht">Teilrechte</a>.<br>
+      <td style="vertical-align: top;"><a href="#Berechtigungsliste">Berechtigungsliste</a>
       </td>
-      <td style="vertical-align: top;">+-?=#<br>
+      <td style="vertical-align: top;">accounts+-?=#:myaccount?=:wiki+=?#<br>
       </td>
     </tr>
     <tr>
@@ -397,138 +415,10 @@ Benutzerkonten<br>
 eine mit ':' getrennte Liste von Ids.<br>
       </td>
       <td style="vertical-align: top;">:1:33:<br>
-// Ids beziehen sich auf Tabelle user<br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">usergroup<br>
-      </td>
-      <td style="vertical-align: top;">Bezieht sich members nicht auf
-die Tabelle user, dann steht hier die Id der Gruppe, auf deren User
-sich die Rechte auswirken sollen. <br>
-      </td>
-      <td style="vertical-align: top;">siehe Beispiel<br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;"><br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
+// Ids beziehen sich auf Tabelle user </td>
     </tr>
   </tbody>
 </table>
-<h3><a name="Beispiel_einer_Gruppe_mit_usergroup"></a>Beispiel einer
-Gruppe mit usergroup</h3>
-Das Basismodul gestattet die Klassifizerung von Wiki-Seiten. So kann
-z.B. eine Gruppe <span style="font-style: italic;">admin</span> auf
-bestimmte Seiten zugreifen, eine Gruppe <span
- style="font-style: italic;">gast</span> jedoch nicht.<br>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
-  <tbody>
-    <tr>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">Id</span><br>
-      </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">Name</span><br>
-      </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">description</span><br>
-      </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">class</span><br>
-      </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">rights</span><br>
-      </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">members</span><br>
-      </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">usergroup</span><br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">22<br>
-      </td>
-      <td style="vertical-align: top;">admin<br>
-      </td>
-      <td style="vertical-align: top;">Administratoren<br>
-      </td>
-      <td style="vertical-align: top;">user<br>
-      </td>
-      <td style="vertical-align: top;">+-?=#<br>
-      </td>
-      <td style="vertical-align: top;">:1:<br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">33<br>
-      </td>
-      <td style="vertical-align: top;">gast<br>
-      </td>
-      <td style="vertical-align: top;">Nicht registrierte Besucher<br>
-      </td>
-      <td style="vertical-align: top;">user<br>
-      </td>
-      <td style="vertical-align: top;">?=<br>
-      </td>
-      <td style="vertical-align: top;">:2:<br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">44<br>
-      </td>
-      <td style="vertical-align: top;">admin<br>
-      </td>
-      <td style="vertical-align: top;">Beschreibung der Adminstration
-von Wiki-Seiten<br>
-      </td>
-      <td style="vertical-align: top;">page<br>
-      </td>
-      <td style="vertical-align: top;">+-?=#<br>
-      </td>
-      <td style="vertical-align: top;">:34:77:238:<br>
-      </td>
-      <td style="vertical-align: top;">22<br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">55<br>
-      </td>
-      <td style="vertical-align: top;">gast<br>
-      </td>
-      <td style="vertical-align: top;">Beschreibung von Benutzung von
-Wiki-Seiten<br>
-      </td>
-      <td style="vertical-align: top;">page<br>
-      </td>
-      <td style="vertical-align: top;">+?<br>
-      </td>
-      <td style="vertical-align: top;">:23:29:53:<br>
-      </td>
-      <td style="vertical-align: top;">33<br>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p>Die Routine, die Wiki-Seiten anzeigt, pr&uuml;ft, ob eine Gruppe mit
-der Objektklasse <span style="font-style: italic;">page</span>
-existiert, in deren <span style="font-style: italic;">members</span>
-die Seite aufgef&uuml;hrt ist.<br>
-Wenn nein, wird die Seite angezeigt.<br>
-Wenn ja, wird &uuml;berpr&uuml;ft, ob der aktuelle Benutzer in der
-Gruppe, deren Id in <span style="font-style: italic;">usergroup</span>
-gespeichert ist (hier also <span style="font-style: italic;">admin</span>),
-enthalten ist. <br>
-</p>
-<div style="margin-left: 40px;">Wenn nein, wird die Seite nicht
-angezeigt<br>
-Wenn ja, erfolgt die Anzeige abh&auml;ngig vom <a href="#Teilrecht">Teilrecht</a>
-Lesen.<br>
-</div>
-<br>
 <h2>Programmcode</h2>
 Jedes Modul liefert seinen PHP-Programmcode mit in einer Datei
 scriptname.php. <br>
@@ -544,7 +434,11 @@ vergeben.<br>
 <h5>Definition des eindeutigen Modulnames<br>
 </h5>
 <p>Das Modul bekommt bei der Installation einen eindeutigen
-Scriptnamen, der der Modulname mit dem Anh&auml;ngsel ".php" ist. Daher
+Namen und einen eindeutigen Scriptnamen.</p>
+<p>Das Basismodul hat den Scriptnamen index.php.<br>
+</p>
+<p>F&uuml;r alle Module au&szlig;er dem Basismodul gilt: Scriptname ist
+der Modulname mit dem Anh&auml;ngsel ".php". Daher
 kann das Modul selbst&auml;ndig seinen Modulnamen ermitteln:</p>
 <p>global $SCRIPT_FILENAME;<br>
 $name = preg_replace ('/\.php.*$/', '.php', $script_url);<br>
@@ -557,8 +451,8 @@ define ('ModuleName', $name); <br>
 Modulspezifische Makronamen beginnen mit dem Modulnamen. Dieser steht
 in der Konstante ModuleName zur Verf&uuml;gung.<br>
 <br>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top; font-weight: bold;">Objekt:<br>
@@ -602,16 +496,20 @@ user.<br>
 <h3><a name="Schnittstelle_zum_Basismodul"></a>Schnittstelle zum
 Basismodul</h3>
 Soll das Modul vom Basismodul mitbenutzt werden, so muss es ein Script
-so muss ein Script <span style="font-weight: bold;">scriptname_inc.php</span>
-existieren. Dieses Modul wird vom
+so muss ein Script <span style="font-weight: bold;">&lt;modulname&gt;_inc.php</span>
+existieren. Dieses Script wird vom
 Basismodul per include eingebunden und daraus bestimmte Funktionen
 aufgerufen. Der Datenaustausch funktioniert normalerweise mit der
 Variable Session, die ja Modulspezifisches aufnehmen kann.<br>
-Es m&uuml;ssen immer alle Funktionen definiert sein, sie k&ouml;nnen
+<br>
+Das Script definiert genau eine Klasse mit dem Namen
+Plugin&lt;Modulname&gt;<br>
+<br>
+Es m&uuml;ssen immer alle Methoden definiert sein, sie k&ouml;nnen
 jedoch auch einen leeren Rumpf besitzen.<br>
 <br>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Signatur</span><br>
@@ -627,8 +525,8 @@ Benutzerkonto:</span><br>
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">function moduleUserTableData
-(&amp;$session)<br>
+      <td style="vertical-align: top;">function userTableData
+(&amp;$session, $userid)<br>
       </td>
       <td style="vertical-align: top;">Diese Funktion gibt HTML-Code
 f&uuml;r Zeilen mit 2 Spalten aus (ohne Tabelleneinleitung /
@@ -638,8 +536,8 @@ Im Grenzfall gibt sie nichts aus.<br>
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">function moduleUserOwnData
-(&amp;$session)<br>
+      <td style="vertical-align: top;">function userOwnData
+(&amp;$session, $userid)<br>
       </td>
       <td style="vertical-align: top;">Diese Funktion gibt beliebigen
 HTML-Code aus, z.B. Tabellen mit mehr als 2 Spalten.<br>
@@ -647,8 +545,16 @@ Im Grenzfall gibt sie nichts aus.<br>
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">function moduleUserStoreData
-(&amp;$session, $isnew, $id)<br>
+      <td style="vertical-align: top;">function userCheckData
+(&amp;$session, $userid)</td>
+      <td style="vertical-align: top;">Pr&uuml;fung der Eingabedaten.
+Wenn Fehler, wird Fehlermeldung zur&uuml;ckgegeben, sonst null.<br>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function userStoreData
+(&amp;$session, $isnew, $userid)<br>
       </td>
       <td style="vertical-align: top;">Diese Funktion speichert die
 Benutzerdaten. <br>
@@ -660,12 +566,14 @@ verwendet werden, da die Basisroutine den Datensatz schon angelegt hat.
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">function moduleUserGetData
-(&amp;$session, $id)<br>
+      <td style="vertical-align: top;">function userGetData
+(&amp;$session, $userid)<br>
       </td>
       <td style="vertical-align: top;">Diese Funktion wird beim
 Anmelden aufgerufen, wenn die Basisroutine den Datensatz liest.<br>
-$id ist die Id des Benutzers in der Tabelle infobasar_user. </td>
+$id ist die Id des Benutzers in der Tabelle infobasar_user. Hier
+k&ouml;nnen modulspezifische Daten gespeichert werden.<br>
+      </td>
     </tr>
     <tr>
       <td style="vertical-align: top;"><br>
@@ -680,7 +588,7 @@ $id ist die Id des Benutzers in der Tabelle infobasar_user. </td>
 Design-Rahmen angezeigt werden, so geschieht dies &uuml;ber Makros.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">function moduleMacroNames
+      <td style="vertical-align: top;">function macroNames
 (&amp;$session)<br>
       </td>
       <td style="vertical-align: top;">Liefert ein Array mit
@@ -689,7 +597,7 @@ Bsp: array ("[CalendarDayOfTheWeek]", "[CalendarWeekNo]");<br>
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">function moduleMacroReplace
+      <td style="vertical-align: top;">function macroReplace
 (&amp;$session, $text)<br>
       </td>
       <td style="vertical-align: top;">Ersetzt die Makronamen und
@@ -701,6 +609,22 @@ Wichtig: Immer einen Wert zur&uuml;ckgeben, mindestens: return $text;<br>
       <td style="vertical-align: top;"><br>
       </td>
       <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">&Uuml;bersichtsseite:</span><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function overview (&amp;$session)<br>
+      </td>
+      <td style="vertical-align: top;">Diese Funktion gibt HTML-Code
+f&uuml;r Zeilen mit 2 Spalten aus (ohne Tabelleneinleitung /
+Tabellenende). In der 1. Spalte steht ein Link auf einen Men&uuml;punkt
+(Aufruf des Scripts), in
+der 2. Spalte die Beschreibung des Men&uuml;punkts.<br>
       </td>
     </tr>
   </tbody>
@@ -761,10 +685,10 @@ definiert: Verzweigen auf diesen Aufruf.<br>
 <h3><a name="Installationsdateien"></a>Installationsdateien</h3>
 Folgende Dateien geh&ouml;ren zu einer Installation (modulename kann
 eine beliebige Zeichenkette sein, z.B. calendar):<br>
-Bei Namenskonflikten wird modulname abge&auml;ndert, damit der Name
+Bei Namenskonflikten wird der Modulname abge&auml;ndert, damit der Name
 eindeutig wird.<br>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Name:</span><br>
@@ -779,13 +703,14 @@ eindeutig wird.<br>
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">install_modulename.txt</td>
+      <td style="vertical-align: top;">install_calendar.txt</td>
       <td style="vertical-align: top;">Konfigurationsdaten des Moduls,
-siehe xxx<br>
-      </td>
+siehe <br>
+      <a href="#Format_von_install_modulename_txt">Format von
+install_modulename.txt</a> </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">modulename.php</td>
+      <td style="vertical-align: top;">calendar.php</td>
       <td style="vertical-align: top;">Scriptdatei<br>
       </td>
     </tr>
@@ -802,24 +727,26 @@ siehe xxx<br>
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">modulname_inc.php<br>
+      <td style="vertical-align: top;">calendar_inc.php<br>
       </td>
       <td style="vertical-align: top;"><a
  href="#Schnittstelle_zum_Basismodul">Kommunikation mit dem Basismodul</a><br>
       </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">modulname_db.sql<br>
+      <td style="vertical-align: top;">calendar_db.sql<br>
       </td>
       <td style="vertical-align: top;">SQL-Definitionen. Sie
 k&ouml;nnen ein Makro enthalten, das bei der Installation durch den
-Modulnamen ersetzt wird. Der Name des Makros ist in modulname_inc.php
+Modulnamen ersetzt wird. Der Name des Makros ist in
+install_calendar.php
 definiert.<br>
       </td>
     </tr>
   </tbody>
 </table>
-<h3>Format von install_modulename.txt</h3>
+<h3><a name="Format_von_install_modulename_txt"></a>Format von
+install_modulename.txt</h3>
 Das ist eine Textdatei, die je Zeile einen Wert beschreibt.
 Kommentarzeilen beginnen mit #<br>
 Leerzeilen sind erlaubt.<br>
@@ -831,7 +758,7 @@ Leerzeilen sind erlaubt.<br>
 formatversion=1.0<br>
 <br>
 # <a href="#Modul-Id">Modul-Id:</a><br>
-id=calendar.infobasar.hamatoma.de<br>
+id=de.hamatoma.php.infobasar.calendar<br>
 <br>
 copyright=2004 hamatoma AT gmx DOT de, M&uuml;nchen<br>
 release=0.6.0<br>
@@ -862,6 +789,16 @@ vorkommt. <br>
 # Keine Perl-Metazeichen $()[]\*/?{}@%:<br>
 macromodulename=!ModuleCalendar&amp;<br>
 <br>
+# Rechte: mit Leerzeichen getrennt<br>
+objectclasses=calendar term<br>
+# Bezeichnungen der Teilrechte: put;get;new;del;lock<br>
+name_calendar=;;Erzeugen;L&ouml;schen;Sperren<br>
+name_term=&Auml;ndern;Lesen;Hinzuf&uuml;gen;L&ouml;schen;<br>
+<br>
+# Sparten: Namensvorspann, mit Leerzeichen getrennt<br>
+divisions=Kalender<br>
+<br>
+<br>
 # ---- Ende von install_calendar.txt ---------------<br>
 <h2><a name="Deinstallation"></a>Deinstallation</h2>
 Noch nicht verf&uuml;gbar<br>
@@ -869,32 +806,19 @@ Noch nicht verf&uuml;gbar<br>
 <h2><a name="Objektklassen_der_Grundversion_des"></a>Objektklassen der
 Grundversion des InfoBasars:</h2>
 <br>
-<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
- cellpadding="2">
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
   <tbody>
     <tr>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Name</span><br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
       </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">members
-bezieht sich auf</span><br>
-      </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">html</td>
-      <td style="vertical-align: top;">HTML-Seiten</td>
-      <td style="vertical-align: top;">user<br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">page<br>
-      </td>
-      <td style="vertical-align: top;">Klassifizierung von Seiten (Wiki
-oder HTML). Siehe auch <a href="#Beispiel_einer_Gruppe_mit_usergroup">Beispiel
-einer Gruppe mit usergroup</a><br>
-      </td>
-      <td style="vertical-align: top;">page<br>
+      <td style="vertical-align: top;">HTML-Seite. Siehe auch <a
+ href="#Beispiel_2">Beispiel 2.</a><br>
       </td>
     </tr>
     <tr>
@@ -903,29 +827,21 @@ einer Gruppe mit usergroup</a><br>
       <td style="vertical-align: top;">Beitrag zu einem Thema in einem
 Forum<br>
       </td>
-      <td style="vertical-align: top;">user<br>
-      </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">thread</td>
       <td style="vertical-align: top;">Thema in einem Forum</td>
-      <td style="vertical-align: top;">user<br>
-      </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">user<br>
+      <td style="vertical-align: top;">myaccount<br>
       </td>
       <td style="vertical-align: top;">Eigenes Benutzerkonto<br>
       </td>
-      <td style="vertical-align: top;">user<br>
-      </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">userother<br>
+      <td style="vertical-align: top;">accounts<br>
       </td>
       <td style="vertical-align: top;">Andere Benutzerkonten<br>
-      </td>
-      <td style="vertical-align: top;">user<br>
       </td>
     </tr>
     <tr>
@@ -933,12 +849,8 @@ Forum<br>
       </td>
       <td style="vertical-align: top;">Wiki-Seiten<br>
       </td>
-      <td style="vertical-align: top;">user<br>
-      </td>
     </tr>
     <tr>
-      <td style="vertical-align: top;"><br>
-      </td>
       <td style="vertical-align: top;"><br>
       </td>
       <td style="vertical-align: top;"><br>

@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.10 2004/06/28 22:13:12 hamatoma Exp $
+// $Id: index.php,v 1.11 2004/09/02 21:25:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.1 (2004.06.28)');
+define ('PHP_ModuleVersion', '0.6.2 (2004.09.01)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -28,6 +28,7 @@ define ('C_ScriptName', 'index.php');
 
 include "config.php";
 include "classes.php";
+include "modules.php";
 // ----------- Definitions
 // Actions:
 define ('A_Edit', 'edit');
@@ -179,7 +180,8 @@ function baseStandardLinkString (&$session, $page) {
 	case P_Start: $header = 'Persönliche Startseite'; break;
 	case P_Login: $header = 'Neu anmelden'; break;
 	case P_Info: $header = 'Information'; break;
-	case P_NewWiki: $header = 'Neue Seite'; break;
+	case P_NewWiki: $header = 'Neue Wiki-Seite'; break;
+	case P_NewPage: $header = 'Neue Seite'; break;
 	default: $header = null; break;
 	}
 	if ($header)
@@ -194,8 +196,10 @@ function baseStandardLink (&$session, $page) {
 function baseShowCurrentPage (&$session){
 	if ( ($page = dbPageId ($session, $session->fPageName)) > 0)
 		guiShowPageById ($session, $page, null);
-	else
+	else {
+		$session->SetLocation (P_Home);
 		baseHome ($session);
+	}
 }
 function baseEditPage (&$session, $message) {
 	global $edit_preview, $edit_pageid, $edit_textid, $edit_content,
@@ -233,7 +237,7 @@ function baseEditPage (&$session, $message) {
 	if (isset ($edit_preview)) {
 		echo guiParam ($session, Th_PreviewStart, '<h1>Vorschau von '
 			. $session->fPageName
-			. '</h1><p>Warnung: Der Text ist noch nicht gesichtert!</p>');
+			. '</h1><p>Warnung: Der Text ist noch nicht gesichert!</p>');
 		guiFormatPage ($session, $edit_texttype, $edit_content);
 		echo guiParam ($session, Th_PreviewEnd, '<h1>Ende der Vorschau</h1>');
 	}
@@ -269,7 +273,7 @@ function baseEditPageAnswerSave (&$session)
 {
 	global $edit_pageid, $edit_textid, $edit_textidpred, $edit_content,
 		$edit_changedat, $edit_changedby, $edit_texttype,
-		$edit_previewandsave;
+		$edit_previewandsave, $last_pagename;
 
 	$session->trace (TC_Gui1, 'baseEditPageAnswerSave');
 	$edit_content = textAreaToWiki ($session, $edit_content);
@@ -293,10 +297,12 @@ function baseEditPageAnswerSave (&$session)
 		dbUpdate ($session, T_Text, $edit_textid, "text=" . dbSqlString ($session, $edit_content) . ",");
 	}
 	unset ($edit_save);
-	if (empty ($message) && ! isset ($edit_previewandsave))
+	if (empty ($message) && ! isset ($edit_previewandsave)){
 		guiShowPageById ($session, $edit_pageid, null);
-	else
+	} else {
+		# $session->SetLocation ($last_pagename);
 		baseEditPage ($session, $message, $message);
+	}
 }
 
 function baseLogin (&$session, $message) {
@@ -382,9 +388,9 @@ function baseAccount (&$session, $message) {
 	global $account_user, $account_code, $account_code2, $account_rights,
 		$account_email,
 		$account_locked, $account_user2, $account_theme, $account_width,
-		$account_height, $account_maxhits, $account_postingsperpage,
+		$account_height, $account_maxhits,
 		$account_right_posting, $account_right_user, $account_right_pages, $account_right_rights,
-		$account_startpage, $account_startpageoffer, $account_threadsperpage;
+		$account_startpage, $account_startpageoffer;
 	global $login_user, $login_passw;
 	$session->trace (TC_Gui1, 'baseAccount');
 	$reload = false;
@@ -396,13 +402,14 @@ function baseAccount (&$session, $message) {
 		$account_user = $account_user2;
 		$reload = true;
 	}
-	if ($reload){
+	if (! $reload)
+		$id = dbUserId ($session, $account_user);
+	else {
 		list ($id, $account_rights, $account_locked, $account_width,
-			$account_height, $account_maxhits, $account_postingsperpage,
-			$account_theme, $account_threadsperpage, $account_startpage,
-			$account_email)
+			$account_height, $account_maxhits,
+			$account_theme, $account_startpage, $account_email)
 			= dbGetRecordByClause ($session, T_User,
-			'id,rights,locked,width,height,maxhits,postingsperpage,theme,threadsperpage,startpage,email',
+			'id,rights,locked,width,height,maxhits,theme,startpage,email',
 			'name=' . dbSqlString ($session, $account_user));
 			baseSplitRights ($session, $account_right_user, $account_right_rights, $account_rights_posting,
 				$account_rights_pages);
@@ -410,7 +417,7 @@ function baseAccount (&$session, $message) {
 	guiStandardHeader ($session, 'Einstellungen f&uuml;r ' . $account_user,
 		Th_StandardHeader, Th_StandardBodyStart);
 	if (! empty ($message))
-		guiParagraph ($session, $message, true);
+		guiParagraph ($session, $message, false);
 	guiStartForm ($session, 'account', P_Account);
 	echo "<table border=\"0\">\n<tr><td>Benutzername:</td><td>";
 	guiHiddenField ('account_user', $account_user);
@@ -421,23 +428,6 @@ function baseAccount (&$session, $message) {
 	guiPasswordField ('account_code2', '', 64, 32);
 	echo '</td></tr>' . "\n" . '<tr><td>EMail:</td><td>';
 	guiTextField ('account_email', $account_email, 64, 64);
-	if ($session->hasRight (R_Rights, R_Get)){
-		echo '</td></tr>' . "\n" . '<tr><td>Rechte:</td><td>';
-		echo 'Legende: Erzeugen: + Löschen: - Lesen: ? Schreiben: = Sperren: !<br/>';
-		if ($session->hasRight (R_Rights, R_Put)){
-			echo 'Benutzer: '; guiTextField ('account_right_user', $account_right_user, 5, 5);
-			echo ' Rechte: '; guiTextField ('account_right_rights', $account_right_rights, 5, 5);
-			echo ' Forumsbeiträge: '; guiTextField ('account_right_posting', $account_right_posting, 5, 5);
-			echo ' Wiki- und HTML-Seiten: '; guiTextField ('account_right_pages', $account_right_pages, 5, 5);
-		} else {
-			baseSplitRights ($session, $account_right_user, $account_right_rights, $account_rights_posting,
-				$account_rights_pages);
-			echo 'Benutzer: '; echo $account_right_user;
-			echo ' Rechte: '; echo $account_right_rights;
-			echo ' Forumsbeiträge: ';echo $account_right_posting;
-			echo ' Wiki- und HTML-Seiten: '; echo $account_right_pages;
-		}
-	}
 	echo "</td></tr>\n<tr><td>Gesperrt:</td><td>";
 	guiCheckBox ("account_locked", "Gesperrt", $account_locked == C_CHECKBOX_TRUE);
 	echo "</td></tr>\n<tr><td>Design:</td><td>";
@@ -450,11 +440,7 @@ function baseAccount (&$session, $message) {
 	guiTextField ("account_height", $account_height, 64, 3);
 	echo "</td></tr>\n<tr><td>Zahl Suchergebnisse:</td><td>";
 	guiTextField ("account_maxhits", $account_maxhits, 64, 3);
-	echo "</td></tr>\n<tr><td>Forumsbeitr&auml;ge je Seite:</td><td>";
-	guiTextField ("account_postingsperpage", $account_postingsperpage, 64, 3);
-	echo "</td></tr>\n<tr><td>Themen je Seite:</td><td>";
-	guiTextField ("account_threadsperpage", $account_threadsperpage, 64, 3);
-	echo "</td></tr>\n<tr><td>Startseite:</td><td>";
+	echo "</td></tr><tr><td>\nStartseite:</td><td>";
 	$names = array ('WikiSeite:', 'Übersicht', 'Einstellungen',
 			'Wikisuche', 'Letze Änderungen', 'StartSeite', 'Hilfe');
 	$values = array ('', P_Home, P_Account, 
@@ -466,12 +452,21 @@ function baseAccount (&$session, $message) {
 	guiComboBox ('account_startpageoffer', $names, $values, $ix);
 	echo ' ';
 	guiTextField ("account_startpage", $account_startpage, 32, 128);
-	echo "</td></tr>\n<tr><td></td><td>";
+	echo "</td></tr>\n";
+	modUserTableData ($session, $id);
+	echo "</table>\n";
+	modUserOwnData ($session, $id);
+	echo "<br>\n";
 	guiButton ("account_change", "&Auml;ndern");
+	echo "<br>\n<br>\n";
+	
 	$change = $session->hasRight (R_User, R_Put);
 	$new = $session->hasRight (R_User, R_New);
+	$new = $session->fUserId <= 2 || $session->fUserName == 'wk' || $session->fUserName == 'admin';
+	$change = $new;
 	if ($change || $new){
-		echo "</td></tr><tr></tr>\n<tr><td>Name:</td><td>";
+		guiLine ($session, 2);
+		echo "<table border=\"0\"></td></tr><tr></tr>\n<tr><td>Name:</td><td>";
 		guiTextField ("account_user2", $account_user2, 32, 32);
 		echo "</td></tr>\n<tr><td></td><td>";
 		if ($change)
@@ -489,7 +484,6 @@ function baseAccountAnswer(&$session, $user) {
 		$account_locked, $account_new, $account_change, $account_name,
 		$account_other, $account_user2,  $account_theme,
 		$account_width, $account_height, $account_maxhits,
-		$account_postingsperpage, $account_threadsperpage, 
 		$account_startpage, $account_startpageoffer;
 
 	$session->trace (TC_Gui1, 'baseAccountAnswer');
@@ -505,17 +499,20 @@ function baseAccountAnswer(&$session, $user) {
 			'count(*)', 'name=' + dbSqlString ($session, $account_user)) > 0)
 			$message = '+++ Name schon vorhanden: ' + $account_user2;
 		else {
-			dbUserAdd ($session, $account_user2, $code, $session->fUserRights,
+			$uid = dbUserAdd ($session, $account_user2, $code, $session->fUserRights,
 				dbSqlString ($session, false), $account_theme, $account_width, $account_height,
-				$account_maxhits, $account_postingsperpage,
-				$account_threadsperpage, $account_startpage, $account_email);
-			$message = "Benutzer $account_user2 wurde angelegt";
+				$account_maxhits, $account_startpage, $account_email);
+			modUserStoreData ($session, true, $uid);
+			
+			$message = "Benutzer $account_user2 wurde angelegt. ID: " . $uid;
 		}
 	} elseif (isset ($account_change)) {
 		if (! empty ($account_code) && $account_code <> $account_code2)
 			$message = '+++ Passwort stimmt mit Wiederholung nicht überein';
 		elseif (! ($uid = dbUserId ($session, $account_user)) || empty ($uid))
 			$message = '+++ unbekannter Benutzer: ' . $account_name;
+		elseif ( ($message = modUserCheckData ($session, true, $uid)) != null)
+			;
 		else {
 			if (empty ($account_theme))
 				$account_theme = Theme_Standard;
@@ -526,12 +523,11 @@ function baseAccountAnswer(&$session, $user) {
 			$what .= "theme=$account_theme,width=$account_width,"
 			. 'height=' . (0 + $account_height)
 			. ',maxhits=' . (0 + $account_maxhits)
-			. ',postingsperpage=' . (0 + $account_postingsperpage)
-			. ',threadsperpage=' . (0 + $account_threadsperpage)
 			. ',startpage=' . dbSqlString ($session, $account_startpage)
 			. ',email=' . dbSqlString ($session, $account_email)
 			 . ',';
 			dbUpdate ($session, T_User, $uid, $what);
+			modUserStoreData ($session, false, $uid);
 			$message = 'Daten für ' . $account_user . ' (' . $uid
 				. ') wurden geändert';
 		}
@@ -574,7 +570,9 @@ function baseHome (&$session) {
 		baseStandardLink ($session, P_LastChanges);
 		echo '</td><td>Neueste &Auml;nderungen</td></tr>'  . "\n" . '<tr><td>';
 		baseStandardLink ($session, P_Info);
-		echo '</td><td>Information &uuml;ber den InfoBasar</td></tr></table>'  . "\n" ;
+		echo '</td><td>Information &uuml;ber den InfoBasar</td></tr>';
+		modOverview ($session);
+		echo '</table>'  . "\n" ;
 		// echo 'Session-Id: ' . $session_id . ' User: ' . $session_user . '<br>';
 		guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 	}
@@ -651,9 +649,9 @@ function baseNewPageReference (&$session) {
 		guiShowPageById ($session, $page, null);
 	else {
 		$alterpage_content = strpos ($alterpage_name, 'ategorie') == 1
-			? '<?plugin BackLinks?>' : "Beschreibung der Seite $alterpage_name\n";
+			? "<?plugin BackLinks?>\n----\nKategorieKategorie" : "Beschreibung der Seite $alterpage_name\n";
 		$alterpage_mime = M_Wiki;
-		guiAlterPage ($session, C_Auto, 'neue Seite', '');
+		baseAlterPage ($session, C_Auto, 'neue Seite', '');
 	}
 }
 
@@ -695,11 +693,12 @@ function baseAlterPageAnswer (&$session, $mode){
 	}
 	$message2 = $len == strlen ($alterpage_content)
 		? '' : 'Es wurde der Rumpf (body) extrahiert.';
+	$session->SetLocation ($alterpage_name);
 	if ($message != null || isset ($alterpage_preview))
-		guiAlterPage ($session, $mode, $message, $message2, $alterpage_mime);
+		baseAlterPage ($session, $mode, $message, $message2, $alterpage_mime);
 	else
-		guiShowPage ($session, $alterpage_mime,
-			$alterpage_name, $alterpage_name);
+		guiShowPage ($session, $alterpage_mime, $alterpage_name,
+			$alterpage_name);
 }
 
 function baseAlterPageAnswerChangePage (&$session){
@@ -731,9 +730,11 @@ function baseAlterPageAnswerChangePage (&$session){
 	if ($len != strlen ($alterpage_content))
 		$message2 = 'Es wurde der Rumpf (body) extrahiert.';
 	if ($message != null)
-		guiAlterPage ($session, C_Change, $message, $message2);
-	else
+		baseAlterPage ($session, C_Change, $message, $message2);
+	else{
+		$session->SetLocation ($alterpage_name);
 		guiShowPage ($session, $alterpage_name);
+	}
 }
 function baseSearch (&$session, $message){
 	global $search_titletext, $search_maxhits, $search_bodytext, $last_pagename,
@@ -908,24 +909,35 @@ function basePageInfo (&$session) {
 	}
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
 }
-function baseDiff ($session) {
+function baseDiff (&$session) {
 	global $text_id, $text_id2;
-	$headline = 'Versionsvergleich von ' . $session->fPageName;
+	baseCompare ($session, $session->fPageName, $text_id, $text_id2);
+}
+function baseCompare (&$session, $pagename, $idnew, $idold){
+	$headline = 'Versionsvergleich';
 	guiStandardHeader ($session, $headline, Th_StandardHeader, Th_StandardBodyStart);
-	$version1 = dbGetRecordById ($session, T_Text, $text_id2,
+	$version_new = dbGetRecordById ($session, T_Text, $idnew+0,
 		'page,createdat,createdby,text');
-	$version2 = dbGetRecordById ($session, T_Text, $text_id,
+	$version_old = dbGetRecordById ($session, T_Text, $idold+0,
 		'page,createdat,createdby,text');
-	if ($version1 [0] != $version2 [0])
+	if ($version_new [0] != $version_old [0])
 		guiParagraph ($session, 'Texte nicht von einer Seite: '
-			. (0 + $version1 [0]) . ' / ' .  (0 + $version2 [0]), false);
+			. (0 + $version_new [0]) . ' / ' .  (0 + $version_old [0]), false);
 	else {
-		guiParagraph ($session, 'verglichen werden die Versionen '
-			. $text_id2 . ' / ' . $text_id . ' von ' . $version1 [2]
-			. ($version1 [2] != $version2 [2] ? ' / ' . $version2 [2] : '')
-			. ' (' . dbSqlDateToText ($session, $version1 [1])
-			. ' / ' .  dbSqlDateToText ($session, $version2 [1]) . ')', false);
-		$engine = new DiffEngine ($session, $version1 [3], $version2 [3]);
+		$page_id = $version_new[0];
+		guiParagraph ($session, 
+			guiInternLinkString ($session, $pagename, $pagename)
+			. ': Änderungen von Version '
+			. guiInternLinkString ($session, $pagename . '?action=' . A_ShowText
+				. '&page_id=' . $page_id . '&text_id=' . ($idold+0), $idold)
+			. ' zu Version ' 
+			. guiInternLinkString ($session, $pagename . '?action=' . A_ShowText
+				. '&page_id=' . $page_id . '&text_id=' . ($idnew+0), $idnew)
+			. ' von ' . $version_new [2]
+			. ($version_new [2] != $version_old [2] ? ' / ' . $version_old [2] : '')
+			. ' (' . dbSqlDateToText ($session, $version_new [1])
+			. ' / ' .  dbSqlDateToText ($session, $version_old [1]) . ')', false);
+		$engine = new DiffEngine ($session, $version_old [3], $version_new [3]);
 		$engine->compare (1, 1);
 	}
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
@@ -949,8 +961,46 @@ function baseLastChanges (&$session) {
 		$time_0 = strftime ('%Y.%m.%d', time () - $day * 86400) ;
 		$time_2 = mktime (0, 0, 0, $date [4] + 1, $date [3], $date [5]);
 		$time_1 = dbSqlDateTime ($session, $time_2);
-		$condition = 'createdat>=' . $time_1
-			. ' and createdat<=' . str_replace ('00:00:00', '23:59:59', $time_1);
+		$condition = 't.createdat>=' . $time_1
+			. ' and t.createdat<=' 
+			. str_replace ('00:00:00', '23:59:59', $time_1);
+		$rec = dbFirstRecord ($session,
+			'select t.id,p.name,t.createdby,t.createdat,t.replacedby,p.id from '
+			. dbTable ($session, T_Text)  . ' t, ' 
+			. dbTable ($session, T_Page) . ' p where p.id=t.page and '
+			. $condition . ' order by createdat desc');
+		if ($rec){
+			echo '<tr><td><b>';
+			echo $time_0;
+			echo '</b></td></tr>' . "\n";
+			do {
+				echo '<tr><td>';
+				echo dbSingleValue ($session, 'select min(id) from '
+					. dbTable ($session, T_Text) . ' where page=' . $rec[5])
+					== $rec [0] ? 'Neu' : 'Änderung';
+				echo '</td><td>';
+				echo $rec [0];
+				echo '</td><td>';
+				echo guiInternLink ($session, $rec [1], $rec [1]);
+				echo '</td><td>';
+				guiAuthorLink ($session, $rec [2]);
+				echo '</td><td>';
+				echo dbSqlDateToText ($session, $rec [3]);
+				$pred_rec = dbSingleValue ($session, 'select max(id) from '
+					. dbTable ($session, T_Text) . ' where page=' . $rec[5]
+					. ' and createdat<'
+					. dbSqlDateTime ($session, $time_2));
+				if ($pred_rec > 0) {
+					echo '</td><td>';
+					guiInternLink ($session, $rec [5] . '?action=' . A_Diff
+						. '&text_id=' . $rec[0] . '&text_id2=' . $pred_rec,
+						'Unterschied zum Vortag (' . $pred_rec . ')');
+				}
+				echo '</td></tr>' . "\n";
+			} while ( ($rec = dbNextRecord ($session)) != null);
+		}
+
+/*		if (false){
 		$ids = dbIdList2 ($session, T_Text, 'distinct page', $condition);
 		if ($ids) {
 			echo '<tr><td><b>';
@@ -992,6 +1042,7 @@ function baseLastChanges (&$session) {
 				}
 			}
 		}
+		} */
 	}
 	echo '</table>';
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
@@ -1063,5 +1114,13 @@ function baseTestAll (&$session) {
 		. "|1|2|3\n|1|2|3\n"
 		. "\n");
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
+}
+function modStandardLinks (&$session){
+	baseStandardLink ($session, P_Home);
+	baseStandardLink ($session, P_Search);
+	echo ' | ';
+	baseStandardLink ($session, P_Account);
+	echo ' | ';
+	baseStandardLink ($session, P_LastChanges);
 }
 ?>

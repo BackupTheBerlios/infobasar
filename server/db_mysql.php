@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.7 2004/06/13 10:53:19 hamatoma Exp $
+// $Id: db_mysql.php,v 1.8 2004/09/02 21:25:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -238,19 +238,18 @@ function dbCheckUser (&$session, $user, $code) {
 	return $rc;
 }
 function dbUserAdd (&$session, $user, $code, $rights, $locked,
-	$theme, $width, $height,$maxhits, $postingsperpage, $threadsperpage,
-	$startpage, $email) {
+	$theme, $width, $height,$maxhits, $startpage, $email) {
 	$session->trace (TC_Db1, 'dbUserAdd');
-	$theme = 10; $width = max ($width, 10); $height = max ($height, 1);
-	$maxhits = max ($maxhits, 1); $postingsperpage = max ($postingsperpage, 2);
-	if (empty ($threadsperpage)) $threadsperpage = 20;
-	if (empty ($postingsperpage)) $postingsperpage = 10;
+	$theme = 10; 
+	$width = max ($width, 10); 
+	$height = max ($height, 1);
+	$maxhits = max ($maxhits, 1);
 	return dbInsert ($session, T_User,
 		'name,createdat,code,rights,locked,theme,width,height,maxhits,'
-			. 'postingsperpage,threadsperpage,startpage,email',
+			. 'startpage,email',
 		dbSqlString ($session, $user) . ',now(),' . dbSqlString ($session, $code)
 		. ',' . dbSqlString ($session, $rights) . ',' . dbSqlBool ($session, $locked)
-		. ",$theme,$width,$height,$maxhits,$postingsperpage,$threadsperpage,"
+		. ",$theme,$width,$height,$maxhits,"
 		. dbSqlString ($session, $startpage) . ',' . dbSqlString ($session, $email));
 }
 function dbCheckSession (&$session) {

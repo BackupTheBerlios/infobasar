@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.3 2004/06/28 22:09:41 hamatoma Exp $
+// $Id: forum.php,v 1.4 2004/09/02 21:25:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -14,6 +14,8 @@ $start_time = microtime ();
 define ('PHP_ModuleVersion', '0.6.1 (2004.06.28)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
+
+define ('PARAM_BASE', 300);
 
 session_start();
 
@@ -30,21 +32,26 @@ include "classes.php";
 
 // ----------- Definitions
 // Alle Designs:
-define ('Th_UserTitles', 301);
+define ('Th_UserTitles', PARAM_BASE + 1);
 // Designspezifisch:
-define ('Th_ThreadHeader', 301); // aus 121
-define ('Th_ThreadBodyStart', 302);
-define ('Th_ThreadBodyEnd', 303);
-define ('Th_NewThreadHeader', 304);
-define ('Th_NewThreadBodyStart', 305);
-define ('Th_NewThreadBodyEnd', 306);
-define ('Th_AnswerHeader', 307);
-define ('Th_AnswerBodyStart', 308);
-define ('Th_AnswerBodyEnd', 309);
+define ('Th_ThreadHeader', PARAM_BASE + 1); // aus 121
+define ('Th_ThreadBodyStart', PARAM_BASE + 2);
+define ('Th_ThreadBodyEnd', PARAM_BASE + 3);
+define ('Th_NewThreadHeader', PARAM_BASE + 4);
+define ('Th_NewThreadBodyStart', PARAM_BASE + 5);
+define ('Th_NewThreadBodyEnd', PARAM_BASE + 6);
+define ('Th_AnswerHeader', PARAM_BASE + 7);
+define ('Th_AnswerBodyStart', PARAM_BASE + 8);
+define ('Th_AnswerBodyEnd', PARAM_BASE + 9);
 
-define ('Th_ForumHomeHeader', 311); // aus 171
-define ('Th_ForumHomeBodyStart', 312);
-define ('Th_ForumHomeBodyEnd', 313);
+define ('Th_ForumHomeHeader', PARAM_BASE + 11); // aus 171
+define ('Th_ForumHomeBodyStart', PARAM_BASE + 12);
+define ('Th_ForumHomeBodyEnd', PARAM_BASE + 13);
+
+define ('Th_SearchHeader', PARAM_BASE + 21);
+define ('Th_SearchBodyStart', PARAM_BASE + 22);
+define ('Th_SearchBodyEnd', PARAM_BASE + 23);
+
 
 define ('A_Answer', 'answer');
 define ('A_NewThread', 'newthread');
@@ -52,13 +59,15 @@ define ('A_ChangeThread', 'changethread');
 define ('A_ShowThread', 'showthread');
 define ('A_ShowForum', 'showforum');
 
+// Änderungen auch in forum_inc.php erledigen:
 define ('P_ForumSearch', 'forumsearch');
 define ('P_ForumHome', 'forumhome');
 define ('P_Forum', 'forum');
 define ('P_Thread', 'thread');
+// Im Basismodul:
+define ('P_Home', '!home');
 
 // ----------- Program
-
 
 
 $session = new Session ($start_time);
@@ -72,6 +81,7 @@ if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
 }
 $rc = dbCheckSession ($session);
+
 $do_login = false;
 if (! empty ($rc)) {
 	// p ("Keine Session gefunden: $session_id / $session_user ($rc)");
@@ -87,7 +97,7 @@ if ($do_login){
 		clearLoginCookie ($session);
 		baseLogin ($session, '');
 } else {
-		$session->trace (TC_Init, 'forum.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
+	$session->trace (TC_Init, 'forum.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($action)) {
 		$session->trace (TC_Init, "forum.php: action: $action");
 		switch ($action){
@@ -126,8 +136,8 @@ function baseStandardLinkString (&$session, $page) {
 	$rc = null;
 	$module = null;
 	switch ($page) {
-	case P_ForumSearch: $header = 'Forumsuche'; $module = Module_Forum; break;
-	case P_ForumHome: $header = 'Forenübersicht'; $module = Module_Forum; break;
+	case P_ForumSearch: $header = 'Forumsuche'; break;
+	case P_ForumHome: $header = 'Forenübersicht'; break;
 	default: $header = null; break;
 	}
 	if ($header)
@@ -569,6 +579,13 @@ function baseCallStandardPage (&$session) {
 		break;
 	}
 	return $found;
+}
+function modStandardLinks (&$session){
+	guiInternLink ($session, P_Home, "Überblick", "index");
+	echo ' | ';
+	baseStandardLink ($session, P_ForumHome);
+	echo ' | ';
+	baseStandardLink ($session, P_ForumSearch);
 }
 
 ?>
