@@ -1,5 +1,5 @@
 <?php
-// $Id: install.php,v 1.19 2005/01/11 00:17:26 hamatoma Exp $
+// $Id: install.php,v 1.20 2005/01/11 01:45:28 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -81,7 +81,7 @@ class Session {
 	var $fFormExists; // true: Es gab schon ein <form> im Text.
 
 	var $fScriptURL; // Ohne / am Ende
-	var $fScriptBase; // ohne *.php
+	var $fScriptBase; // ohne Host, ohne *.php. Bsp: /hamatoma/wiki
 	var $fScriptFile; // Relativ zu DocumentRoot
 	var $fFileSystemBase; // Absolutpfad im Filesystem des Servers
 
@@ -797,8 +797,6 @@ function populate (&$session, $fn_sql) {
 				 . (0+$line_count) . ' Zeilen gelesen, davon '
 				. (0+$comments) . ' Kommentare';
 			$path = getParentDir ($session, $session->fScriptBase);
-			preg_match ('!(/[^/]+/)$!', $path, $match);
-			$path = $match [1];
 			if (empty ($path))
 				$path = PATH_DELIM;
 			instUpdateMacro ($session, 'BaseModule', $path . "index.php/", $message); 

@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.28 2005/01/08 23:50:35 hamatoma Exp $
+// $Id: classes.php,v 1.29 2005/01/11 01:45:03 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -369,7 +369,7 @@ class Session {
 	var $fLocation; // null oder effektive URL (ab Script). Bsp: StartSeite
 	var $fScriptURL; // Ohne / am Ende. Bsp: //localhost/index.php
 	var $fPageURL; // ab ScriptURL Bsp: !home
-	var $fScriptBase; // ohne *.php
+	var $fScriptBase; // ohne Host, ohne *.php. Bsp: /hamatoma/wiki
 	var $fScriptFile; // Relativ zu DocumentRoot
 	var $fFileSystemBase; // Absolutpfad im Filesystem des Servers
 	var $fHasHeader; // true: DOCTYPE und <html> ist ausgegeben
