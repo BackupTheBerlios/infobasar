@@ -1,5 +1,5 @@
 <?php
-// $Id: install.php,v 1.24 2005/01/13 03:58:28 hamatoma Exp $
+// $Id: install.php,v 1.25 2005/01/14 03:15:46 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -13,7 +13,7 @@ $start_time = microtime ();
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
-define ('Install_Version', '0.7.2 (2005.01.13)');
+define ('Install_Version', '0.7.3 (2005.01.14)');
 define ('PATH_DELIM', '/');
 define ('REXPR_PATH_DELIM', '\/');
 define ('C_ScriptName', 'install.php');
@@ -548,7 +548,7 @@ function instDBAnswer (&$session){
 	$session->trace (TC_Init, 'instDBAnswer');
 	$message = null;
 	if (isset ($_POST ['inst_populate'])) {
-		$message = populate ($session, instGetSqlFile ($session), 
+		$message = InstPopulateDB ($session, instGetSqlFile ($session), 
 			instGetDesignSqlFile ($session));
 	} else {
 		foreach ($_POST as $name => $value){
@@ -558,8 +558,11 @@ function instDBAnswer (&$session){
 				$name = $_POST [$var];
 				if ( ($pos = strpos ($name, '.sql')) > 0){
 					if (! ($message = executeSqlFile ($session, $name,
-							&$line_count, &$comments)))
+							&$line_count, &$comments))){
 						$message = "Ausgeführt: $name: $line_count Zeilen ($comments Kommentare)";
+						if (getPos ($name, 'design_start.sql') >= 0)
+							instAdaptPathInDB ($session, $message);
+					}
 				} elseif ( ($pos = strpos ($name, '.wiki')) > 0) {
 					if (! ($message = instImportPages ($session, $name, true)))
 						$message = "Importiert: $name";
@@ -794,8 +797,23 @@ function instUpdateMacro (&$session, $macro, $value, &$message){
 			$message .= " $count mal!";
 	}
 }
-function populate (&$session, $fn_sql, $fn_sql_design) {
-	$session->trace (TC_Init, "populate:");
+function instAdaptPathInDB (&$session, &$message){
+	$path = getParentDir ($session, $session->fScriptBase);
+	if (empty ($path))
+		$path = PATH_DELIM;
+	instUpdateMacro ($session, 'BaseModule', $path . "index.php/", $message); 
+	instUpdateMacro ($session, 'ForumModule', $path . "forum.php/", $message); 
+	instUpdateMacro ($session, 'ScriptBase', $path, $message); 
+	
+	$count = sqlUpdate ($session, 'param', " text='" . $path . "css/phpwiki.css'", 
+		"pos=152", true);
+	if ($count == 0)
+		$message .= "\n<br>+++ Parameter 152 (CSS-Datei) nicht gefunden.";
+	else
+		$message .= "<br>\n" . 'CSS wurde auf ' . $path . "css/phpwiki.css gesetzt. ($count mal)";
+}
+function instPopulateDB (&$session, $fn_sql, $fn_sql_design) {
+	$session->trace (TC_Init, "instPopulateDB:");
 	$db_prefix = $session->fDbTablePrefix;
 	$message = '';
 	if (checkDB ($session, $message) == DB_EXISTS) {
@@ -806,19 +824,7 @@ function populate (&$session, $fn_sql, $fn_sql_design) {
 			$message = 'Die Infobasar-Tabellen wurden initialisiert: '
 				 . ($line_count + $line_count2) . ' Zeilen gelesen, davon '
 				. ($comments + $comments2) . ' Kommentare';
-			$path = getParentDir ($session, $session->fScriptBase);
-			if (empty ($path))
-				$path = PATH_DELIM;
-			instUpdateMacro ($session, 'BaseModule', $path . "index.php/", $message); 
-			instUpdateMacro ($session, 'ForumModule', $path . "forum.php/", $message); 
-			instUpdateMacro ($session, 'ScriptBase', $path, $message); 
-			
-			$count = sqlUpdate ($session, 'param', " text='" . $path . "css/phpwiki.css'", 
-				"pos=152", true);
-			if ($count == 0)
-				$message .= "\n<br>+++ Parameter 152 (CSS-Datei) nicht gefunden.";
-			else
-				$message .= "\n<br>CSS wurde auf ' . $path . 'css/phpwiki.css gesetzt. ($count mal)";
+			instAdaptPathInDB ($session, $message);
 			$fn_pages = instGetStandardPageFile ($session);
 			$message .= '<br>' . instImportPages ($session, $fn_pages, true);
 		}
