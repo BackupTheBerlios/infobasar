@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: util.php,v 1.2 2004/09/15 21:41:59 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -46,9 +46,6 @@ function htmlToText (&$session, $text){
 function p ($message){
 	echo "<p>$message</p>\n";
 }
-function makePageName ($name){
-	return preg_replace ("/[^-\w]/", "", $name);
-}
 function extractHtmlBody ($page){
 	$page = preg_replace ( '/^.*<\s*body\s*>/si', '', $page);
 	$page = preg_replace ('/<\s*\/\s*body\s*>.*$/si', "", $page);
@@ -79,16 +76,18 @@ function findTextInLine ($body, $tofind, $count) {
 	}
 	return $rc;
 }
-function normWikiName (&$session, &$name){
-	$session->trace (TC_Util2, 'normWikiName');
-	$rc = false;
-	if (! preg_match ('/öäüÄÖÜß/', $name)){
-		$name = preg_replace (array ('/ä/', '/ö/', '/ü/', '/Ä/', '/Ö/', '/Ü/', '/ß/'),
-			array ('ae', 'oe', 'ue', 'Ae', 'Oe', 'Ue', 'ss'), $name);
-		$rc = true;
-	}
-	$session->trace (TC_Util2, 'normWikiName-2: ' . $name);
-	return $rc;
+function encodeWikiName (&$session, $name){
+	$session->trace (TC_Util2, 'encodeWikiName');
+	return urlencode ($name);
+}
+function decodeWikiName (&$session, $name){
+	$session->trace (TC_Util2, 'decodeWikiName');
+	return urldecode ($name);
+}
+function normalizeWikiName (&$session, $name){
+	$session->trace (TC_Util2, 'normalizeWikiName');
+	return preg_replace ('/[^a-z0-9A-Z_\xc4\xd6\xdc\xe4\xf6\xfc\xdf]/', 
+		"", $name);
 }
 
 function writeExternLink ($link, $text, &$status) {
@@ -122,7 +121,7 @@ function writeWikiName ($name, $text, &$status) {
 	if (substr ($name, 0, 1) == "!")
 		echo htmlentities (substr ($name, 1));
 	else {
-		normWikiName ($status->fSession, $name);
+		$name = encodeWikiName ($status->fSession, $name);
 		if (dbPageId ($status->fSession, $name) > 0)
 			guiInternLink ($status->fSession, $name, $text);
 		else
@@ -131,27 +130,42 @@ function writeWikiName ($name, $text, &$status) {
 }
 function writeText ($body, &$status) {
 	$status->trace (TC_Util2, "writeText: $body");
+	#$status->trace (TC_X, "writeText: $body");
 	$count = 0;
+	// iso-8859-1: ÄÖÜäöüß : 196 214 220 ! 228 246 252 223
+	// octal: 0304 326 334 ! 344 366 374 337
+	// \0304\0326\0334 \0344\0366\0374 \0337
+	// Hex:  c4 d6 dc f6 e4 fc df
+	// \xc4\xd6\xdc \xf6\xe4\xfc\xdf
 	while (strlen ($body) > 0
+		// Klammer 0: Vorspann Klammer 1: Muster, das evt. ersetzt wird
 		// unterstrichen, (kursiv, fett, kursiv-fett),
 		&& preg_match ('/^(.*?)(__|\'{2,4}'
 		//  Extern-Link
+		// Klammer 2: URL Klammer 3: Text
 		. '|\[([a-z]+:\S+)(\s+[^]]*)?\]'
-		// http-Link, ftp-Link
-		. '|(https?|ftp|mailto):\/\/\S+'
+		// http-Link, ftp-Link, mailto
+		// Klammer 4: Protokollname
+		. '|(https?|ftp):\/\/\S+'
 		// (Nicht-)Wiki-Name
-		. '|!?\b[A-ZÄÖÜ][äüö\w]+[A-ZÄÖÜ][ÄÖÜäöü\w]*'
+		. '|!?[A-Z\xc4\xd6\xdc][a-z_0-9\xf6\xe4\xfc\xdf]+[A-Z0-0_\xc4\xd6\xdc][A-Za-z0-9_\xc4\xd6\xdc\xf6\xe4\xfc\xdf]*'
 		// Genau ein Zeichen:
 		. '|\[.\]'
-		. '\[\[\]'
 		// Zeilenwechsel:
 		. '|\[Newline\]'	// TM_Newline
 		// Wiki-Verweis
-		. '|\[([A-ZÄÖÜ][-äöüß\w]+)\s*([^]]*)?\]'
+		// Klammer 5: Wikiname Klammer 6: Text
+		. '|\[([A-Za-zÄÖÜääöü][-äöüßa-zA-Z_0-9]+)\s*([^]]*)?\]'
 		// Plugin
-		. '|<\?plugin (\w+)(.*)\?>)/',
+		// Klammer 7: Plugin-Name Klammer 8: Parameter
+		. '|<\?plugin\s+(\w+)(.*)\?>'
+		// Hex-Anzeige:
+		// Klammer 9:  Oktalbereich
+		. '|%hex\((.*?)\)'
+		. ')/',
 			$body, $match)) {
 		$args = count ($match);
+		# $status->trace (TC_X, 'Args: ' . $args . " match[2]: ." . $match[2] . ".");
 		$count++;
 		if ($match[1] != '')
 			echo htmlentities ($match[1]);
@@ -160,20 +174,25 @@ function writeText ($body, &$status) {
 		case '\'\'': $status->handleEmphasis ('i'); break;
 		case '\'\'\'': $status->handleEmphasis ('b'); break;
 		case '\'\'\'\'': $status->handleEmphasis ('x'); break;
-
 		default:
-			# $status->trace (TC_X, '$#match: ' . count ($match));
-			if ($args > 5 && $match [5] != '')
-				writeExternLink ($match [2], '', $status);
-			elseif ($args == 8 &&  $match [6] != '')
+			# $status->trace (TC_X, '$#match: ' . count ($match) . " LenMatch0: ." . $match [0] . ".");
+			if (strpos ($match [2], "hex(") == 1){
+				for ($ii = 5; $ii < strlen ($match [2]) - 1; $ii++){
+					printf ("%02x ", ord (substr ($match [2], $ii, 1)));
+				}
+			} elseif ($args == 8 &&  $match [6] != '')
 				writeWikiName ($match [6], $match [7], $status);
+			elseif ($args > 5 && $match [5] != '')
+				writeExternLink ($match [2], '', $status);
 			elseif ( ($pos = strpos ($match [2], '[')) == 0 && is_int ($pos)) {
-				if ($args <= 4)
-					if (strlen ($match [0]) == 3)
-						echo $match [0] == '[[]' ? '[' : $match [0];
-					else
+				if ($args <= 4){
+					if (strlen ($match [2]) == 3)
+						echo substr ($match [2], 1, 1);
+					else if ($match [2] == '[Newline]')
 						echo '<br />';
-				else
+					else
+						echo $match [2];
+				} else
 					writeExternLink ($match [3], $match [4], $status);
 			} elseif ($args > 9 && ($pos = strpos ($match [2], '<?')) == 0 && is_int ($pos))
 				writePlugin ($match [8], $match [9], $status);
