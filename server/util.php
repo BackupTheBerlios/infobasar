@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.3 2004/05/27 22:50:02 hamatoma Exp $
+// $Id: util.php,v 1.4 2004/05/31 23:21:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -348,18 +348,32 @@ function sendPassword (&$session, $id, $user, $email){
 }
 function encryptPassword (&$session, $user, $code){
 	$session->trace (TC_Util2, "encryptPassword");
-	return strrev (crypt ($user, $code));
+	return strrev (crypt ($code, $user));
+}
+function encrypt (&$session, $value, $salt){
+	return createPassword ($session, 6) . strrev ($value) . 'jfi9';
+}
+function decrypt (&$session, $value, $salt){
+	return strrev (substr ($value, 6, strlen ($value) - 10));
 }
 function setLoginCookie (&$session, $user, $code) {
 	$session->trace (TC_Util2, 'setLoginCookie');
-	setCookie (COOKIE_NAME, crypt ($user . "\t" . $code, COOKIE_NAME),
-		time() + 60*60*24*365);
+	$value = encrypt ($session, $user . " " . $code, COOKIE_NAME);
+	$session->trace (TC_Util2, 'setLoginCookie: ' . $value);
+	setCookie (COOKIE_NAME, $value, time() + 60*60*24*365);
 }
 function getLoginCookie (&$session, &$user, &$code){
 	$session->trace (TC_Util2, 'getLoginCookie');
-	if ($rc = ! empty ($_COOKIE[COOKIE_NAME]))
-		list ($user, $code) = split ('/\t/', crypt ($_COOKIE[COOKIE_NAME]), COOKIE_NAME);
-	$session->trace (TC_Util2, 'getLoginCookie: ' . $user);
+	if ($rc = ! empty ($_COOKIE[COOKIE_NAME])){
+		$session->trace (TC_Util2, 'getLoginCookie-2: ' . $_COOKIE[COOKIE_NAME]);
+		$value = decrypt ($session, $_COOKIE[COOKIE_NAME], COOKIE_NAME);
+		$session->trace (TC_Util2, 'getLoginCookie-3: ' . $value);
+		if ( ($pos = strpos ($value, " ")) > 0){
+			$user = substr ($value, 0, $pos);
+			$code = substr ($value, $pos + 1);
+		}
+	}
+	$session->trace (TC_Util2, 'getLoginCookie-4: ' . $user);
 	return $rc;
 }
 function clearLoginCookie (&$session){
