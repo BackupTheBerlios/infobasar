@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.25 2005/01/13 03:37:05 hamatoma Exp $
+// $Id: gui.php,v 1.26 2005/01/13 03:46:56 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -324,11 +324,7 @@ function guiField($name, $type, $text, $size, $maxlength, $special) {
 		echo ' '.$special;
 	echo TAG_SUFFIX;
 }
-function outField (&$session, $name, $type, $text, $size, $maxlength, $special, $in_paragraph = null) {
-	if ($in_paragraph == null)
-		$in_paragraph = $session->fIsInParagraph;
-	if (!$in_paragraph)
-		echo TAG_DIV;
+function outField (&$session, $name, $type, $text, $size, $maxlength, $special) {
 	$session->trace(TC_Gui3, 'outField');
 	echo TAG_INPUT_TYPE;
 	echo $type;
@@ -353,38 +349,28 @@ function outField (&$session, $name, $type, $text, $size, $maxlength, $special, 
 	if (!empty ($special))
 		echo ' '.$special;
 	echo TAG_SUFFIX;
-	if (!$in_paragraph)
-		echo TAG_DIV_END;
 }
-function outFileField (&$session, $name, $in_paragraph = null) {
-	if ($in_paragraph == null)
-		$in_paragraph = $session->fIsInParagraph;
-	if (!$in_paragraph)
-		echo TAG_DIV;
+function outFileField (&$session, $name) {
 	echo TAG_INPUT_TYPE;
 	echo TAGAV_FILE;
 	echo TAGA_NAME;
 	echo $name;
 	echo TAG_APO_SUFFIX_NEWLINE;
 }
-function outHiddenField (&$session, $name, $text = null, $in_paragraph = null) {
+function outHiddenField (&$session, $name, $text = null) {
 	if ($text == null)
 		$text = isset ($_POST[$name]) ? $_POST[$name] : "";
-	outField($session, $name, TAGAV_HIDDEN, $text, 0, 0, null, $in_paragraph);
+	outField($session, $name, TAGAV_HIDDEN, $text, 0, 0, null);
 }
-function outTextField (&$session, $name, $text, $size, $maxlength = 0, $in_paragraph = null) {
+function outTextField (&$session, $name, $text, $size, $maxlength = 0) {
 	if ($text == null)
 		$text = isset ($_POST[$name]) ? $_POST[$name] : "";
-	outField($session, $name, TAGAV_TEXT, $text, $size, $maxlength, null, $in_paragraph);
+	outField($session, $name, TAGAV_TEXT, $text, $size, $maxlength, null);
 }
-function outPasswordField (&$session, $name, $text, $size, $maxlength, $in_paragraph = null) {
-	outField($session, $name, TAGAV_PASSWORD, $text, $size, $maxlength, null, $in_paragraph);
+function outPasswordField (&$session, $name, $text, $size, $maxlength) {
+	outField($session, $name, TAGAV_PASSWORD, $text, $size, $maxlength, null);
 }
-function outTextArea (&$session, $name, $content, $width, $height, $in_paragraph = null) {
-	if ($in_paragraph == null)
-		$in_paragraph = $session->fIsInParagraph;
-	if (!$in_paragraph)
-		echo TAG_DIV;
+function outTextArea (&$session, $name, $content, $width, $height) {
 	echo TAG_TEXTAREA_NAME;
 	echo $name;
 	echo TAGA_APO_COLS;
@@ -396,49 +382,37 @@ function outTextArea (&$session, $name, $content, $width, $height, $in_paragraph
 		$content = $_POST[$name];
 	echo $content;
 	echo TAG_TEXTAREA_END;
-	if (!$in_paragraph)
-		echo TAG_DIV_END;
 }
-function outButton (&$session, $name, $text, $in_paragraph = null) {
-	if ($in_paragraph == null)
-		$in_paragraph = $session->fIsInParagraph;
-	if (!$in_paragraph)
-		echo TAG_DIV;
+function outButton (&$session, $name, $text) {
 	echo TAG_INPUT_WIKIACTION_NAME;
 	echo $name;
 	echo TAGA_APO_VALUE;
 	echo $text;
 	echo TAGA_SUBMIT_END;
-	if (!$in_paragraph)
-		echo TAG_DIV_END;
 }
-function outButton2 (&$session, $name, $text, $delim, $name2, $text2, $in_paragraph = null) {
-	outButton($session, $name, $text, $in_paragraph);
+function outButton2 (&$session, $name, $text, $delim, $name2, $text2) {
+	outButton($session, $name, $text);
 	if (!empty ($delim))
 		echo $delim;
-	outButton($session, $name2, $text2, $in_paragraph);
+	outButton($session, $name2, $text2);
 }
 function guiLinkAsButton (&$session, $command, $text) {
 	guiInternLink($session, encodeWikiName($session, $session->fPageName).'?action='.$command, $text);
 }
-function outRadioButton (&$session, $name, $text, $checked, $in_paragraph = null) {
-	outField($session, $name, TAGAV_RADIO, $text, 0, 0, isset ($checked) && $checked ? "checked" : "", $in_paragraph);
+function outRadioButton (&$session, $name, $text, $checked) {
+	outField($session, $name, TAGAV_RADIO, $text, 0, 0, isset ($checked) && $checked ? "checked" : "");
 }
-function outCheckBox (&$session, $name, $text, $checked = false, $in_paragraph = null) {
+function outCheckBox (&$session, $name, $text, $checked = false) {
 	$session->trace(TC_Gui2, 'outCheckBox');
 	if ($checked == null)
 		$checked = isset ($_POST[$name]) && $_POST[$name] == C_CHECKBOX_TRUE;
-	outField($session, $name, TAGAV_CHECKBOX, C_CHECKBOX_TRUE, 0, 0, isset ($checked) && $checked ? TAGAV_CHECKED : "", $in_paragraph);
+	outField($session, $name, TAGAV_CHECKBOX, C_CHECKBOX_TRUE, 0, 0, isset ($checked) && $checked ? TAGAV_CHECKED : "");
 	echo htmlentities($text)." ";
 }
 function guiChecked (&$session, $name) {
 	return isset ($_POST[$name]) && $_POST[$name] == C_CHECKBOX_TRUE;
 }
-function outComboBox (&$session, $name, $options, $values = null, $ix_selected = 0, $in_paragraph = null) {
-	if ($in_paragraph == null)
-		$in_paragraph = $session->fIsInParagraph;
-	if (!$in_paragraph)
-		echo TAG_DIV;
+function outComboBox (&$session, $name, $options, $values = null, $ix_selected = 0) {
 	echo TAG_SELECT_NAME;
 	echo $name;
 	echo TAGA_APO_SIZE_END;
@@ -458,8 +432,6 @@ function outComboBox (&$session, $name, $options, $values = null, $ix_selected =
 		echo "\n";
 	}
 	echo TAG_SELECT_END;
-	if (!$in_paragraph)
-		echo TAG_DIV_END;
 }
 function guiUploadFile(&$session, $prefix = null, $button = null, $max_file_size = null, $custom_field = null, $custom_value = null, $caption = null, $file = null) {
 	outDivision ($session);
