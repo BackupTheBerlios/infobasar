@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.8 2004/10/11 11:34:55 hamatoma Exp $
+// $Id: classes.php,v 1.9 2004/10/15 23:24:15 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -276,7 +276,7 @@ class Session {
 		}
 		$this->fPageName = $this->fPageURL;
 		$this->fScriptFile = $_SERVER['SCRIPT_FILENAME'];
-		$this->fScriptBase = $_SERVER['PHP_SELF'];
+		$this->fScriptBase = preg_replace ('/\/\w+\.php.*$/', '', $_SERVER['PHP_SELF']);
 		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $this->fScriptFile);
 	
 		// MySQL
@@ -285,7 +285,7 @@ class Session {
 			$this->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 		} // mysql
 		$this->fTraceFile = "/tmp/trace.log";
-		$this->fTraceFile = null;
+		#$this->fTraceFile = null;
 		$this->fTraceFlags
 			= 0 * (1 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
 			+ 1 * (1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3)
@@ -298,13 +298,12 @@ class Session {
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
-		$this->fTraceInFile = false;
-		$this->fTraceFile = "trace.log";
+		$this->fTraceInFile = true;
+		$this->fTraceFile = "/tmp/trace.log";
 		$this->trace (TC_Init, "Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
 			. $this->fPageURL . "' ($pos) <== '" . $uri . "'");
 	}
 	function traceInFile($msg){
-		echo "TraceInfile: " . $msg . "<br>\n";	 
 		if ($this->fTraceFile != null && ($file = fopen ($this->fTraceFile, "a")) != null){
 			fwrite ($file, $msg . "\n");
 			fclose ($file);
