@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.16 2005/01/08 13:09:17 hamatoma Exp $
+// $Id: db_mysql.php,v 1.17 2005/01/08 23:52:43 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -478,7 +478,7 @@ function dbForumName (&$session, $id, $with_link) {
 	return $rc;
 }
 function dbReadMacros (&$session, $theme, $prefix, &$key, &$values) {
-	//$session->trace (TC_Db1 + TC_Query, "dbReadMacros: $theme");
+	$session->trace (TC_Db1 + TC_Query, "dbReadMacros: $theme");
 	if ($row =dbFirstRecord ($session, 'select name, value from ' . dbTable ($session, T_Macro)
 		. ' where theme=' . (0+$theme)))
 		do {

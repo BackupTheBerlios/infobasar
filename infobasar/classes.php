@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.27 2005/01/08 13:08:13 hamatoma Exp $
+// $Id: classes.php,v 1.28 2005/01/08 23:50:35 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -95,7 +95,7 @@ define ('C_ParamGUIBase', 100);
 
 // Modul- und Design-unabhängig: 100-149
 define ('C_MinAllModulesAllDesigns', 100);
-define ('C_MaxAllModulesAllDesigns', 150);
+define ('C_MaxAllModulesAllDesigns', 149);
 
 define ('Th_StandardHeader', 101);
 define ('Th_StandardBodyStart', 102);
@@ -461,7 +461,7 @@ class Session {
 		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 		$this->fTraceInFile = false;
-		#$this->fTraceInFile = true;
+		$this->fTraceInFile = true;
 		$this->trace (TC_Init, "TC: " . $this->fTraceFlags . " InFile: " . ($this->fTraceInFile ? 'f' : 'f'));
 		$this->fTraceFile = "/tmp/trace.log";
 		$this->trace (TC_Init, "Session.Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
@@ -633,9 +633,10 @@ class Session {
 			TM_MacroPrefix . TM_ThemeMacroPrefix,
 			$this->fMacroReplacementKeys,
 				$this->fMacroReplacementValues);
-		$this->trace (TC_Init, 'setMacros: ' . count ($this->fMacroReplacementKeys));
-		for ($ii = 0; $ii < count ($this->fMacroReplacementKeys); $ii++){
-			$this->trace (TC_Session3, $this->fMacroReplacementKeys [$ii] . ' -> ' . ($this->fMacroReplacementValues [$ii]));
+		if ($this->fTraceFlags & TC_Init){
+			$this->trace (TC_Init, 'setMacros-2: ' . count ($this->fMacroReplacementKeys));
+			for ($ii = 0; $ii < count ($this->fMacroReplacementKeys); $ii++)
+				$this->trace (TC_Session3, $this->fMacroReplacementKeys [$ii] . ' -> ' . ($this->fMacroReplacementValues [$ii]));
 		}
 	}
 	function setDbResult ($result) { $this->fDbResult = $result; }
@@ -679,7 +680,7 @@ class Session {
 					$again = true;
 				else {
 					$macroname = substr ($text, $pos, 20);
-					$this->trace (TC_Error, 'replaceMacrosNoHTML: zu verschachtelt: Pos: ' . $pos . " Macro: $macroname  $text");
+					$this->trace (TC_Error, 'replaceMacrosNoHTML: zu verschachtelt: Pos: ' . $pos . " Macro: $macroname Text: $text");
 					break;
 				}
 			}
