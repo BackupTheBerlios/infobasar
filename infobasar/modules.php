@@ -42,7 +42,7 @@ class ModuleForum {
 	function overview(&$session){
 		$session->trace (TC_Gui3, 'forum.overview');
 		outTableRecord();
-		outNewLine();
+		outTableCell (' ');
 		outTableCellStrong(tagNewline () . 'Modul Foren');
 		outTableRecordEnd();
 		outTableRecordInternLink ($session, 'Auflistung der existierenden Foren.',
@@ -72,7 +72,7 @@ class ModuleAddress {
 	function overview(&$session){
 		$session->trace (TC_Gui3, 'address.overview');
 		outTableRecord();
-		outNewLine();
+		outTableCell (' ');
 		outTableCellStrong(tagNewline () . 'Modul Adressen');
 		outTableRecordEnd();
 		outTableRecordInternLink ($session, 'Adressbuch erstellen oder ändern.',
