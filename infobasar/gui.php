@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.7 2004/10/27 22:45:06 hamatoma Exp $
+// $Id: gui.php,v 1.8 2004/10/28 09:44:00 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -83,14 +83,14 @@ function guiUploadFile (&$session, $prefix, $lastpage = null,
 function guiUploadFileAnswer (&$session, $destination = PATH_DELIM,
 		$new_target_name = null, $button = 'upload_go', $file = 'upload_file'){
 	global $_FILE;
-	$session->trace (TC_X, "guiUploadFileAnswer: dest: $destination new_name: $new_target_name name");
+	$session->trace (TC_Gui2, "guiUploadFileAnswer: dest: $destination new_name: $new_target_name name");
 	$message = null;
 	print_r ($_FILE);
 	$temp_name =  $_FILES[$file]['tmp_name'];
 	$name =  $_FILES[$file]['name'];
 	$target = $session->fFileSystemBase . $destination 
 			. ($new_target_name != null ? $new_target_name : $name);
-	$session->trace (TC_X, "guiUploadFileAnswer: name: $name target: $target");
+	$session->trace (TC_Gui2, "guiUploadFileAnswer: name: $name target: $target");
 	if (move_uploaded_file($temp_name, $target)) {
 		$message = 'Datei erfolgreich hochgeladen: ' . $name;
 		if ($new_target_name != null)
@@ -102,6 +102,35 @@ function guiUploadFileAnswer (&$session, $destination = PATH_DELIM,
 	}
 	return $message;
 }
+function guiUploadFileAnswerUnique (&$session, $destination,
+		$new_target_name, $var_file, &$name){
+	global $_FILE;
+	$session->trace (TC_Gui2, "guiUploadFileAnswerUnique: dest: $destination new_name: $new_target_name name");
+	$message = null;
+	print_r ($_FILE);
+	$temp_name =  $_FILES[$var_file]['tmp_name'];
+	$name =  $new_target_name == null ? $_FILES[$var_file]['name'] : $new_target_name;
+	$ext = substr ($name, strrpos ($name, '.'));
+	$org_name = substr ($name, 0, strlen ($name) - strlen ($ext));
+	$target = $session->fFileSystemBase . $destination . $org_name . $ext;
+	$session->trace (TC_Gui2, "guiUploadFileAnswerUnique: name: $name target: $target");
+	$no = 0;
+	while (file_exists ($target)){
+		$name = $org_name . (++$no) . $ext;
+		$target = $session->fFileSystemBase . $destination . $name;
+	}
+	if (move_uploaded_file($temp_name, $target)) {
+		$message = 'Datei erfolgreich hochgeladen: ' . $_FILES[$var_file]['name'];
+		if ($new_target_name != null || $no > 0)
+			$message .= ' als ' . $name;
+	} else {
+		$message = "+++ Problem beim Hochladen von $name ($temp_name) -> $target: " 
+			. $_FILES[$var_file]['error'];
+		$message->traceArray (TC_WARNING, "_FILE", $_FILE);
+	}
+	return $message;
+}
+
 function guiLine ($width) {
 	if (! isset ($width))
 		$width = 2;
