@@ -1,5 +1,5 @@
 <?php
-// $Id: install.php,v 1.25 2005/01/14 03:15:46 hamatoma Exp $
+// $Id: install.php,v 1.26 2005/01/17 02:30:24 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -371,8 +371,8 @@ function instArchiveAnswer (&$session){
 function instGetSqlFile (&$session){
 	return $session->fFileSystemBase . PATH_DELIM . '../db/infobasar_start.sql';
 }
-function instGetDesignSqlFile (&$session){
-	return $session->fFileSystemBase . PATH_DELIM . '../db/design_start.sql';
+function instGetSkinSqlFile (&$session){
+	return $session->fFileSystemBase . PATH_DELIM . '../db/base_skin.sql';
 }
 
 function instGetStandardPageFile (&$session){
@@ -404,7 +404,7 @@ function instConfigFile (&$session, $message =  null) {
 	
 	guiStartForm ($session, 'Form');
 	$file = instGetSqlFile ($session);
-	$file_design = instGetDesignSqlFile ($session);
+	$file_design = instGetSkinSqlFile ($session);
 	$sql_exists = file_exists ($file);
 	$design_sql_exists = file_exists ($file_design);
 
@@ -440,7 +440,7 @@ function instConfigFile (&$session, $message =  null) {
 		guiButton ('config_createdb', 'Datenbank ' . $_POST ['db_name'] . ' erzeugen');
 	guiLine ($session, 2);
 	guiParagraph ($session, "DB-Definitionsdatei $file " . ($sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
-	guiParagraph ($session, "Design-Definitionsdatei $file_design " . ($design_sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
+	guiParagraph ($session, "Skin-Definitionsdatei $file_design " . ($design_sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
 	guiLine ($session, 2);
 	instDocu ($session, '<li>Felder ausfüllen</li><li>Konfiguration speichern</li>'
 		. '<li>Solange korrigieren, bis "Zugang zur Datenbank test ist möglich" erscheint</li>',
@@ -549,7 +549,7 @@ function instDBAnswer (&$session){
 	$message = null;
 	if (isset ($_POST ['inst_populate'])) {
 		$message = InstPopulateDB ($session, instGetSqlFile ($session), 
-			instGetDesignSqlFile ($session));
+			instGetSkinSqlFile ($session));
 	} else {
 		foreach ($_POST as $name => $value){
 			# $session->trace (TC_X, 'instDBAnswer-2: ' . $name);
@@ -560,7 +560,7 @@ function instDBAnswer (&$session){
 					if (! ($message = executeSqlFile ($session, $name,
 							&$line_count, &$comments))){
 						$message = "Ausgeführt: $name: $line_count Zeilen ($comments Kommentare)";
-						if (getPos ($name, 'design_start.sql') >= 0)
+						if (getPos ($name, 'base_skin.sql') >= 0)
 							instAdaptPathInDB ($session, $message);
 					}
 				} elseif ( ($pos = strpos ($name, '.wiki')) > 0) {
@@ -790,7 +790,7 @@ function instUpdateMacro (&$session, $macro, $value, &$message){
 	$count = sqlUpdate ($session, 'macro', " value='" . $value . '\'', 
 		"name = '$macro'", true);
 	if ($count == 0)
-		$message .= "\n<br>+++ Update missglückt: Makro $name nicht gefunden.";
+		$message .= "\n<br>+++ Update missglückt: Makro $macro nicht gefunden.";
 	else {
 		$message .= "\n<br>$macro wurde auf $value gesetzt.";
 		if ($count > 1)
@@ -801,9 +801,9 @@ function instAdaptPathInDB (&$session, &$message){
 	$path = getParentDir ($session, $session->fScriptBase);
 	if (empty ($path))
 		$path = PATH_DELIM;
-	instUpdateMacro ($session, 'BaseModule', $path . "index.php/", $message); 
-	instUpdateMacro ($session, 'ForumModule', $path . "forum.php/", $message); 
-	instUpdateMacro ($session, 'ScriptBase', $path, $message); 
+	instUpdateMacro ($session, 'base:BaseModule', $path . "index.php/", $message); 
+	instUpdateMacro ($session, 'forum:ForumModule', $path . "forum.php/", $message); 
+	instUpdateMacro ($session, 'base:ScriptBase', $path, $message); 
 	
 	$count = sqlUpdate ($session, 'param', " text='" . $path . "css/phpwiki.css'", 
 		"pos=152", true);
@@ -812,14 +812,14 @@ function instAdaptPathInDB (&$session, &$message){
 	else
 		$message .= "<br>\n" . 'CSS wurde auf ' . $path . "css/phpwiki.css gesetzt. ($count mal)";
 }
-function instPopulateDB (&$session, $fn_sql, $fn_sql_design) {
+function instPopulateDB (&$session, $fn_sql, $fn_sql_skin) {
 	$session->trace (TC_Init, "instPopulateDB:");
 	$db_prefix = $session->fDbTablePrefix;
 	$message = '';
 	if (checkDB ($session, $message) == DB_EXISTS) {
 		$message = executeSqlFile ($session, $fn_sql, $line_count, $comments);
 		if (empty ($message))
-			$message = executeSqlFile ($session, $fn_sql_design, $line_count2, $comments2);
+			$message = executeSqlFile ($session, $fn_sql_skin, $line_count2, $comments2);
 		if (empty ($message)){
 			$message = 'Die Infobasar-Tabellen wurden initialisiert: '
 				 . ($line_count + $line_count2) . ' Zeilen gelesen, davon '
