@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.15 2005/01/10 18:35:50 hamatoma Exp $
+// $Id: install.php,v 1.16 2005/01/10 19:35:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -200,29 +200,12 @@ if (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/inst
 		. substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8));
 else {
 	switch ($session->fStep){
-	case 2: 
-		if (isset ($_REQUEST ['inst_populate']))
-			instDBAnswer ($session);
-		else
-			instDB ($session); 
-		break;
-	case 3: 
-		instFinish ($session); 
-		break;
-	case 4: 
-		instExit ($session);
-		break;
-	case 1:
-		if (isset ($_REQUEST ['config_save']) || isset ($_REQUEST ['config_access']) 
-				|| isset ($_REQUEST ['config_createdb']))
-			instConfigFileAnswer ($session);
-		else
-			instConfigFile ($session, null);
-		break;
+	case 2: instDBAnswer ($session); break;
+	case 3:	instFinish ($session); break;
+	case 4: instExit ($session); break;
+	case 1: instConfigFileAnswer ($session); break;
 	default:
-	case 0:
-		instArchiveAnswer ($session);
-		break;
+	case 0:	instArchiveAnswer ($session); break;
 	}
 }
 exit (0);
@@ -285,7 +268,7 @@ function instShowDir (&$session, $path, $headline = null, $pattern = null,
 			if ($button_text != null){
 				$no++;
 				echo '<div>';
-				guiHiddenField ($file_prefix . $no, $file);
+				guiHiddenField ($file_prefix . $no, $path . $file);
 				echo '</div></td><td>';
 				guiButton ($button_prefix . $no, $button_text);
 			}
@@ -298,7 +281,7 @@ function instShowDir (&$session, $path, $headline = null, $pattern = null,
 		guiFinishForm ($session);
 }
 function instDocu (&$session, $install, $update){
-	guiHeadline ($session, 2, 'Dokumentation');
+	guiHeadline ($session, 2, 'Empfehlungen');
 	echo '<table border="1"><tr><td><h2>Standard-Installation</h2></td>';
 	echo '<td><h2>Standard-Update</h2></td>';
 	echo "</tr>\n<tr><td><ul>";
@@ -545,7 +528,7 @@ function instDB (&$session, $message =  null) {
 		guiParagraph ($session, $message, false);
 	
 	checkDB ($session, $message);
-	$message = '';
+	$message = null;
 
 	$path = $session->fFileSystemBase . PATH_DELIM; 
 	instShowDir ($session, $session->fFileSystemBase . PATH_DELIM . '../db' . PATH_DELIM,
@@ -570,18 +553,24 @@ function instDB (&$session, $message =  null) {
 }
 function instDBAnswer (&$session){
 	$session->trace (TC_Init, 'instDBAnswer');
-	$message = '';
-	
+	$message = null;
 	if (isset ($_POST ['inst_populate'])) {
 		$message = populate ($session, instGetSqlFile ($session));
 	} else {
 		foreach ($_POST as $name => $value){
+			# $session->trace (TC_X, 'instDBAnswer-2: ' . $name);
 			if (preg_match ('/^db_install(\d+)/', $name, $match)){
 				$var = 'db_file' . $match [1];
 				$name = $_POST [$var];
-				$session->trace (TC_Init, "instDBAnswer: $name");
-				if (! ($message = executeSqlFile ($session, $name, &$line_count, &$comments)))
-					$message = "Ausgeführt: $name: $line_count Zeilen ($commens Kommentare)";
+				if ( ($pos = strpos ($name, '.sql')) > 0){
+					if (! ($message = executeSqlFile ($session, $name,
+							&$line_count, &$comments)))
+						$message = "Ausgeführt: $name: $line_count Zeilen ($comments Kommentare)";
+				} elseif ( ($pos = strpos ($name, '.wiki')) > 0) {
+					if (! ($message = instImportPages ($session, $name, true)))
+						$message = "Importiert: $name";
+				} else
+					$message = "unbekannter Dateityp: $name";
 				break;
 			}
 		}
@@ -695,9 +684,12 @@ function checkTableStatus (&$session, &$exists) {
 function executeSqlFile (&$session, $fn_sql, &$line_count, &$comments){
 	$message = null;
 	$line_count = $comments = 0;
-	if (! ($file = fopen ($fn_sql, "r"))) {
+	if (checkDB ($session, $message) != DB_EXISTS)
+		;
+	elseif (! ($file = fopen ($fn_sql, "r"))) {
 			$message = "+++ Kann Datei nicht &ouml;ffnen: $fn_sql";
 	} else {
+		$message = null;
 		$status = null;
 		$db_prefix = $session->fDbTablePrefix;
 		while (! feof ($file)) {
@@ -1089,7 +1081,7 @@ function instImportPages (&$session,  $import_file, $import_replace) {
 	$message = null;
 	if (! file_exists ($import_file))
 		$message = "Datei nicht gefunden: " . $import_file;
-	else {
+	elseif (checkDB ($session, $message) == DB_EXISTS) {
 		$file = fopen ($import_file, "r");
 		$count_inserts = 0;
 		$count_updates = 0;
