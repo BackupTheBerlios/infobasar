@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.20 2005/01/04 23:37:02 hamatoma Exp $
+// $Id: util.php,v 1.21 2005/01/05 05:28:25 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -389,13 +389,26 @@ function getUserParam (&$session, $name, &$param) {
 	$session->trace (TC_Util2, "getUserParam: $name");
 	if (! isset ($param) || empty ($param))
 		switch ($name){
-		case U_TextAreaWidth: $param = $session->fUserTextareaWidth; break;
+		case U_TextAreaWidth: $param = $_POST ['textarea_width'] = $session->fUserTextareaWidth; break;
 		case U_TextAreaHeight: $param = $session->fUserTextareaHeight; break;
 		case U_MaxHits: $param = $session->fUserMaxHits; break;
 		case U_PostingsPerPage: $param = $session->fUserPostingsPerPage; break;
 		case U_Theme: $param = $session->fUserTheme;
 		default: $session->trace (TC_Error, "getUserParam: unbek. Param: $name"); break;
 		}
+	return $param;
+}
+function getTextareaSize (&$session, &$width, &$height){
+	if (! isset ($_POST['textarea_width']) || empty ($_POST['textarea_width']))
+		$_POST['textarea_width'] = getUserParam ($session, U_TextAreaWidth, $width);
+	$width = $_POST['textarea_width'];
+	if ($width <= 0)
+		$width = $_POST['textarea_width'] = 70;
+	if (! isset ($_POST['textarea_height']) || empty ($_POST['textarea_height']))
+		$_POST['textarea_height'] = getUserParam ($session, U_TextAreaHeight, $height);
+	$height = $_POST['textarea_height'];
+	if ($height <= 0)
+		$height = $_POST['textarea_height'] = 10;
 }
 function isInt ($val) {
 	return preg_match ('/^\d+\s*$/', $val);
