@@ -1,4 +1,7 @@
-USE InfoBasar;
+# $Id: address_start.sql,v 1.3 2005/01/13 03:26:06 hamatoma Exp $
+# DB-Definitionen des Adress-Moduls
+
+
 
 
 # --------------------------------------------------------
