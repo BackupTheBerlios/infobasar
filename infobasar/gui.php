@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.21 2005/01/05 05:27:21 hamatoma Exp $
+// $Id: gui.php,v 1.22 2005/01/06 11:58:49 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -207,6 +207,18 @@ function outTableTextField2 ($prefix, $name1, $value1, $size1,
 	guiTextField ($name2, $value2, $size2, $maxsize2);
 	echo TAG_TABLE_DELIM_END;
 }
+function outTableTextFieldButton ($prefix, $name, $value, $size, $maxsize,
+	$delim, $button_name, $button_text){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim ();
+	guiTextField ($name, $value, $size, $maxsize);
+	if ($delim != null)
+		echo $delim;
+	guiButton ($button_name, $button_text);
+	echo TAG_TABLE_DELIM_END;
+}
+
 function outTablePasswordfield ($prefix, $name, $value, $size, 
 		$maxsize=0, $halignment = AL_None){
 	if ($prefix != null)
@@ -395,11 +407,11 @@ function guiUploadFile (&$session, $prefix, $lastpage = null,
 		$custom_field = null, $custom_value = null,
 		$caption = 'Hochladen', 
 		$button = 'upload_go', $file = 'upload_file', $max_file_size = 100000) {
-	global $last_pagename;
 	echo TAG_FORM_MULTIPART_POST_ACTION;
 	echo $session->fScriptURL;
 	echo TAG_APO_SUFFIX_NEWLINE;
-	guiHiddenField ('last_pagename', $lastpage ? $lastpage : $last_pagename);
+	if (isset ($_POST ['last_pagename']) || $lastpage != null)
+		guiHiddenField ('last_pagename', $lastpage ? $lastpage : $_POST ['last_pagename']);
 	if ($custom_field)
 		guiHiddenField ($custom_field, $custom_value);
 	guiHiddenField ('MAX_FILE_SIZE', $max_file_size);
@@ -414,7 +426,6 @@ function guiUploadFile (&$session, $prefix, $lastpage = null,
 }
 function guiUploadFileAnswer (&$session, $destination = PATH_DELIM,
 		$new_target_name = null, $button = 'upload_go', $file = 'upload_file'){
-	global $_FILE;
 	$session->trace (TC_Gui2, "guiUploadFileAnswer: dest: $destination new_name: $new_target_name name");
 	$message = null;
 	print_r ($_FILE);
@@ -436,7 +447,6 @@ function guiUploadFileAnswer (&$session, $destination = PATH_DELIM,
 }
 function guiUploadFileAnswerUnique (&$session, $destination,
 		$new_target_name, $var_file, &$name){
-	global $_FILE;
 	$session->trace (TC_Gui2, "guiUploadFileAnswerUnique: dest: $destination new_name: $new_target_name name");
 	$message = null;
 	print_r ($_FILE);
