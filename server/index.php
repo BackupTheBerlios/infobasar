@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.2 2004/05/23 22:13:27 hamatoma Exp $
+// $Id: index.php,v 1.3 2004/05/26 22:20:11 hamatoma Exp $
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -15,7 +15,7 @@ session_start();
  $session_id = session_id();
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<!-- $Id: index.php,v 1.2 2004/05/23 22:13:27 hamatoma Exp $ -->
+<!-- $Id: index.php,v 1.3 2004/05/26 22:20:11 hamatoma Exp $ -->
 <?php
 define ('C_ScriptName', 'index.php');
 
@@ -124,11 +124,11 @@ function init (&$session, $dbType) {
 		+ 0 * TC_Db1 + 0 * TC_Db2 + 0 * TC_Db3
 		+ 0 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
 		+ 0 * TC_Layout1
-		+ 1 * TC_Update + 0 * TC_Insert + 1 * TC_Query
+		+ 1 * TC_Update + 1 * TC_Insert + 0 * TC_Query
 		+ 0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2
 		+ TC_Error + TC_Warning + TC_X;
 	$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
-	# $session->fTraceFlags = TC_All;
+	#$session->fTraceFlags = TC_All;
 } // Config
 
 ?>
