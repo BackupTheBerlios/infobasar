@@ -1,8 +1,21 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.2 2004/12/22 18:54:30 hamatoma Exp $
+$Id: changelog.txt,v 1.3 2005/01/06 12:27:07 hamatoma Exp $
 
 Legende: F(ehler) N(eu) A(enderung)
 
+Version 0.7.0 vom 2005.01.05
+ -A: keine global-Variablen, damit unter register-globals=off lauffähig
+ -A: Wiki-Syntax: ; Einrückung, Verweise mit [[]] [newline] statt [Newline] wichtig und Zitat getauscht
+ -A: TM_Newline von [Newline] auf [newline]
+ -N: admin.php: Wiki-Syntax-Konversion
+Version 0.6.6.1 vom 2004.12.25
+ -F: Aufzählung mit verschiedenem Einrücktiefen
+ -F: Tipps im Änderungsmodus. Hilfeseiten
+ -F: Tabellenende, wenn keine Leerzeile danach
+ -N: Einrücken
+ -N: FEATURE_SIMPLE_USER_MANAGEMENT: Wenn gesetzt, darf jeder User anlegen/ändern.
+ -N: Session.fAdmins: Admins im Programm bestimmbar.
+ -N: Alle HTML-Konstrukte als Konstanten (TAG_...)
 Version 0.6.6 vom 2004.12.22
  -N: Installation: Startseiten im Export-Format. SQL-Import wesentlich geringer.
  -N: Installation: index.html in allen Unterverzeichnissen. Verzeichnis overwrite.
