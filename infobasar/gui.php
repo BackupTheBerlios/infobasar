@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.13 2004/11/05 23:59:44 hamatoma Exp $
+// $Id: gui.php,v 1.14 2004/11/08 13:30:13 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -164,6 +164,14 @@ function outTableCell($text, $halignment = AL_None){
 	echo $text;
 	outTableDelimEnd();
 }
+function outTableRecordCells ($text1, $text2, $text3 = null){
+	outTableRecord ();
+	outTableCell ($text1);
+	outTableCell ($text2);
+	if ($text3 != null)
+		outTableCell ($text3);
+	outTableRecordEnd();
+}
 function outTableCellStrong($text, $halignment = AL_None){
 	outTableDelim ($halignment);
 	echo '<strong>';
@@ -187,6 +195,16 @@ function outTableTextField ($prefix, $name, $value, $size,
 	guiTextField ($name, $value, $size, $maxsize);
 	outTableDelimEnd();
 }
+function outTableTextField2 ($prefix, $name1, $value1, $size1, 
+		$maxsize1, $delim, $name2, $value2, $size2, $maxsize2 = 0){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim();
+	guiTextField ($name1, $value1, $size1, $maxsize1);
+	echo $delim;
+	guiTextField ($name2, $value2, $size2, $maxsize2);
+	outTableDelimEnd();
+}
 function outTablePasswordfield ($prefix, $name, $value, $size, 
 		$maxsize=0, $halignment = AL_None){
 	if ($prefix != null)
@@ -200,6 +218,16 @@ function outTableButton ($prefix, $name, $text, $halignment = AL_None){
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiButton ($name, $text);
+	outTableDelimEnd(); 
+}
+function outTableButton2 ($prefix, $name1, $text1, $delim, $name2, $text2, 
+		$halignment = AL_None){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim ($halignment);
+	guiButton ($name1, $text1);
+	echo $delim;
+	guiButton ($name2, $text2);
 	outTableDelimEnd(); 
 }
 function outTableCheckBox ($prefix, $name, $text, $selected, $halignment = AL_None){
@@ -229,6 +257,14 @@ function outTableAuthorLink ($session, $author){
 	guiAuthorLink ($session, $author);
 	outTableDelimEnd();
 }
+function outTableTextArea ($prefix, $name, $content, $width, $height){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim();
+	guiTextArea ($name, $content, $width, $height);
+	outTableDelimEnd();
+}
+
 // --- Allgemeine Funktionen --------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
 	echo "<input type=\"$type\" name=\"$name\"";
@@ -637,12 +673,12 @@ function guiShowPageById (&$session, $page, $text_id) {
 		T_Page, $page, 'name,type,readgroup');
 	if (! empty ($text_id) && $text_id > 0)
 		$count_newer = dbSingleValue ($session, 'select count(id) from '
-			. dbTable ($session, T_Text) . ' where page=' . $page . ' and id>'
+			. dbTable ($session, T_Text) . ' where page=' . (0+$page) . ' and id>'
 			. $text_id);
 	else {
 		$count_newer = 0;
 		list ($text_id) = dbGetRecordByClause ($session, T_Text,
-			'max(id)', 'page=' . $page);
+			'max(id)', 'page=' . (0+$page));
 	}
 	$session->trace (TC_Gui1, 'guiShowPageById-2: ' . $count_newer);
 	list ($content, $created_at, $created_by) = dbGetRecordById ($session,
