@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.24 2005/01/06 17:00:36 hamatoma Exp $
+// $Id: index.php,v 1.25 2005/01/07 21:14:47 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -34,7 +34,6 @@ define ('A_Diff', 'diff');
 define ('A_Show', 'show');
 // Predefined pages
 define ('P_Account', '!account');
-define ('P_Home', '!home');
 define ('P_NewPage', '!newpage');
 define ('P_ModifyPage', '!modifypage');
 define ('P_Search', '!search');
@@ -51,12 +50,10 @@ define ('Th_EditHeaderHTML', 214);
 define ('Th_EditStartHTML', 215);
 define ('Th_EditEndHTML', 216);
 
-
-define ('Th_LoginHeader', 221);
-define ('Th_LoginBodyEnd', 222);
 define ('Th_Overview', 223);
 define ('Th_InfoHeader', 224);
 define ('Th_InfoBodyEnd', 225);
+
 
 define ('Th_SearchHeader', 231);
 define ('Th_SearchBodyStart', 232);
@@ -414,8 +411,6 @@ function baseEditPage (&$session, $mode,
 	}
 	$session->setPageData (empty ($pagename) ? 'Neue Seite' : $pagename,
 		 $changedat, $changedby);
-	getUserParam ($session, U_TextAreaWidth, $width);
-	getUserParam ($session, U_TextAreaHeight, $height);
 	if ($pageid <= 0)
 		$mode = C_New;
 	if ($mode == C_New)
@@ -488,6 +483,7 @@ function baseEditPage (&$session, $mode,
 	outTableEnd();
 	outTableDelimAndRecordEnd();
 	outTableRecordAndDelim();
+	getTextareaSize ($session, $width, $height);
 	guiTextArea ('edit_content', $content, $width, $height);
 	outTableDelimAndRecordEnd();
 	outTableRecordAndDelim();
