@@ -1,5 +1,5 @@
 <?php
-// $Id: base_module.php,v 1.8 2005/01/13 03:48:41 hamatoma Exp $
+// $Id: base_module.php,v 1.9 2005/01/14 03:04:58 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -10,7 +10,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.7.2 (2005.01.13)');
+define ('PHP_ModuleVersion', '0.7.3 (2005.01.14)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -95,7 +95,7 @@ if (successfullLogin ($session)){
 				? (" (" . $_REQUEST ['edit_save'] . ")") : ' []'));
 		if (isset ($test))
 			baseTest ($session);
-		else if (substr ($session->fPageName, 0, 1) == '.')
+		else if (substr ($session->fPageURL, 0, 1) == '.')
 			baseNewPageReference ($session);
 		else if (isset ($_POST ['last_refresh']))
 			baseLastChanges ($session);
@@ -115,7 +115,7 @@ if (successfullLogin ($session)){
 		elseif (isset ($_POST ['posting_preview']) || isset ($_POST ['posting_insert'])
 			|| isset ($_POST ['posting_change']))
 			basePostingAnswer ($session);
-		elseif ( ($page_id = dbPageId ($session, $session->fPageName)) > 0)
+		elseif ( ($page_id = dbPageId ($session, $session->fPageURL)) > 0)
 			guiShowPageById ($session, $page_id, null);
 		else {
 			guiLogin ($session, null);;
@@ -152,7 +152,7 @@ function baseStandardLink (&$session, $page) {
 }
 
 function baseShowCurrentPage (&$session){
-	if ( ($page = dbPageId ($session, $session->fPageName)) > 0)
+	if ( ($page = dbPageId ($session, $session->fPageURL)) > 0)
 		guiShowPageById ($session, $page, null);
 	else {
 		$session->SetLocation (P_Home);
@@ -203,7 +203,7 @@ function baseAccount (&$session, $message) {
 		Th_StandardHeader, Th_StandardBodyStart);
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-	guiStartForm ($session, 'account', P_Account);
+	guiStartForm ($session);
 	outDivision ($session);
 	outHiddenField ($session, 'account_user', $account_user);
 	outTable();
@@ -391,7 +391,7 @@ function baseEditPage (&$session, $mode,
 		$mimetype = $type; 
 		$textidpred = 0;
 	} elseif ($mode == C_Change) {
-		$pagename = $session->fPageName;
+		$pagename = $session->fPageURL;
 		list ($pageid, $texttype) = dbGetRecordByClause ($session, T_Page,
 				'id,type', 'name=' . dbSqlString ($session, $pagename));
 		$mimetype = textTypeToMime ($texttype);
@@ -425,7 +425,7 @@ function baseEditPage (&$session, $mode,
 		guiStandardHeader ($session, $header, Th_EditHeaderHTML, Th_EditStartHTML);
 	if (isset ($_POST ['edit_preview']) || isset ($_POST ['edit_previewandsave'])) {
 		echo guiParam ($session, Th_PreviewStart, '<h1>Vorschau von '
-			. $session->fPageName
+			. $session->fPageURL
 			. '</h1><p>Warnung: Der Text ist noch nicht gesichert!</p>');
 		guiFormatPage ($session, $mimetype, $content);
 		echo guiParam ($session, Th_PreviewEnd, '<h1>Ende der Vorschau</h1>');
@@ -634,7 +634,7 @@ function baseEditPageAnswerSave (&$session)
 
 function baseNewPageReference (&$session) {
 	$session->trace (TC_Gui1, 'baseNewPageReference');
-	$name = substr ($session->fPageName, 1);
+	$name = substr ($session->fPageURL, 1);
 	if ( ($page = dbPageId ($session, $name)) > 0)
 		guiShowPageById ($session, $page, null);
 	else {
@@ -651,7 +651,7 @@ function baseSearch (&$session, $message){
 		Th_SearchHeader, Th_SearchBodyStart);
 	if (isset ($_POST ['search_title']) || isset ($_POST ['search_body']))
 		baseSearchResults ($session);
-	guiStartForm ($session, 'search', P_Search);
+	guiStartForm ($session);
 	outTableAndRecord();
 	outTableCell ('Titel:');
 	outTableDelim();
@@ -767,9 +767,9 @@ function baseSearchResults (&$session){
 	}
 }
 function baseCallStandardPage (&$session) {
-	$session->trace (TC_Gui2, 'baseCallStandardPage: ' . $session->fPageName);
+	$session->trace (TC_Gui2, 'baseCallStandardPage: ' . $session->fPageURL);
 	$found = true;
-	switch ($session->fPageName) {
+	switch ($session->fPageURL) {
 	case P_Login:	guiLogin ($session, ''); break;
 	case P_Logout:	guiLogout ($session); break;
 	case P_Account: baseAccount ($session, ''); break;
@@ -805,7 +805,7 @@ function baseCustomStart (&$session) {
 		}
 }
 function basePageInfo (&$session) {
-	$pagename = $session->fPageName;
+	$pagename = $session->fPageURL;
 	$pagelink = encodeWikiName ($session, $pagename);
 	$headline = 'Info über ' . $pagename;
 	guiStandardHeader ($session, $headline, Th_InfoHeader, 0);
@@ -865,7 +865,7 @@ function basePageInfo (&$session) {
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
 }
 function baseDiff (&$session) {
-	baseCompare ($session, $session->fPageName, $_GET ['text_id'], $_GET ['text_id2']);
+	baseCompare ($session, $session->fPageURL, $_GET ['text_id'], $_GET ['text_id2']);
 }
 function baseCompare (&$session, $pagename, $idnew, $idold){
 	$headline = 'Versionsvergleich';

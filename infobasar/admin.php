@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.15 2005/01/13 03:34:17 hamatoma Exp $
+// $Id: admin.php,v 1.16 2005/01/14 03:03:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.7.1 (2005.01.11)');
+define ('PHP_ModuleVersion', '0.7.3 (2005.01.14)');
 
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
@@ -42,13 +42,17 @@ define ('P_ShowUsers', 'showusers');
 define ('P_Test', 'test');
 // Dateinamen
 define ('FN_PageExport', 'exp_pages.wiki');
+// Design:
+define ('Th_AdminStandardHeader', 111);
+define ('Th_AdminStandardBodyStart', 112);
+define ('Th_AdminStandardBodyEnd', null);
 
 
 $session = new Session ($start_time, $session_id, 
 	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
 	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
 if (successfullLogin ($session)){
-	switch ($session->fPageName) {
+	switch ($session->fPageURL) {
 	case P_Param: admParam ($session, ''); break;
 	case P_Macro: admMacro ($session, ''); break;
 	case P_Home: admHome($session, ''); break;
@@ -75,7 +79,7 @@ if (successfullLogin ($session)){
 	case P_PHPInfo: admInfo ($session); break;
 	case P_Test: admTest ($session); break;
 	default:
-		if (substr ($session->fPageName, 0, 1) == ".")
+		if (substr ($session->fPageURL, 0, 1) == ".")
 			guiNewPageReference ($session);
 		if (isset ($_POST ['param_load']))
 			admParamAnswerLoad ($session);
@@ -137,11 +141,16 @@ function admStandardLinkString(&$session, $page){
 function admStandardLink(&$session, $page){
 	echo admStandardLinkString ($session, $page);
 }
-
+function admStandardHeader (&$session, $title){
+	guiStandardHeader ($session, $title, Th_AdminStandardHeader, 
+		Th_AdminStandardBodyStart);
+}
+function admFinishBody (&$session){
+	guiFinishBody ($session, Th_AdminStandardBodyEnd);
+}
 function admHome (&$session){
 	global $session_id, $session_user;
-	guiStandardHeader ($session, 'Adminstration-Startseite f&uuml;r ' . $session->fUserName,
-		Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Adminstration-Übersicht');
 	guiParagraph ($session, 'Willkommen ' . $session->fUserName, false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Param), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Macro), false);
@@ -155,19 +164,19 @@ function admHome (&$session){
 	guiParagraph ($session, admStandardLinkString ($session, P_Options), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Login), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_PHPInfo), false);
-	guiFinishBody ($session, null);
+	admFinishBody ($session);
 }
 function admParam (&$session, $message){
 	$session->trace(TC_Gui1, 'admParam');
-	guiStandardHeader ($session, 'Parameter', Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Parameter');
 
 	getTextareaSize ($session, $width, $height);
 	if (empty ($_POST ['param_theme']))
 		$_POST ['param_theme'] = Theme_Standard;
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
+	guiStartForm ($session);
 	outDivision ($session);
-	guiStartForm ($session, 'param', P_Param);
 	if (! isset ($_POST ['param_id']))
 		$_POST ['param_id'] = 0;
 	if (! isset ($_POST ['param_pos']))
@@ -221,9 +230,9 @@ function admParam (&$session, $message){
 		$row  = dbNextRecord ($session);
 	}
 	outTableEnd ();
-	guiFinishForm ($session);
 	outDivisionEnd ($session);
-	guiFinishBody ($session, Th_StandardBodyEnd);
+	guiFinishForm ($session);
+	guiFinishBody ($session, Th_AdminStandardBodyEnd);
 }
 function admParamAnswerLoad (&$session){
 	$session->trace(TC_Gui1, 'admParamAnswerLoad');
@@ -277,14 +286,14 @@ function admParamAnswerChange (&$session, $mode){
 
 function admMacro (&$session, $message){
 	$session->trace(TC_Gui1, 'admMacro');
-	guiStandardHeader ($session, 'Makros', Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Makros'); 
 	getTextareaSize ($session, $width, $height);
 	if (empty ($_POST ['macro_theme']))
 		$_POST ['macro_theme'] = Theme_All;
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	outDivision($session);
-	guiStartForm ($session, "macro", P_Macro);
+	guiStartForm ($session);
 	outTableAndRecord ();
 	outTableCell ('Theme/Name: ');
 	outTableDelim ();
@@ -337,7 +346,7 @@ function admMacro (&$session, $message){
 	outTableEnd ();
 	guiFinishForm ($session);
 	outDivisionEnd ($session);
-	guiFinishBody ($session, null);
+	admFinishBody ($session);;
 }
 function admMacroAnswerLoad (&$session){
 	$session->trace(TC_Gui1, 'admMacroAnswerLoad');
@@ -397,10 +406,10 @@ function admMacroAnswerChange (&$session, $mode){
 }
 function admForum (&$session, $message, $mode){
 	$session->trace(TC_Gui1, 'admForum');
-	guiStandardHeader ($session, 'Forumsverwaltung', Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Forumsverwaltung');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-	guiStartForm ($session, "forum", P_Forum);
+	guiStartForm ($session);
 	outHiddenField ($session, 'forum_id');
 	guiShowTable ($session, "<h2>Existierende Foren</h2>\n",
 		array ('Id', 'Name', 'Beschreibung'),
@@ -433,7 +442,7 @@ function admForum (&$session, $message, $mode){
 	outTableDelimAndRecordEnd ();
 	outTableEnd ();
 	guiFinishForm ($session);
-	guiFinishBody ($session, null);
+	admFinishBody ($session);;
 }
 function admForumAnswer (&$session){
 	$message = null;
@@ -502,11 +511,10 @@ function admBuildCondition (&$session, $pattern){
 }
 function admConvertWiki (&$session, $message) {
 	$session->trace(TC_Gui1, 'admConvertWiki');
-	guiStandardHeader ($session, 'Wiki-Syntax konvertieren', Th_StandardHeader,
-		Th_StandardBodyStart);
+	admStandardHeader ($session, 'Wiki-Syntax konvertieren');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-	guiStartForm ($session, 'convert', P_ConvertWiki);
+	guiStartForm ($session);
 	outTableandRecord();
 	outTableComboBox ($session, 'Konversionstyp:', 'conversion_type', array ('0.6 nach 0.7'), null, null);
 	outTableCell (' ');
@@ -514,7 +522,7 @@ function admConvertWiki (&$session, $message) {
 	outTableButton ($session, ' ', 'conversion_run', 'Konvertieren');
 	outTableAndRecordEnd ();
 	guiFinishForm ($session);
-	guiFinishBody ($session, null);
+	admFinishBody ($session);;
 }
 function wiki06To07 ($text){
 	$text = str_replace ("'''", '!%!Zitat!%!', $text);
@@ -580,8 +588,7 @@ function admConvertWikiAnswer (&$session){
 
 function admExportPages (&$session, $message) {
 	$session->trace(TC_Gui1, 'admExportPages');
-	guiStandardHeader ($session, 'Seitenexport', Th_StandardHeader,
-		Th_StandardBodyStart);
+	admStandardHeader ($session, 'Seitenexport');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	if (isset ($_POST ['export_preview']) && ! empty ($_POST ['export_pattern']))
@@ -595,8 +602,8 @@ function admExportPages (&$session, $message) {
 		guiParagraph ($session, 'Exportdatei: '
 			. guiInternLinkString ($session, $_POST ['export_exists'], null), false);
 	
+	guiStartForm ($session);
 	outDivision ($session);
-	guiStartForm ($session, "export", P_ExportPages);
 	outHiddenField ($session, 'export_exists');
 	outTableAndRecord();
 	outTableTextField ($session, 'Namensmuster', 'export_pattern', null, 64);
@@ -608,9 +615,9 @@ function admExportPages (&$session, $message) {
 	outTableRecordDelim ();
 	outTableButton2 ($session, ' ', 'export_preview', 'Vorschau', ' | ', 'export_export', 'Exportieren');
 	outTableAndRecordEnd ();
-	guiFinishForm ($session);
 	outDivisionEnd ($session);
-	guiFinishBody ($session, null);
+	guiFinishForm ($session);
+	admFinishBody ($session);;
 }
 function admExportPagesAnswer (&$session){
 	$session->trace(TC_Gui1, 'admExportPagesAnswer');
@@ -667,26 +674,24 @@ function admExportPagesAnswer (&$session){
 function admImportPages (&$session,  $message) {
 	$session->trace(TC_Gui1, 'admImportPages');
 
-	guiStandardHeader ($session, 'Seitenimport', Th_StandardHeader,
-		Th_StandardBodyStart);
+	admStandardHeader ($session, 'Seitenimport');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 
 	guiUploadFile ($session, 'Importdatei:', 'import_upload', 1000000);
 	$dir_name = $session->fullPath ("import") . PATH_DELIM;
 	guiHeadline ($session, 3, "Importverzeichnis auf dem Server: " . $dir_name);
-	guiStartForm ($session, "import", P_ImportPages);
+	guiStartForm ($session);
 	outParagraph ($session);
 	outCheckBox ($session, 'import_replace', 'Historie löschen', null, false);
 	outParagraphEnd($session);
 	admShowDir ($session, $dir_name, '','/[.]wiki$/', 'Importieren', 'import_import', 
 		'import_file', false);
 	guiFinishForm ($session);
-	guiFinishBody ($session, null);
+	admFinishBody ($session);;
 }
 function admImportPagesAnswer (&$session){
-	guiStandardHeader ($session, 'SeitenimportAntwort', Th_StandardHeader,
-		Th_StandardBodyStart);
+	admStandardHeader ($session, 'SeitenimportAntwort');
 	$session->trace(TC_Gui1, 'admImportPagesAnswer');
 	$message = null;
 	if (isset ($_POST ['import_upload'])){
@@ -777,14 +782,14 @@ function admSaveTable (&$session, $table, $ignore_id, &$file){
 function admBackup (&$session, $with_header, $message){
 	$session->trace(TC_Gui1, 'admBackup');
 	if ($with_header)
-		guiStandardHeader ($session, 'Datenbank-Backup', Th_StandardHeader, Th_StandardBodyStart);
+		admStandardHeader ($session, 'Datenbank-Backup'); 
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	if (empty ($_POST ['backup_file']))
 		$_POST ['backup_file'] = $session->fDbTablePrefix
 			. strftime ("_%Y_%m_%d") . '.sql';
 	guiHeadLine ($session, 1, 'Backup');;
-	guiStartForm ($session, 'backup', P_Backup);
+	guiStartForm ($session);
 	outTableAndRecord ();
 	outTableTextField ($session, 'Dateiname:', 'backup_file', null, 64, 64);
 	outTableRecordDelim ();
@@ -799,7 +804,7 @@ function admBackup (&$session, $with_header, $message){
 	outTableButton ($session, ' ', 'backup_save', 'Sichern');
 	outTableAndRecordEnd ();
 	guiFinishForm ($session);
-	guiFinishBody ($session, null);
+	admFinishBody ($session);
 }
 
 function admWriteOneTable (&$session, $table, $file){
@@ -826,7 +831,7 @@ function admBackupAnswer (&$session){
 		if (! is_dir ($dir =  $session->fullPath ("backup")))
 			mkdir ($dir);
 		if (empty ($_POST ['backup_file']))
-			$_POST ['backup_file'] = $session->fMacroBasarName 
+			$_POST ['backup_file'] = $session->getMacro (TM_BasarName) 
 				. strftime ('_%Y_%m_%d.sql');
 		$filename = 'backup/' . $_POST ['backup_file'];
 		$is_compressed = guiChecked ($session, 'backup_compressed');
@@ -874,38 +879,63 @@ function admBackupAnswer (&$session){
 }
 function admOptions (&$session, $message){
 	$session->trace (TC_Gui1, 'admOptions');
-	guiStandardHeader ($session, 'Allgemeine Einstellungen', Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Allgemeine Einstellungen'); 
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 
 	guiHeadline ($session, 2, 'Texte:');
 	if (empty ($_POST ['opt_basarname']))
-		$_POST ['opt_basarname'] = $session->fMacroBasarName;
+		$_POST ['opt_basarname'] = $session->getMacro (TM_BasarName);
+	if (empty ($_POST ['opt_webmaster']))
+		$_POST ['opt_webmaster'] = $session->getMacro (TM_Webmaster);
 	if (empty ($_POST ['opt_css']))
 		$_POST ['opt_css'] = dbGetText ($session, Th_CSSFile);
-	guiStartForm ($session, 'Form', P_Options);
+	guiStartForm ($session);
+	outDivision ($session);
 	outTableAndRecord ();
 	outTableTextField ($session, 'Basarname:', 'opt_basarname', null, 32, 128);
 	outTableRecordDelim ();
+	outTableTextField ($session, 'Webmaster:', 'opt_webmaster', null, 32, 128);
+	outTableRecordDelim ();
 	outTableButton ($session, ' ', 'opt_save', '&Auml;ndern');
 	outTableAndRecordEnd ();
+	outDivisionEnd ($session);
 	guiFinishForm ($session);
 	guiHeadline ($session, 2, 'Dateien:');
 	guiUploadFile ($session, 'Logo:', 'opt_upload', 50000);
 	$dir_name = $session->fullPath ('pic') . PATH_DELIM;
 	admShowDir ($session, $dir_name, null, '/logo/');
 	
-	guiFinishBody ($session, null);
+	admFinishBody ($session);
 }
 function admOptionsAnswer(&$session){
 	$session->trace (TC_Gui1, 'admOptionsAnswer');
 	
 	$message = null;
 	if (isset ($_POST ['opt_save'])){
-		$id = dbSingleValue($session, 'select id from ' . dbTable ($session, T_Param)
-			. ' where theme=' . Theme_All . ' and pos=' .Param_BasarName);
-		dbUpdateRaw ($session, T_Param, $id, 'text=' 
-			. dbSqlString ($session, $_POST ['opt_basarname']));
+		if ($_POST ['opt_basarname'] == $session->getMacro (TM_BasarName))
+			$message = 'Basarname wurde nicht gespeichert, da gleich.' . tagNewline ();
+		else {
+			$id = dbSingleValue($session, 'select id from ' 
+				. dbTable ($session, T_Macro)
+				. ' where theme=' . Theme_All . ' and name=' 
+				. dbSqlString ($session, TM_BasarName));
+			dbUpdateRaw ($session, T_Macro, $id, 'value=' 
+				. dbSqlString ($session, $_POST ['opt_basarname']));
+			$message = 'Basarname wurde geändert.' . tagNewline ();
+		}
+		if ($_POST ['opt_webmaster'] == $session->getMacro (TM_Webmaster))
+			$message .= 'Webmaster wurde nicht gespeichert, da gleich.' 
+				. tagNewline ();
+		else {
+			$id = dbSingleValue($session, 'select id from ' 
+				. dbTable ($session, T_Macro)
+				. ' where theme=' . Theme_All . ' and name=' 
+				. dbSqlString ($session, TM_Webmaster));
+			dbUpdateRaw ($session, T_Macro, $id, 'value=' 
+				. dbSqlString ($session, $_POST ['opt_webmaster']));
+			$message .= 'Webmaster wurde geändert.' . tagNewline ();
+		}
 	} elseif (isset ($_POST ['opt_upload']))
 		$message = guiUploadFileAnswer ($session, 'opt_upload', 
 			PATH_DELIM . 'pic' . PATH_DELIM, 'logo.png');
@@ -913,11 +943,11 @@ function admOptionsAnswer(&$session){
 }
 function admRename (&$session, $message){
 	$session->trace (TC_Gui1, 'admRename');
-	guiStandardHeader ($session, 'Umbenennen einer Seite', Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Umbenennen einer Seite');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 
-	guiStartForm ($session, 'Form', P_Rename);
+	guiStartForm ($session);
 	outTableAndRecord ();
 	outTableTextField ($session, 'Bisheriger Name:', 'rename_oldname', null, 64, 64);
 	outTableRecordDelim ();
@@ -973,7 +1003,7 @@ function admRename (&$session, $message){
 			outTableEnd ();
 		}
 	}
-	guiFinishBody ($session, null);
+	admFinishBody ($session);
 }
 function admAnswerRename (&$session){
 	$session->trace (TC_Gui1, 'admAnswerRename');
@@ -1051,15 +1081,15 @@ function admAnswerRename (&$session){
 }
 function admShowUsers (&$session, $message){
 	$session->trace (TC_Gui1, 'admShowUsers');
-	guiStandardHeader ($session, 'Alle Benutzer', Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Alle Benutzer');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 
-	guiStartForm ($session, 'Form', P_ShowUsers);
+	guiStartForm ($session);
 	dbPrintTable ($session, 'Select id,name,email,theme,startpage from ' . dbTable ($session, T_User)
 		. ' where 1', array ("Id", "Name", "EMail", "Design", "Startseite"), 0);
 	guiFinishForm ($session);
-	guiFinishBody ($session, null);
+	admFinishBody ($session);
 }
 
 function addSystemMessage (&$session, $message){
@@ -1067,9 +1097,9 @@ function addSystemMessage (&$session, $message){
 }
 function admInfo (&$session) {
 	$session->trace (TC_Gui1, 'admInfo');
-	guiStandardHeader ($session, 'PHP-Info', Th_StandardHeader, Th_StandardBodyStart);
+	// admStandardHeader ($session, 'PHP-Info');
 	phpinfo ();
-	guiFinishBody ($session, null);
+	// admFinishBody ($session);
 }
 function modStandardLinks (&$session){
 	admStandardLink ($session, P_Home);
@@ -1090,7 +1120,7 @@ function admTest (&$session){
 		. "''fett''[Newline]und '''Zitat''' [small]klein[/small] und [_]_ kein Unterstrich!\n\n"
 		. "[http:pic/logo.png Logo] und [http:pic/logo.png] und [ftp://abc/def.de Meine Adresse]!\n\n"
 		;
-	guiStandardHeader ($session, 'Test', Th_StandardHeader, Th_StandardBodyStart);
+	admStandardHeader ($session, 'Test');
 	guiHeadline ($session, 1, 'Orginal als Quelltext');
 	echo TAG_PRE;
 	echo htmlentities ($wiki);
@@ -1102,7 +1132,7 @@ function admTest (&$session){
 	echo TAG_PRE_END;	
 	guiHeadline ($session, 1, 'Als Wiki');
 	echo wikiToHtml ($session, $wiki);	
-	guiFinishBody ($session, null);
+	admFinishBody ($session);
 	 
 }
 function admShowDir (&$session, $path, $headline = null, $pattern = null, 
@@ -1114,7 +1144,7 @@ function admShowDir (&$session, $path, $headline = null, $pattern = null,
 		guiHeadline ($session, 2, 
 			$headline == null ? "Verzeichnis $path auf dem Server" : $headline);
 	if ($button_text != null && $with_form)
-		guiStartForm ($session, 'Form');
+		guiStartForm ($session);
 	outTableAndRecord (1);
 	outTableCellStrong ('Name');
 	outTableCellStrong ('Größe');
