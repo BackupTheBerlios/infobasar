@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.10 2004/10/17 21:16:49 hamatoma Exp $
+// $Id: classes.php,v 1.11 2004/10/28 09:42:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -169,6 +169,10 @@ define ('R_Wiki', 'wiki');
 define ('R_User', 'user');
 define ('R_Rights', 'right');
 
+// Features:
+define ('FEATURE_UPLOAD_ALLOWED', 1);
+
+
 class Session {
 	// var, wenn protected nicht geht
 	var $fDbType; // MySQL
@@ -233,7 +237,9 @@ class Session {
 
 	var $fModules; // array: module_names => Plugin-Klasse (Module<Name>)
 	var $fLogPageId; // Id der Seite SystemLog
-
+	
+	var $fFeatureList; // Bit-Liste der Eigenschaften (F_...)
+	
 	var $fTraceInFile; // true: trace() schreibt in Datei (statt in HTML-Ausgabe).
 	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.	
 	function Session ($start_time){
@@ -256,6 +262,7 @@ class Session {
 		$this->fPageTitle = "";
 		$this->fUserTheme = Theme_Standard;
 		$this->fLogPageId = null;
+		$this->fFeatureList = -1; // Alle Eigenschaften
 		// Basisverzeichnis relativ zu html_root
 		$uri = $_SERVER['REQUEST_URI'];
 		$this->fScriptURL = $uri;
@@ -322,6 +329,12 @@ class Session {
 			$this->Write ($name . ": " . textToHtml ($val) . "<br>");
 		}
 	}
+	function traceArray ($class, $msg, $array){
+		if (($class & $this->fTraceFlags) != 0){
+			$this->trace ($class, $msg);
+			print_r ($array);
+		}
+	}
 	function Write ($line){
 		if ($this->fHasBody)
 			echo $line;
@@ -333,6 +346,12 @@ class Session {
 	}
 	function WriteLine ($line){
 		$this->Write ($line . ($this->fPreformated ? "\n" : "<br/>\n"));
+	}
+	function setFeatureList ($list) {
+		$this->fFeatureList = $list;
+	}
+	function testFeature($feature){
+		return $this->fFeatureList & $feature != 0;
 	}
 	function SetHasBody(){
 		$this->fHasBody = true;
