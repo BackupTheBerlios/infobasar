@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.24 2005/01/07 21:15:57 hamatoma Exp $
+// $Id: util.php,v 1.25 2005/01/13 03:38:57 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -590,5 +590,10 @@ function successfullLogin (&$session){
 		$session->storeSession ();
 	}
 	return ! $do_login;
+}
+function dumpPost (&$session){
+	echo 'Inhalt der Variable _POST:<br>';
+	foreach ($_POST as $name => $value)
+		echo $name . " = " . $value . "<br>";
 }
 ?>
