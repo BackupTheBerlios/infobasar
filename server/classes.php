@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.8 2004/06/17 22:57:18 hamatoma Exp $
+// $Id: classes.php,v 1.9 2004/06/28 22:07:59 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 
-define ('PHP_ClassVersion', '0.6.0 (2004.06.13)');
+define ('PHP_ClassVersion', '0.6.1 (2004.06.28)');
 
 define ('PATH_DELIM', '/');
 define ('COOKIE_NAME', 'infobasar');
@@ -188,10 +188,13 @@ class Session {
 	var $fOutputState; // Init Header Body
 	var $fFormExists; // true: Es gab schon ein <form> im Text.
 
+	var $fLocation; // null oder effektive URL (ab Script). Bsp: StartSeite
 	var $fScriptURL; // Ohne / am Ende
 	var $fScriptBase; // ohne *.php
 	var $fScriptFile; // Relativ zu DocumentRoot
 	var $fFileSystemBase; // Absolutpfad im Filesystem des Servers
+	var $fHasHeader; // true: DOCTYPE und <html> ist ausgegeben
+	var $fBodyLines; // null oder auszugebendes HTML (in PutHeader)
 
 	var $fTraceFlags;
 	var $fPreformated;
@@ -205,11 +208,13 @@ class Session {
 		global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
 		global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 		
+		$this->fStartTime = getMicroTime ($this, $start_time);
+		$this->fHasHeader = false;
 		$this->fOutputState = 'Init';
 		$this->fTraceFlags = 0;
 		$this->fVersion = 400;
 		$this->fModuleData = array ();
-		$this->fStartTime = getMicroTime ($this, $start_time);
+		$fBodyLines = null;
 		
 		// Basisverzeichnis relativ zu html_root
 		$this->setScriptBase ("http://$HTTP_HOST$PHP_SELF", $SCRIPT_FILENAME);
@@ -233,17 +238,28 @@ class Session {
 	}
 	function trace($class, $msg){
 		if (($class & $this->fTraceFlags) != 0){
-			if ($this->fOutputState == 'Init') {
-				echo "<head></head>\n<body>\n";
-				$this->fOutputState = 'Body';
+			$line = htmlentities ($msg) . ($this->fPreformated ? "\n" : "<br/>\n");
+			if ($this->fHasHeader) {
+				echo $line;
+			} else {
+				if (!$this->fBodyLines)
+					$this->fBodyLines = array ();
+				array_push ($this->fBodyLines, $line);
 			}
-			#echo sprintf (" Trace: %x / %x: ", $class, $this->fTraceFlags, ($class & $this->fTraceFlags));
-			if ($this->fPreformated)
-				echo htmlentities ($msg) . "\n";
-			else
-				echo htmlentities ($msg) . "<br>\n";
 		}
-		#
+	}
+	function SetLocation($location){
+		$this->fLocation = $location;
+	}
+	function PutHeader(){
+		global $HOST_NAME;
+		if (!$this->fHasHeader){
+			if ($this->fLocation)
+				header ('Location: http:' . $HOST_NAME . $this->fScriptURL . "/" . $this->fLocation);
+			echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">';
+			echo "\n<html>\n";
+			$this->fHasHeader = true;
+		}
 	}
 	function startCode() {
 		$this->trace (TC_Session1, 'startCode');
