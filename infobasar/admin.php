@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.4 2004/09/22 23:30:13 hamatoma Exp $
+// $Id: admin.php,v 1.5 2004/10/13 22:20:55 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -1022,7 +1022,9 @@ function admAnswerRename (&$session){
 	}
 	admRename ($session, $message);
 }
-
+function addSystemMessage (&$session, $message){
+	echo "nicht implementiert: addSystemMessage()<br>\n";
+}
 function admInfo (&$session) {
 	$session->trace (TC_Gui1, 'admInfo');
 	guiStandardHeader ($session, 'PHP-Info', Th_StandardHeader, Th_StandardBodyStart);
