@@ -7,7 +7,7 @@
 </head>
 <body>
 <h1>Module f&uuml;r den Infobasar</h1>
-$Id: module.html,v 1.2 2004/06/17 22:59:12 hamatoma Exp $<br>
+$Id: module.html,v 1.3 2004/06/28 22:15:23 hamatoma Exp $<br>
 <p>Den Infobasar kann man erweitern. Daf&uuml;r ist eine Schnittstelle
 definiert, die hier beschrieben wird.<br>
 </p>
@@ -41,6 +41,14 @@ Tabelle <span style="font-style: italic;">user.</span><br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiele</span><br>
       </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Berechtigungsliste"></a>Berechtigungsliste<br>
+      </td>
+      <td style="vertical-align: top;">Summe aller Objektberechtigungen
+f&uuml;r einen Benutzer (oder Gruppe).<br>
+      </td>
+      <td style="vertical-align: top;">user?:posting+?=:wiki+-?=#...</td>
     </tr>
     <tr>
       <td style="vertical-align: top;"><a name="Design-Rahmen"></a>Design-Rahmen<br>
@@ -159,8 +167,8 @@ wiki+-?=#<br>
     <tr>
       <td style="vertical-align: top;"><a name="Teilrecht"></a>Teilrecht<br>
       </td>
-      <td style="vertical-align: top;">Berechtigung, ein Objekt zu
-behandeln<br>
+      <td style="vertical-align: top;">Recht, eine bestimmte Aktion mit
+einem Objekt durchzuf&uuml;hren<br>
       </td>
       <td style="vertical-align: top;">Erzeugen (+), L&ouml;schen (-),
 Lesen (?), Schreiben (=), Sperren (#)</td>
@@ -304,11 +312,16 @@ $calendar-&gt;getDaysPerMonth (time());<br>
 </code>
 <h2><a name="Rechte"></a>Rechte</h2>
 Rechte sind an Gruppen gebunden. Damit k&ouml;nnen sie zentral f&uuml;r
-viele Objekte gepflegt werden. Da die Gruppenanzahl nicht begrenzt ist,
-ist das keine Einschr&auml;nkung. Notfalls bekommt halt jedes Objekt
+mehrere Benutzer gleichzeitig gepflegt werden. Da die Gruppenanzahl
+nicht begrenzt ist,
+ist das keine Einschr&auml;nkung. Notfalls bekommt halt jeder Benutzer
 seine Gruppe.<br>
+Aus Effizenzgr&uuml;nden werden die <a
+ href="#effektive_Objektberechtigung">effektiven Objektberechtigungen</a>
+aller Benutzer bei jeder Ver&auml;nderung einer Gruppe berechnet und im
+Datensatz des Benutzers gespeichert.<br>
 Jedes Modul wei&szlig;, welche Rechte f&uuml;r seine Objekte relevant
-sind.<br>
+sind und fragt sie entsprechend ab.<br>
 <h3>Beispiel 1: Verwaltung Benutzerkonto:</h3>
 Hier sind zwei Objektklassen relevant: <span
  style="font-style: italic;">user</span> und <span
