@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.19 2004/12/22 18:58:24 hamatoma Exp $
+// $Id: index.php,v 1.20 2004/12/26 12:48:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.6 (2004.12.22)');
+define ('PHP_ModuleVersion', '0.6.6.1 (2004.12.25)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -305,13 +305,6 @@ function baseSplitRights (&$session, &$account_right_user, &$account_right_right
 	
 
 function baseAccount (&$session, $message) {
-	#global $account_user, $account_code, $account_code2, $account_rights,
-#		$account_email,
-#	$account_locked, $account_user2, $account_theme, $account_width,
-#	$account_height, $account_maxhits,
-#	$account_right_posting, $account_right_user, $account_right_pages, $account_right_rights,
-#	$account_startpage, $account_startpageoffer;
-#	global $login_user, $login_passw;
 	$session->trace (TC_Gui1, 'baseAccount');
 	$reload = false;
 	if (isset ($_POST ['account_user']) && ! empty ($_POST ['account_user']))
@@ -387,7 +380,10 @@ function baseAccount (&$session, $message) {
 	
 	$change = $session->hasRight (R_User, R_Put);
 	$new = $session->hasRight (R_User, R_New);
-	$new = $session->fUserId <= 2 || $session->fUserName == 'wk' || $session->fUserName == 'admin';
+	$new = $session->fUserId <= 2 || $session->fUserName == 'wk' 
+		|| $session->fUserName == 'admin'
+		|| $session->testFeature (FEATURE_SIMPLE_USER_MANAGEMENT)
+		|| strpos ($session->fUserName, $session->fAdmins) > 0;
 	$change = $new;
 	if ($change || $new){
 		guiLine ($session, 2);
@@ -771,9 +767,6 @@ function baseEditPageAnswerSave (&$session)
 }
 
 function baseNewPageReference (&$session) {
-	global $alterpage_name, $alterpage_content, $textarea_width, $alterpage_mime,
-		 $textarea_height, $alterpage_content, $alterpage_insert, 
-		 $alterpage_appendtemplate;
 	$session->trace (TC_Gui1, 'baseNewPageReference');
 	$name = substr ($session->fPageName, 1);
 	if ( ($page = dbPageId ($session, $name)) > 0)

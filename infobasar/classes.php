@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.18 2004/12/22 18:58:25 hamatoma Exp $
+// $Id: classes.php,v 1.19 2004/12/26 12:46:04 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 
-define ('PHP_ClassVersion', '0.6.6 (2004.12.22)');
+define ('PHP_ClassVersion', '0.6.6.1 (2004.12.25)');
 
 define ('PATH_DELIM', '/');
 define ('COOKIE_NAME', 'infobasar');
@@ -175,6 +175,8 @@ define ('R_Rights', 'right');
 
 // Features:
 define ('FEATURE_UPLOAD_ALLOWED', 1);
+define ('FEATURE_SIMPLE_USER_MANAGEMENT', 2); // Jeder darf Konten anlegen/aendern
+define ('FEATURE_SECURE_LOGOUT', 4);
 
 // Alignments:
 define ('AL_None', null);
@@ -184,6 +186,114 @@ define ('AL_Justify', 'justify');
 define ('AL_Center', 'center');
 define ('AL_Top', 'top');
 define ('AL_Bottom', 'bottom');
+
+// HTML-Tags:
+define ('TAG_ANCOR_END', "</a>\n");	
+define ('TAG_ANCOR_HREF', '<a href="');	
+define ('TAG_APO', '"');
+define ('TAG_APO_SUFFIX', '">');
+define ('TAG_APO_SUFFIX_NEWLINE', "\">\n");
+define ('TAG_BODY_END',  '</body>');
+define ('TAG_BODY_H1', '<body><h1>');
+define ('TAG_BODY_HTML_END', "\n</body></html>");
+define ('TAG_BOLD_ITALIC', '<b><i>');
+define ('TAG_CITE', '<cite>');
+define ('TAG_CITE_END', '</cite>');
+define ('TAG_DOC_TYPE', '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">');
+define ('TAG_ENDPREFIX', '</'); 	
+define ('TAG_FORM_END', "</form>\n");
+define ('TAG_FORM_MULTIPART_POST_ACTION', '<form enctype="multipart/form-data" " method="post" action="');
+define ('TAG_FORM_POST_ACTION', '<form method="post" action="');
+define ('TAG_H1_END', "</h1>\n");
+define ('TAG_H1', '<h1>');
+define ('TAG_H2_END', "</h2>\n");
+define ('TAG_H2', '<h2>');
+define ('TAG_HEAD_END', '</head>');
+define ('TAG_HEAD', '<head>');
+define ('TAG_HEAD_TITLE', '<head><title>');
+define ('TAG_HRULE_HEIGHT', '<hr style="width: 100%; height: ');
+define ('TAG_HRULE', '<hr>');
+define ('TAG_HTML', "\n<html>");
+define ('TAG_HTML_BODY', "\n<html>\n<body>");
+define ('TAG_IMAGE_ALT', '<img alt="');
+define ('TAG_IMAGE_SOURCE', '" src="');
+define ('TAG_IMAGE_TITLE', '" title="');
+define ('TAG_INPUT_FILE_NAME', '<input type="file" name="');
+define ('TAG_INPUT_TYPE', '<input type=');
+define ('TAG_INPUT_WIKIACTION_NAME', '<input class="wikiaction" name="');
+define ('TAG_ITALIC_BOLD_END', '</i></b>');
+define ('TAG_LINK_STYLESHEET', '<link rel="stylesheet" type="text/css" href="');
+define ('TAG_LISTITEM_END', "</li>\n");
+define ('TAG_LISTITEM', '<li>');
+define ('TAG_META', "<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">\n");
+define ('TAG_NEWLINE', "<br/>\n");
+define ('TAG_OPTION', '<option');
+define ('TAG_PARAGRAPH_END', "</p>\n");
+define ('TAG_PARAGRAPH', '<p>');
+define ('TAG_PRE_END', "</pre>\n");
+define ('TAG_PREFIX', '<'); 	
+define ('TAG_PRE', "<pre>\n");
+define ('TAG_REPLACEMENT_MATCH1',  '<$1>');	
+define ('TAG_REXPR_BIG_SMALL', '!(\[/?(big|small))\]!');
+define ('TAG_REXPR_BODY_END', '/<\s*\/\s*body\s*>.*$/si');
+define ('TAG_REXPR_BODY', '/^.*<\s*body\s*>/si');
+define ('TAG_SELECT_END', "</select>\n");
+define ('TAG_SELECT_NAME', '<select name="');
+define ('TAG_STRONG_END', '</strong>');
+define ('TAG_STRONG', '<strong>');
+define ('TAG_SUFFIX', '>'); 	
+define ('TAG_SUFFIX_NEWLINE', ">\n"); 	
+define ('TAG_TABLE_BOLD_DELIM_END', '</b></td>');
+define ('TAG_TABLE_DELIM_ALIGN', '<td text-align: ');
+define ('TAG_TABLE_DELIM_BOLD', '<td><b>');
+define ('TAG_TABLE_DELIM_END_DELIM', '</td><td>');
+define ('TAG_TABLE_DELIM_END', '</td>');
+define ('TAG_TABLE_DELIM_RECORD_END', "</td></tr>\n");
+define ('TAG_TABLE_DELIM', '<td>');
+define ('TAG_TABLE_END', "</table>\n");
+define ('TAG_TABLE_OPEN', '<table ');
+define ('TAG_TABLE_RECORD_END_RECORD', "</tr>\n<tr>");
+define ('TAG_TABLE_RECORD_END', "</tr>\n");
+define ('TAG_TABLE_RECORD', '<tr>');
+define ('TAG_TEXTAREA_END', "</textarea>\n");
+define ('TAG_TEXTAREA_NAME', '<textarea name="');
+define ('TAG_TITLE_END_BODY', "</title>\n</head>\n<body>\n");
+define ('TAG_TITLE_HEAD_END',  "</title></head>\n");
+define ('TAG_TITLE', '<title>');
+define ('TAG_ULIST_END', "</ulist>\n");
+define ('TAG_ULIST', '<ulist>');
+// Tag-Names:
+define ('TAGN_HEADLINE', 'h');		
+define ('TAGN_LISTITEM', 'li');
+define ('TAGN_OLIST', 'ol');
+define ('TAGN_TABLE_DELIM', 'td');
+define ('TAGN_ULIST', 'ulist');		
+// Tag-Attributes:
+define ('TAGA_APO_COLS',  '" cols="');
+define ('TAGA_APO_NAME', '" name="');
+define ('TAGA_APO_ROWS', ' " rows="');
+define ('TAGA_APO_SIZE_END', "\" size=\"1\">\n");
+define ('TAGA_APO_VALUE', '" value="');	
+define ('TAGA_APO_WIDTH',  '" width="');
+define ('TAGA_BORDER_1', ' border="1"');		
+define ('TAGA_BORDER', ' border="');
+define ('TAGA_MAXSIZE', ' maxlength="');
+define ('TAGA_NAME', '" name="');
+define ('TAGA_PX_END', "px;\">\n");
+define ('TAGA_SIZE', ' size="');
+define ('TAGA_SUBMIT_END', '" type="submit">');	
+define ('TAGA_VALUE_COLON', ' value=";');
+define ('TAGA_VALUE', ' value="');	
+define ('TAGA_WIDTH_100', ' width="100%"');
+// Tag-Attribut-Value:
+define ('TAGAV_CHECKBOX', '"checkbox"');
+define ('TAGAV_CHECKED', 'checked');
+define ('TAGAV_FILE', '"file"');
+define ('TAGAV_HIDDEN', '"hidden"');
+define ('TAGAV_PASSWORD', '"password"');
+define ('TAGAV_RADIO', '"radio"');
+define ('TAGAV_SELECTED', ' selected');
+define ('TAGAV_TEXT', '"text"');
 
 class Session {
 	// var, wenn protected nicht geht
@@ -240,7 +350,7 @@ class Session {
 	var $fBodyLines; // null oder auszugebendes HTML (in guiHeader())
 
 	var $fTraceFlags;
-	var $fPreformated;
+	var $fPreformatted;
 
 	var $fGroups; // array: gid => ",uid1,uid2,...uidX,";
 	var $fVersion; // php-Version
@@ -255,6 +365,7 @@ class Session {
 	var $fTraceInFile; // true: trace() schreibt in Datei (statt in HTML-Ausgabe).
 	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.
 	var $fTraceDirect; // true: sofortiges echo	
+	var $fAdmins; // mit ':' getrennte Usernamen der Admins
 	function Session ($start_time){
 		global $_SERVER;
 		global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
@@ -267,7 +378,7 @@ class Session {
 		$this->fVersion = 400;
 		$this->fModuleData = array ();
 		$this->fBodyLines = null;
-		$this->fPreformated = false;
+		$this->fPreformatted = false;
 		$this->fLocation = "";
 		$this->fFormExists = false;
 		$this->fPageChangedAt = "";
@@ -275,7 +386,9 @@ class Session {
 		$this->fPageTitle = "";
 		$this->fUserTheme = Theme_Standard;
 		$this->fLogPageId = null;
-		$this->fFeatureList = -1; // Alle Eigenschaften
+		$this->fAdmins = ':wk:';
+		$this->fFeatureList = FEATURE_UPLOAD_ALLOWED;
+		; // FEATURE_UPLOAD_ALLOWED FEATURE_SIMPLE_USER_MANAGEMENT FEATURE_SECURE_LOGOUT 
 		// Basisverzeichnis relativ zu html_root
 		$uri = $_SERVER['REQUEST_URI'];
 		$this->fScriptURL = $uri;
@@ -317,7 +430,7 @@ class Session {
 			+ 1 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
-		#$this->fTraceFlags = TC_All;
+		$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 		$this->fTraceInFile = false;
 		$this->fTraceInFile = true;
@@ -342,7 +455,7 @@ class Session {
 	function dumpVars($header){
 		$this->Write ("HTTP_POST_VARS: $header");
 		foreach ($_POST as $name => $val){
-			$this->Write ($name . ": " . textToHtml ($val) . "<br>");
+			$this->Write ($name . ": " . textToHtml ($val) . TAG_NEWLINE);
 		}
 	}
 	function traceArray ($class, $msg, $array){
@@ -361,7 +474,7 @@ class Session {
 		}
 	}
 	function WriteLine ($line){
-		$this->Write ($line . ($this->fPreformated ? "\n" : "<br/>\n"));
+		$this->Write ($line . ($this->fPreformatted ? "\n" : TAG_NEWLINE));
 	}
 	function setFeatureList ($list) {
 		$this->fFeatureList = $list;
@@ -399,34 +512,34 @@ class Session {
 				if ($uri != $_SERVER['REQUEST_URI'])
 					header ('Location: http://' . $_SERVER['HTTP_HOST'] . $uri);
 			}
-			echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">';
-			echo "\n<html>\n";
+			echo TAG_DOC_TYPE;
+			echo TAG_HTML;
 			$this->fHasHeader = true;
 		}
 	}
 	function startCode() {
 		$this->trace (TC_Session1, 'startCode');
-		if ($this->fPreformated)
+		if ($this->fPreformatted)
 			$this->trace (TC_Warning, PREFIX_Warning . 'Verschachtelung von [code]');
 		else {
-			echo '<pre>';
-			$this->fPreformated = true;
+			echo TAG_PRE;
+			$this->fPreformatted = true;
 		}
 	}
 	function finishCode() {
 		$this->trace (TC_Session1, 'finishCode');
-		if (! $this->fPreformated)
+		if (! $this->fPreformatted)
 			$this->trace (TC_Warning, PREFIX_Warning . '[/code] ohne [code]');
 		else {
-			echo "</pre>\n";
-			$this->fPreformated = false;
+			echo TAG_PRE_END;
+			$this->fPreformatted = false;
 		}
 	}
 	function dump ($msg) {
 		echo "Dump von Config aus " . $msg
 			. ": DBName: " . $this->fDbName
 			. " DBUser: " . $this->fDbUser
-			. "<br />\n";
+			. TAG_NEWLINE;
 	}
 	function backTrace ($message) {
 		$list = debug_backtrace ();
@@ -474,7 +587,7 @@ class Session {
 				$this->setLocation (encodeWikiName ($this, $last_pagename));
 		}
 		$this->fPageTitle = $this->fPageName;
-		$this->trace (TC_Init, 'setPageName: PageName: ' . $this->fPageName . '<br>');
+		$this->trace (TC_Init, 'setPageName: PageName: ' . $this->fPageName . TAG_NEWLINE);
 	}
 	function setPageTitle ($title) {
 		$this->trace (TC_Session1, 'setPageTitle: ' . $title);
@@ -566,8 +679,8 @@ class Session {
 	}
 	function replaceMacrosHTML ($text){
 		if ( ($pos = strpos ($text, Macro_Char)) >= 0 && is_int ($pos)){
-			$text = str_replace (TM_Newline, "<br/>\n", $text);
-			$text = preg_replace ('!(\[/?(big|small))\]!', '<$1>', $text);
+			$text = str_replace (TM_Newline, TAG_NEWLINE, $text);
+			$text = preg_replace (TAG_REXPR_BIG_SMALL, TAG_REPLACEMENT_MATCH1, $text);
 		}
 		return $text;
 	}
@@ -586,16 +699,19 @@ class LayoutStatus {
 		$this->fSession = $session;
 		$this->fEmphasisStack = "";
 		$this->fIndentLevel = $this->fUListLevel = $this->fOrderedListLevel = 0;
-		$this->fOpenTable = $this->fOpenParagraph = $this->fPreformated = false;
-		$this->fTableBorder = 1;
-		$this->fTableWidth = '100%';
+		$this->fOpenTable = $this->fOpenParagraph = $this->fPreformatted = false;
+		$this->fTableBorder = TAGA_BORDER_1;
+		$this->fTableWidth = TAGA_WIDTH_100;
 	}
 	function pushEmphasis ($type) {
 		$this->fEmphasisStack .= $type;
 		if ($type == 'x')
-			echo '<b><i>';
-		else
-			echo '<' . $type . '>';
+			echo TAG_BOLD_ITALIC;
+		else {
+			echo TAG_PREFIX;
+			echo $type;
+			echo TAG_SUFFIX;
+		}
 	}
 	function popEmphasis ($type) {
 		$this->fSession->trace (TC_Layout2 + TC_Formating,
@@ -604,7 +720,7 @@ class LayoutStatus {
 		if (is_int ($pos)) {
 			for ($ii = strlen ($this->fEmphasisStack) - 1; $ii >= $pos; $ii--) {
 				$type = substr ($this->fEmphasisStack, $ii, 1);
-				echo $type == 'x' ? '</i></b>' :  "</$type>";
+				echo $type == 'x' ? TAG_ITALIC_BOLD_END :  TAG_ENDPREFIX . $type . TAG_SUFFIX;
 			}
 			$this->fEmphasisStack = substr ($this->fEmphasisStack, 0, $pos);
 		}
@@ -621,14 +737,17 @@ class LayoutStatus {
 		if (! $this->fOpenTable) {
 			$this->stopSentence();
 			$this->fOpenTable = true;
-			echo "<table border=\"$this->fTableBorder\" width=\"$this->fTableWidth\">\n";
+			echo TAG_TABLE_OPEN;
+			echo $this->fTableBorder;
+			echo $this->fTableWidth;
+			echo TAG_SUFFIX_NEWLINE;
 		}
 	}
 	function startParagraph (){
 		$this->fSession->trace (TC_Layout1 + TC_Formating, 'startParagraph');
 		if (! $this->fOpenParagraph) {
 			$this->fOpenParagraph = true;
-			echo '<p>';
+			echo TAG_PARAGRAPH;
 		}
 	}
 	function stopSentence () {
@@ -645,36 +764,45 @@ class LayoutStatus {
 		$this->stopSentence ();
 		if ($val < $level) {
 			while ($val < $level) {
-				echo "</$tag>";
+				echo TAG_ENDPREFIX;
+				echo $tag;
+				echo TAG_SUFFIX;
 				$level--;
 			}
 		} else while ($val > $level) {
-			echo "<$tag>";
+			echo TAG_PREFIX;
+			echo $tag;
+			echo TAG_SUFFIX;
 			$level++;
 		}
 	}
 	function changeUListLevel ($val) {
 		$this->fSession->trace (TC_Layout2 + TC_Formating, "changeUListLevel");
-		$this->changeListLevel ($val, $this->fUListLevel, 'ulist');
+		$this->changeListLevel ($val, $this->fUListLevel, TAGN_ULIST);
 	}
 	function changeOrderedListLevel ($val) {
 		$this->fSession->trace (TC_Layout2 + TC_Formating, "changeOrderedListLevel");
-		$this->changeListLevel ($val, $this->fOrderedListLevel, 'ol');
+		$this->changeListLevel ($val, $this->fOrderedListLevel, TAGN_OLIST);
 	}
 	function stopTable () {
 		if ($this->fOpenTable){
 			$this->fOpenTable = false;
-			echo "</table>\n";
+			echo TAG_TABLE_END;
 		}
 	}
 	function stopParagraph () {
 		$this->fSession->trace (TC_Layout1 + TC_Formating, "stopParagraph");
-		$this->changeUListLevel (0);
-		$this->changeOrderedListLevel (0);
 		$this->stopTable();
-		if ($this->fOpenParagraph) {
-			$this->fOpenParagraph = false;
-			echo "</p>\n";
+	}
+	function changeOfLineType ($oldtype, $type){
+		if ($oldtype != $type){
+			$this->changeUListLevel (0);
+			$this->changeOrderedListLevel (0);
+			$this->stopTable ();
+			if ($this->fOpenParagraph) {
+				$this->fOpenParagraph = false;
+				echo TAG_PARAGRAPH_END;
+			}
 		}
 	}
 	function trace ($class, $msg) {
@@ -697,29 +825,49 @@ class DiffEngine {
 		$this->fIx1 = $this->fIx2 = 0;
 	}
 	function addLines ($ix2, $count) {
-		echo "<pre>\n";
+		echo TAG_PRE;
+
 		for ($ii = 0; $ii < $count; $ii++) {
-			echo '+ ' . ($ix2 + $ii + 1) . ': ' . $this->fLines2 [$ix2 + $ii]
-				. "\n";
+			echo '+ ';
+			echo  ($ix2 + $ii + 1);
+			echo ': ';
+			echo $this->fLines2 [$ix2 + $ii];
+			echo "\n";
 		}
-		echo "</pre>\n";
+		echo TAG_PRE_END;
 	}
 	function delLines ($ix1, $count) {
-		echo "<pre>\n";
+		echo TAG_PRE;
 		for ($ii = 0; $ii < $count; $ii++) {
-			echo '- ' . ($ix1 + $ii + 1) . ': ' . $this->fLines1 [$ix1 + $ii]
-				. "\n";
+			echo '- ';
+			echo  ($ix1 + $ii + 1);
+			echo ': ';
+			echo $this->fLines1 [$ix1 + $ii];
+			echo  "\n";
 		}
-		echo "</pre>\n";
+		echo TAG_PRE_END;
 	}
 	function differentRange ($ix1, $count1, $ix2, $count2) {
-		echo '<p>Bereich ' . (1 + $ix1) . '-' . ($ix1 + $count1)
-			. ' / ' . (1 + $ix2) . '-' . ($ix2 + $count2) . ' verschieden</p>';
+		echo TAG_PARAGRAPH;
+		echo 'Bereich ';
+		echo (1 + $ix1);
+		echo '-';
+		echo ($ix1 + $count1);
+		echo ' / ';
+		echo (1 + $ix2);
+		echo '-';
+		echo ($ix2 + $count2);
+		echo ' verschieden';
+		echo TAG_PARAGRAPH_END;
 		$this->delLines ($ix1, $count1);
 		$this->addLines ($ix2, $count2);
 	}
 	function equalLines ($ix1, $ix2, $count) {
-		echo '<p>Es sind ' . ($count+0) . ' Zeile(n) gleich</p>';
+		echo TAG_PARAGRAPH;
+		echo 'Es sind ';
+		echo ($count+0);
+		echo ' Zeile(n) gleich.';
+		echo TAG_PARAGRAPH_END;
 	}
 	function skipEqual ($ix1, $ix2) {
 		$this->fSession->trace (TC_Diff3, 'skipEqual');
