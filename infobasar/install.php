@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.13 2005/01/08 23:54:44 hamatoma Exp $
+// $Id: install.php,v 1.14 2005/01/09 23:54:06 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -246,14 +246,12 @@ function instArchive (&$session, $message =  null) {
 		
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-	
 	instGetConfig ($session);
 
 	guiHeadline ($session, 2, 'Archiv hochladen');
 	
-	if (empty ($archive_name))
-		$archive_name = $session->fFileSystemBase . PATH_DELIM . "install" . PATH_DELIM . 'infobasar.hma';
-	$archive_exists = file_exists ($archive_name);
+	if (empty ($_POST ['archives_dir_showed']))
+		$_POST ['archives_dir_showed'] = '.';
 
 	echo '<form enctype="multipart/form-data" action="' . C_ScriptName
 		. '" method="post">' . "\n";
@@ -266,13 +264,14 @@ function instArchive (&$session, $message =  null) {
 		
 	guiStartForm ($session, 'Form');
 	guiHiddenField ('inst_step', 0);
-	guiHiddenField ('archive_name', null);
 	
-	$path = $session->fFileSystemBase . PATH_DELIM;
+	$path = $session->fFileSystemBase . PATH_DELIM; 
+	if ($_POST ['archives_dir_showed'] != '.')
+		$path .= $_POST ['archives_dir_showed'] . PATH_DELIM;
 	if (guiChecked ($session, 'archive_dir')){
 		$dir = opendir ($path);
-		guiHeadline ($session, 3, "Verzeichnis auf dem Server");
-		echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
+		guiHeadline ($session, 3, "Verzeichnis $path auf dem Server");
+		echo '<table border="1"><tr><td><b>Name:</b></td>';
 		echo '<td><b>Gr&ouml;&szlig;e</b></td><td><b>Ge&auml;ndert am</b></td></tr>' . "\n";
 		while ($file = readdir ($dir)){
 			if ($file != '.' && $file != '..'){
@@ -289,8 +288,9 @@ function instArchive (&$session, $message =  null) {
 		echo '</table>' . "\n";
 		closedir ($dir);
 	}
+	$path = $session->fFileSystemBase . PATH_DELIM; 
 	$dir = opendir ($path);
-	guiHeadline ($session, 3, "Archive");
+	guiHeadline ($session, 3, "Archive (Verzeichnis install)");
 	echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
 	echo '<td><b>Gr&ouml;&szlig;e</b></td><td><b>Ge&auml;ndert am</b></td>';
 	echo '<td><b>Aktion</b></td></tr>' . "\n";
@@ -313,8 +313,12 @@ function instArchive (&$session, $message =  null) {
 	}
 	echo '</table>' . "\n";
 	guiHeadline ($session, 2, 'Optionen');
-	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen');
+	echo ' Verzeichnis: ';
+	guiComboBox ('archives_dir_showed', 
+		array ('.', '..', '../db', '../pic', '../import', '../css', '../docu'),
+		null, null);
 	echo ' ';
+	guiCheckBox ('archive_dir', 'Anzeigen');
 	guiButton ('archive_show', 'Aktualisieren');
 	outNewline();
 	echo 'Kommentare aus PHP-Quellen entfernen: ';
@@ -328,7 +332,7 @@ function instArchiveAnswer (&$session){
 	$session->trace (TC_Init, "instArchiveAnswer");
 	$message = null;
 	if (isset ($_POST ['archive_upload'])){
-		$session->trace ('instArchiveAnswer: archive_upload');
+		$session->trace (TC_Init, 'instArchiveAnswer: archive_upload');
 		$name =  $_FILES['archive_uploadfile']['name'];
 		if (move_uploaded_file($_FILES['archive_uploadfile']['tmp_name'],
 			$session->fFileSystemBase . PATH_DELIM . $name)) {
@@ -370,7 +374,6 @@ function instGetStandardPageFile (&$session){
 	return $session->fFileSystemBase . PATH_DELIM . '../db/infobasar_pages.wiki';
 }
 function instConfigFile (&$session, $message =  null) {
-	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 	$session->trace (TC_Init, 'instConfigFile');
 	guiHeader ($session, 'Schritt 1');
 	
@@ -391,20 +394,20 @@ function instConfigFile (&$session, $message =  null) {
 	$file = instGetSqlFile ($session);
 	$sql_exists = file_exists ($file);
 
-	if (empty ($db_server))
-		$db_server = 'localhost';
-	if (empty ($db_prefix))
-		$db_prefix = 'infobasar_';
+	if (empty ($_POST ['db_server']))
+		$$_POST ['db_server'] = 'localhost';
+	if (empty ($$_POST ['db_prefix']))
+		$$_POST ['db_prefix'] = 'infobasar_';
 	echo '<table><tr><td>MySQL-Server</td><td>';
-	guiTextField ('db_server', $db_server, 32, 0);
+	guiTextField ('db_server', null, 32, 0);
 	echo "</td></tr>\n<tr><td>Datenbank</td><td>";
-	guiTextField ('db_name', $db_name, 32, 0);
+	guiTextField ('db_name', null, 32, 0);
 	echo "</td></tr>\n<tr><td>Benutzer</td><td>";
-	guiTextField ('db_user', $db_user, 32, 0);
+	guiTextField ('db_user', null, 32, 0);
 	echo "</td></tr>\n<tr><td>Passwort</td><td>";
-	guiTextField ('db_passw', $db_passw, 32, 0);
+	guiTextField ('db_passw', null, 32, 0);
 	echo "</td></tr>\n<tr><td>Tabellenvorspann</td><td>";
-	guiTextField ('db_prefix', $db_prefix, 32, 0);
+	guiTextField ('db_prefix', null, 32, 0);
 	echo "</td></tr>\n<tr><td></td><td>";
 	guiButton ('config_save', 'Konfiguration speichern');
 	echo "</td></tr>\n<tr><td></td><td>";
@@ -414,7 +417,7 @@ function instConfigFile (&$session, $message =  null) {
 	$status = checkDB ($session, $message);
 	guiParagraph ($session, $message, false);
 	if ($status == NO_DB)
-		guiButton ('config_createdb', 'Datenbank ' . $db_name . ' erzeugen');
+		guiButton ('config_createdb', 'Datenbank ' . $_POST ['db_name'] . ' erzeugen');
 	guiLine ($session, 2);
 	guiParagraph ($session, "DB-Definitionsdatei $file " . ($sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
 	guiButton ('inst_last', 'zurück');
@@ -424,28 +427,27 @@ function instConfigFile (&$session, $message =  null) {
 	guiFinishBody ($session);
 }
 function instConfigFileAnswer (&$session){
-	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
-	global $config_save, $config_access, $config_createdb;
 	$session->trace (TC_Init, "instConfigFileAnswer");
 	$message = "";
-	if (isset ($config_createdb)){
+	if (isset ($_POST ['config_createdb'])){
+		$db_name =  $_POST ['db_name'];
 		if (! $session->fDbInfo && checkDB ($session, $message) == NO_DB) {
 			$query = "create database $db_name;";
 			$result = mysql_query ($query, $session->fDbInfo);
 			if ($result)
-				$message = "DB $db_name wurde erzeugt.";
+				$message = 'DB ' .$db_name . ' wurde erzeugt.';
 			else
 				$messsage = "+++ DB $db_name nicht erzeugt: " 
 					. htmlentities (mysql_error ());
 		} else {
-			$message = "Inkonstistenz";
+			$message = "Inkonsistenz";
 		}
-	} elseif (isset ($config_access)) {
+	} elseif (isset ($_POST ['config_access'])) {
 		checkDB ($session, $message);
-	} elseif (isset ($_REQUEST ['config_save'])) {
-		if (empty ($db_server))
+	} elseif (isset ($_POST ['config_save'])) {
+		if (empty ($_POST ['db_server']))
 			$message = '+++ Kein Server angegeben. Vielleicht "localhost"?';
-		elseif (empty ($db_user))
+		elseif (empty ($_POST ['db_user']))
 			$message = '+++ Kein Datenbank-Benutzer angegeben. Evt. Administrator fragen.';
 		else {
 			$name = $session->fFileSystemBase . PATH_DELIM . '..' . PATH_DELIM . 'config.php';
@@ -470,11 +472,11 @@ function instConfigFileAnswer (&$session){
 				. Install_Version
 				. ') at ' . strftime ("%Y.%m.%d %H.%N.%S", time()) . "\n"
 				. "\$db_type = 'MySQL';\n"
-				. "\$db_server = '$db_server';\n"
-				. "\$db_user = '$db_user';\n"
-				. "\$db_passw = '$db_passw';\n"
-				. "\$db_name = '$db_name';\n"
-				. "\$db_prefix = '$db_prefix';\n"
+				. '$db_server = \'' . $_POST ['db_server'] . "';\n"
+				. '$db_user = \'' . $_POST ['db_user'] . "';\n"
+				. '$db_passw = \'' . $_POST ['db_passw'] . "';\n"
+				. '$db_name = \'' . $_POST ['db_name'] . "';\n"
+				. '$db_prefix = \'' . $_POST ['db_prefix'] . "';\n"
 				. "?>\n"
 				);
 			fclose ($file);
@@ -486,7 +488,6 @@ function instConfigFileAnswer (&$session){
 	instConfigFile ($session, $message);
 }
 function instDB (&$session, $message =  null) {
-	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 	$session->trace (TC_Init, 'instDB');
 	guiHeader ($session, 'Schritt 2');
 	guiHeadline ($session, 2, 'Bestückung der Datenbank');
@@ -499,6 +500,12 @@ function instDB (&$session, $message =  null) {
 	
 	guiStartForm ($session, 'Form');
 	guiHiddenField ('inst_step', 2);
+	guiHiddenField ('db_name');
+	guiHiddenField ('db_prefix');
+	guiHiddenField ('db_user');
+	guiHiddenField ('db_passw');
+	guiHiddenField ('db_server');
+	
 	$table_status = checkTableStatus ($session, $tables_exist);
 	guiParagraph ($session, $table_status, false);
 	
@@ -514,6 +521,7 @@ function instDB (&$session, $message =  null) {
 function instDBAnswer (&$session){
 	$session->trace (TC_Init, 'instDBAnswer');
 	$message = '';
+	
 	if (isset ($_POST ['inst_populate'])) {
 		$message = populate ($session, instGetSqlFile ($session));
 	}
@@ -540,8 +548,6 @@ function instFinish (&$session, $message = null){
 	guiFinishBody ($session);
 }
 function instExit (&$session){
-	global $db_prefix, $inst_delete, $inst_passw, $inst_setpassw;
-	$session->trace (TC_Init, 'instExit');
 	$error = null;
 	$message = null;
 	if (guiChecked ($session, 'inst_setpassw')) {
@@ -550,7 +556,7 @@ function instExit (&$session){
 		else {
 			checkDB ($session, $message);
 			$passw = strrev (crypt ($_POST ['inst_passw'], 'admin'));
-			sqlStatement ($session, 'update ' . $db_prefix . "user set code='"
+			sqlStatement ($session, 'update ' . $_POST ['db_prefix'] . "user set code='"
 				 . $passw . "' where name='admin'");
 			$message = 'Passwort wurde gesetzt';
 		}
@@ -576,32 +582,31 @@ function instExit (&$session){
 }
 // ------------------------------------------
 function checkDB (&$session, &$message) {
-	global $db_server, $db_user, $db_passw, $db_name;
-	$session->trace (TC_Init, 'checkDB: ' . $db_name);
+	$session->trace (TC_Init, 'checkDB: ' . $_POST ['db_name']);
 	$result = NO_SERVER;
-	if (!($dbc = mySql_pconnect($db_server, $db_user, $db_passw))) {
+	if (!($dbc = mySql_pconnect($_POST ['db_server'], $_POST ['db_user'], 
+		$_POST ['db_passw']))) {
 		$message = 'Kann mich mit mySQL-Server nicht verbinden.'
 			. ' Stimmen Benutzer / Passwort?</p>'
 			. '<p>MySql meldet: ' . htmlentities (mySql_error());
-	} elseif (!mysql_select_db($db_name, $dbc)) {
+	} elseif (!mysql_select_db($_POST ['db_name'], $dbc)) {
 		$session->setDbConnectionInfo ($dbc, $dbc);
-		$message = "DB $db_name nicht gefunden"
+		$message = 'DB ' . $_POST ['db_name'] . ' nicht gefunden'
 			. '</p><p>MySql meldet: ' . htmlentities (mySql_error());
 		$result = NO_DB;
 	} else {
 		$session->setDbConnectionInfo ($dbc, $dbc);
-		$message = 'Zugang zur Datenbank ' . $db_name . ' ist möglich.';
+		$message = 'Zugang zur Datenbank ' . $_POST ['db_name'] . ' ist möglich.';
 		$result = DB_EXISTS;
 	}
 	$session->trace (TC_Init, 'checkDB: ' . $result);
 	return $result;
 }
 function checkTableStatus (&$session, &$exists) {
-	global $db_name, $db_prefix;
 	$status = '';
 	$exists = false;
 	if ($session->fDbConnection) {
-		$result = mysql_list_tables($db_name);
+		$result = mysql_list_tables($_POST ['db_name']);
 
 		if (!$result) {
 			$status = "keine Tabellen vorhanden";
@@ -610,66 +615,68 @@ function checkTableStatus (&$session, &$exists) {
 			$count1 = $count2 = 0;
 			while ($row = mysql_fetch_row($result)) {
 				$count1++;
-				if (getPos ($row[0], $db_prefix) >= 0)
+				if (getPos ($row[0], $_POST ['db_prefix']) >= 0)
 					$count2++;
 			}
 			$status = ($count1 + 0) . ' Tabelle(n), davon ' . ($count2 + 0)
-				. " mit Vorspann $db_prefix in der DB";
+				. ' mit Vorspann ' . $_POST ['db_prefix'] . ' in der DB';
 			$exists = $count2 > 0;
 			mysql_free_result($result);
 		}
 	}
 	return $status;
 }
-
-function populate (&$session, $fn_sql) {
-	global $db_prefix;
-	$session->trace (TC_Init, "populate:");
-	$message = '';
-	if (checkDB ($session, $message) == DB_EXISTS) {
-		if (! ($file = fopen ($fn_sql, "r"))) {
+function executeSqlFile (&$session, $fn_sql, &$line_count, &$comments){
+	$message = null;
+	$line_count = $comments = 0;
+	if (! ($file = fopen ($fn_sql, "r"))) {
 			$message = "+++ Kann Datei nicht &ouml;ffnen: $fn_sql";
-		} else {
-			$status = null;
-			$line_count = $comments = 0;
-			while (! feof ($file)) {
-				$line_count++;
-				$line = fgets ($file, 0x7fff);
-				if (strlen ($line) <= 3 
-					|| preg_match ('!^\s*(#|/[*/])!', $line))
-					$comments++;
-				else if (strpos ($line, 'SE InfoBasar;') == 1)
-					$session->trace (TC_Init, "Use db gefunden");
-				else { 
-					$len = strlen ($line);
-					$with_colon = ($pos = strpos ($line, ';', $len - 2)) > 0;
-					if ($with_colon){
-						$line = substr ($line, 0, $pos);
-						$session->trace (TC_Gui3, "Strichpunkt entfernt: $line");
+	} else {
+		$status = null;
+		$db_prefix = $_POST ['db_prefix'];
+		while (! feof ($file)) {
+			$line_count++;
+			$line = fgets ($file, 0x7fff);
+			if (strlen ($line) <= 3 
+				|| preg_match ('!^\s*(#|/[*/])!', $line))
+				$comments++;
+			else if (strpos ($line, 'SE InfoBasar;') == 1)
+				$session->trace (TC_Init, "Use db gefunden");
+			else { 
+				$len = strlen ($line);
+				$with_colon = ($pos = strpos ($line, ';', $len - 2)) > 0;
+				if ($with_colon){
+					$line = substr ($line, 0, $pos);
+					$session->trace (TC_Gui3, "Strichpunkt entfernt: $line");
+				}
+				if ($status == 'create') {
+					$sql .= ' ' . $line;
+					if ($with_colon) {
+						sqlStatement ($session, $sql);
+						$status = null;
 					}
-					if ($status == 'create') {
-						$sql .= ' ' . $line;
-						if ($with_colon) {
-							sqlStatement ($session, $sql);
-							$status = null;
-						}
-					} elseif (getPos ($line, 'CREATE TABLE') == 0) {
-							$sql = str_replace ('infobasar_', $db_prefix, $line);
-							$status = 'create';
-					} else {
-						if (strpos ($line, 'ROP TABLE') == 1)
-							$line = str_replace ('infobasar_', $db_prefix, $line);
-						elseif (strpos ($line, 'NSERT INTO') == 1)
-							$line = str_replace (' INTO infobasar_', ' INTO ' . $db_prefix,
-								$line);
-						elseif (strpos ($line, 'PDATE ') == 1)
-							$line = str_replace ('UPDATE infobasar_', 'UPDATE ' . $db_prefix,
-								$line);
-						sqlStatement ($session, $line);
-					}
+				} elseif (preg_match ('/^create\s+table/i', $line)) {
+					$sql = str_replace (' infobasar_', ' ' . $db_prefix, $line);
+					$status = 'create';
+				} else {
+					if ( ($pos = strpos ($line, 'infobasar_')) > 0)
+						$line = substr ($line, 0, $pos) . $db_prefix
+							. substr ($line, $pos + 10);
+					sqlStatement ($session, $line);
 				}
 			}
-			fclose ($file);
+		}
+		fclose ($file);
+	}
+	return $message;
+}
+function populate (&$session, $fn_sql) {
+	$session->trace (TC_Init, "populate:");
+	$db_prefix = $_POST ['db_prefix'];
+	$message = '';
+	if (checkDB ($session, $message) == DB_EXISTS) {
+		$message = executeSqlFile ($session, $fn_sql, $line_count, $comments);
+		if (empty ($message)){
 			$message = 'Die Infobasar-Tabellen wurden initialisiert: '
 				 . (0+$line_count) . ' Zeilen gelesen, davon '
 				. (0+$comments) . ' Kommentare';
@@ -782,7 +789,7 @@ function guiField ($name, $type, $text, $size, $maxlength, $special){
 		echo ' ' . $special;
 	echo ">";
 }
-function guiHiddenField ($name, $text) {
+function guiHiddenField ($name, $text = null) {
 	if ($text == null)
 		$text = isset ($_POST [$name]) ? $_POST [$name] : "";
 	guiField ($name, '"hidden"', $text, 0, 0, null);
@@ -822,6 +829,9 @@ function guiChecked(&$session, $name){
 function guiComboBox ($name, $options, $values, $ix_selected = 0) {
 	echo '<select name="' . $name . '" size="1' // . count ($options)
 		. "\">\n";
+	if ($ix_selected == null)
+		$ix_selected = ! isset ($_POST [$name]) 
+			? -1 : indexOf ($options, $_POST [$name]); 
 	foreach ($options as $ix => $text)
 		echo '<option' . ($ix == $ix_selected ? ' selected' : '')
 			. ($values ? ' value="' . $values[$ix] . '"' : '')
@@ -891,8 +901,6 @@ function guiExternLink (&$session, $link, $text) {
 }
 //----------------------------------------
 function instGetConfig (&$session){
-	// Zugriff indirekt!
-	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 	$session->trace (TC_Init, 'instGetConfig: ');
 	
 	$name = $session->fFileSystemBase . PATH_DELIM . ".." . PATH_DELIM . "config.php";
@@ -903,12 +911,13 @@ function instGetConfig (&$session){
 			if (preg_match (
 				'/^\$(db_(server|user|passw|name|prefix))\s*=\s*\'([^\']+)\'/',
 				$line, $match)) {
-				$$match[1] = $match[3];
-				$session->trace (TC_Init, 'instGetConfig: ' . $match[1] . '=' . $$match[1]);
+				$_POST [$match[1]] = $match[3];
+				$session->trace (TC_Init, 'instGetConfig: ' . $match[1] . '=' . $_POST [$match[1]]);
 			}
 		}
 		fclose ($file);
-		$session->setDb(DB_MySQL, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
+		$session->setDb(DB_MySQL, $_POST ['db_server'], $_POST ['db_name'], $_POST ['db_user'], 
+			$_POST ['db_passw'], $_POST ['db_prefix']);
 	}
 }
 function getArchiveHexValue (&$file, $width){
@@ -1102,4 +1111,11 @@ function stripPhpSource (&$session, $fn_source, $fn_target){
 	}
 	return $message;
 }
+function indexOf ($array, $value){
+	$ix = -1;
+	for ($ii = 0; $ix < 0 && $ii < count ($array); $ii++)
+		if ($array [$ii] == $value)
+			$ix = $ii;
+}
+
 ?>
