@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.5 2004/10/18 23:13:04 hamatoma Exp $
+// $Id: address.php,v 1.6 2004/10/22 09:02:47 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -177,6 +177,7 @@ function addressEditBookAnswer (&$session){
 function addressEditCard (&$session, $message = null){
 	$session->trace (TC_Gui1, 'addressEditCard');
 	if (! isset ($_POST ['card_id']) || empty ($_POST ['card_id'])){
+		$session->trace (T_X, 'addressEditCard-2');
 		$card_id = dbGetValueByClause ($session, Tab_Card, 'min(id)', '1');
 		list ($books, $firstname, $lastname, $nickname,
 			$emailprivate, $emailprivate2, $phoneprivate, $phoneprivate2, $faxprivate, $mobileprivate,
@@ -189,12 +190,8 @@ function addressEditCard (&$session, $message = null){
 			. 'street, country, zip, city, '
 			. 'functions, notes'
 			);
-		$ids = preg ('/,/', $books);
-		$books = '';
-		foreach ($ids as $ii => $id)
-			$books .= dbSingleValue ($session, 'select name from ' . dbTable (Tab_Book)
-				. ' where $id=$id') . ($ii < count ($ids) - 1 ? ',' : '');
 	} else {
+		$session->trace (TC_X, 'addressEditCard-3: ' . $_POST ['card_books']);
 		$books = $_POST ['card_books'];
 		$firstname = $_POST ['card_firstname']; 
 		$lastname = $_POST ['card_lastname'];
@@ -221,6 +218,13 @@ function addressEditCard (&$session, $message = null){
 	}
 	guiStandardHeader ($session, 'Ändern einer Adresskarte ',
 		Th_AddressHeader, Th_AddressBodyStart);
+	$ids = preg_split ('/[ ,]+/', $books);
+	$books = '';
+	foreach ($ids as $ii => $id){
+		$books .= dbSingleValue ($session, 'select name from ' . dbTable ($session, Tab_Book)
+			. " where id=" . (0+$id)) . ($ii < count ($ids) - 1 ? ',' : '');
+		$session->trace (TC_X, 'addressEditCard-4: ' . $id . "/" . $books);
+	}
 	if (isset ($search_title) || isset ($search_body))
 		baseSearchResults ($session);
 	if ($message <> null)
@@ -228,9 +232,9 @@ function addressEditCard (&$session, $message = null){
 	guiStartForm ($session, 'search', P_EditCard);
 	guiHiddenField ('card_id', $card_id);
 	echo "<table border=\"0\">\n";
+	echo "<tr><td>Id:</td><td>$card_id</td><tr>\n";
 	echo "<tr><td>Adressbücher:</td><td>";
 	guiTextField ('card_books', $books, 34, 0);
-	echo "<tr><td>Id:</td><td>$card_id</td><tr>\n";
 	echo "<tr><td>Vor-, Nachname:</td><td>";
 	guiTextField ('card_firstname', $firstname, 16, 64);
 	echo ' ';
@@ -291,14 +295,19 @@ function addressCheckBooks (&$session, $books, &$id_list){
 	$id_list = '';
 	$error = null;
 	foreach ($ids as $ii => $name){
-		$id = dbSingleValue ($session, 'select id from ' 
-			. dbTable ($session, Tab_Book)
-			. ' where name=' . dbSqlString ($session, $name)); 
-		if (empty ($id)){
-			$error = 'Adressbuch ' . $name . ' unbekannt!';
-			break;
+		if ($name > 0)
+			$id = $name;
+		else {
+			$id = dbSingleValue ($session, 'select id from ' 
+				. dbTable ($session, Tab_Book)
+				. ' where name=' . dbSqlString ($session, $name)); 
+			if (empty ($id)){
+				$error = 'Adressbuch ' . $name . ' unbekannt!';
+				break;
+			}
 		}
 		$id_list .= $id . ($ii < count ($ids) - 1 ? ',' : '');
+	$session->trace (TC_X, 'addressCheckBooks: ' . $id_list);
 	}
 	return $error;
 }
@@ -321,7 +330,7 @@ function addressEditCardAnswer (&$session){
 		else if (! empty ($email)
 			&& dbSingleValue ($session, 'select count(id) from ' . dbTable ($session, Tab_Card) 
 			. ' where emailprivate=' . dbSqlString ($session, $email) . ' and id<>' . (0+$id)) > 0)
-			$message = "Addresskarte mit EMai-Adresse $email existiert schon!";
+			$message = "Adresskarte mit EMai-Adresse $email existiert schon!";
 		else {
 			dbUpdate ($session, Tab_Card, $id, 
 				'firstname=' . dbSqlString ($session, $_POST ['card_firstname'])
@@ -346,7 +355,7 @@ function addressEditCardAnswer (&$session){
 				. ',functions=' . dbSqlString ($session, $_POST ['card_functions'])
 				. ',notes=' . dbSqlString ($session, $_POST ['card_notes'])
 				. ',');
-				$message = "Addresskarte $name wurde geändert.";
+				$message = "Adresskarte $name wurde geändert.";
 		}
 	} elseif (isset ($_POST ['card_new'])){
 		$session->trace (TC_Gui1, 'addressEditCard-new entdeckt');
@@ -355,7 +364,7 @@ function addressEditCardAnswer (&$session){
 			$message = 'Bitte Nachnamen angeben';
 		else if (dbSingleValue ($session, 'select count(id) from ' . dbTable ($session, Tab_Card) 
 			. ' where name=' . dbSqlString ($session, $name)) > 0)
-			$message = "Addresskarte mit Namen $name existiert schon!";
+			$message = "Adresskarte mit Namen $name existiert schon!";
 		else {
 			dbInsert ($session, Tab_Card,
 				'firstname,lastname,nickname,'
@@ -384,7 +393,7 @@ function addressEditCardAnswer (&$session){
 				. ',' . dbSqlString ($session, $_POST ['card_functions'])
 				. ',' . dbSqlString ($session, $_POST ['card_notes'])
 				);
-			$message = "Addresskarte $name wurde erstellt.";
+			$message = "Adresskarte $name wurde erstellt.";
 		}
 	}
 	addressEditcard ($session, $message);
