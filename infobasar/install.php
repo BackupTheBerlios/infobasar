@@ -1,5 +1,5 @@
 <?php
-// $Id: install.php,v 1.20 2005/01/11 01:45:28 hamatoma Exp $
+// $Id: install.php,v 1.21 2005/01/11 18:13:46 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -802,7 +802,6 @@ function populate (&$session, $fn_sql) {
 			instUpdateMacro ($session, 'BaseModule', $path . "index.php/", $message); 
 			instUpdateMacro ($session, 'ForumModule', $path . "forum.php/", $message); 
 			instUpdateMacro ($session, 'ScriptBase', $path, $message); 
-			instUpdateMacro ($session, 'ForumModule', $path . "forum.php/", $message); 
 			
 			$count = sqlUpdate ($session, 'param', " text='" . $path . "css/phpwiki.css'", 
 				"pos=152", true);
