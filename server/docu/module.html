@@ -1,0 +1,546 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Module f&uuml;r den Infobasar</title>
+  <meta content="">
+  <style></style>
+</head>
+<body>
+<h1>Module f&uuml;r den Infobasar</h1>
+$Id: module.html,v 1.1 2004/06/13 11:07:50 hamatoma Exp $<br>
+<p>Den Infobasar kann man erweitern. Daf&uuml;r ist eine Schnittstelle
+definiert, die hier beschrieben werden soll. </p>
+<span style="font-weight: bold;">Definition</span>:<br>
+<p>Ein Infobasarmodul ist ein PHP-Programm, das f&uuml;r die
+Generierung einer bestimmte Sorte von Seiten im Infobasar&nbsp;
+zust&auml;ndig ist. </p>
+<p>Ein Beispiel w&auml;re ein Kalender-Modul: Es verwaltet Termine in
+der Datenbank und zeigt sie in verschiedenen Ansichten an.</p>
+Die Grundausstattung des&nbsp; InfoBasars bietet schon 3 Module:<br>
+<ul>
+  <li>index.php: HTML- und Wiki-Seiten, Basisverwaltung<br>
+  </li>
+  <li>forum.php: Nutzen und Verwalten von Foren</li>
+  <li>admin.php: Datensicherung und Restauration, Designverwaltung,
+Grundeinstellungen<br>
+  </li>
+</ul>
+<h2>Schreibweise</h2>
+Namen von Objekten aus dem Infobasar werden <span
+ style="font-style: italic;">kursiv</span> geschrieben, z.B. die
+Tabelle <span style="font-style: italic;">user.</span><br>
+<h2>Begriffe</h2>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Begriff</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiele</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a
+ name="effektive_Objektberechtigung"></a>effektive Objektberechtigung<br>
+      </td>
+      <td style="vertical-align: top;">Da ein Objekt mehreren Gruppen
+zugeordnet werden kann, gibt es eine "Rechtesumme". Dies ist die Summe
+aller Teilrechte aus allen Objektberechtigungen<br>
+      </td>
+      <td style="vertical-align: top;">Ein Benutzer ist in den Gruppen <span
+ style="font-style: italic;">admin</span> und <span
+ style="font-style: italic;">gast:</span><br>
+admin: posting+?=<br>
+gast: posting?<br>
+effektive O.b.: posting+?=</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Gruppe<br>
+      </td>
+      <td style="vertical-align: top;">Objekt, in dem die
+Objektberechtigung einer Objektklasse abgelegt wird. <br>
+Siehe auch <a href="#Gruppen">Gruppen.</a><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Objekt"></a>Objekt<br>
+      </td>
+      <td style="vertical-align: top;">Gegenstand (Instanz), den ein
+Modul verwaltet. Jedes Objekt ist einer Objektklasse zugordnet.<br>
+      </td>
+      <td style="vertical-align: top;">Der Benutzer <span
+ style="font-style: italic;">admin.</span><br>
+Der Thread mit Id 32736.<br>
+Das Posting mit Id 332.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Objektklasse"></a>Objektklasse<br>
+      </td>
+      <td style="vertical-align: top;">Typ eines Objekts.
+Zusammenfassung bestimmter Eigenschaften mit einem Namen.<br>
+Siehe auch <a href="#Objektklassen_der_Grundversion_des">Objektklassen
+der Grundversion des InfoBasars</a><br>
+      </td>
+      <td style="vertical-align: top;">Wiki: User, Page<br>
+Foren: User, Thread, Posting<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Objektberechtigung"></a>Objektberechtigung<br>
+      </td>
+      <td style="vertical-align: top;">Notation aller Teilrechte einer
+Objekteklasse, gespeichert in einer Gruppe<br>
+      </td>
+      <td style="vertical-align: top;">user?<br>
+posting+?=<br>
+wiki+-?=#<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Teilrecht"></a>Teilrecht<br>
+      </td>
+      <td style="vertical-align: top;">Berechtigung, ein Objekt zu
+behandeln<br>
+      </td>
+      <td style="vertical-align: top;">Erzeugen (+), L&ouml;schen (-),
+Lesen (?), Schreiben (=), Sperren (#)</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Schnittstellen&uuml;berblick<br>
+</h2>
+Module k&ouml;nnen in das System einbringen:<br>
+<ul>
+  <li>Datenbank-Tabellen</li>
+  <li>PHP-Code</li>
+  <li>Rechte<br>
+  </li>
+</ul>
+Module k&ouml;nnen von den Basis-Modulen (oder anderen Module) nutzen:<br>
+<ul>
+  <li>Datenbank-Tabellen</li>
+  <li><a href="#Nutzung_der_Basismodule_PHP-Code">PHP-Code</a><br>
+  </li>
+  <li><a href="#Rechte">Rechteverwaltung</a></li>
+  <li><a href="#Nutzung_der_Sessiondaten">Sessiondaten</a><br>
+  </li>
+</ul>
+Ferner muss die Installation/Deinstallation gewissen Bedingungen
+gen&uuml;gen.<br>
+<h3>Voraussetzungen</h3>
+Ein Modul besteht in jedem Fall aus einer PHP-Datei, das per Link
+aufgerufen werden kann. Es kann Parameter definieren, die Zust&auml;nde
+oder andere Steuerungsinformationen festlegen.<br>
+Das Modul muss in jedem Fall diese Parameter auswerten und als Ergebnis
+eine HTML-Seite abliefern.<br>
+Es ist sinnvoll (aber nicht notwendig), dass die Sessiondaten des
+Basismoduls und der Basis-Anmeldevorgang (in Form von
+Funktionsaufrufen) genutzt werden.<br>
+<h3><a name="Ablauf_in_einem_hypothetischen_Modul"></a>Ablauf in einem
+hypothetischen Modul Calendar</h3>
+Einbinden der Standard-Module (include "config.h"; include "classes.h")<br>
+Datenbank-Anmeldung<br>
+Test, ob Benutzer angemeldet. Wenn nein, Ausgabe Fehlermeldung mit Link
+auf Anmeldung.<br>
+Auswertung des Parameters action:<br>
+<div style="margin-left: 40px;">Wenn action = "add": Ausgabe eines
+Formulars zur Terminerfassung<br>
+Wenn action = "edit": Ausgabe eines Formulars zur &Auml;nderung eines
+Termins.<br>
+Wenn action = "show": Ausgabe der Termine<br>
+Sonst: <br>
+<div style="margin-left: 40px;">Wenn Antwort auf Erfassungsformular: <br>
+<div style="margin-left: 40px;">Auswerten der Antwort, evt. Speichern
+in DB. Anzeige der Termine<br>
+</div>
+Wenn Antwort auf &Auml;nderungsformular:
+<div style="margin-left: 40px;">Auswerten der Antwort, evt. Speichern
+in DB. Anzeige der Termine<br>
+</div>
+Sonst: Anzeige der Termine <br>
+</div>
+</div>
+<h3><a name="Nutzung_der_Basismodule_PHP-Code"></a>Nutzung der
+Basismodule (PHP-Code)<br>
+</h3>
+<p>Viele Teilaufgaben sind schon in den Basismodulen programmiert:</p>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Modul</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">classes.php<br>
+      </td>
+      <td style="vertical-align: top;">Session-Management,
+Layout-Status f&uuml;r Wikiparser<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">db_mysql.php<br>
+      </td>
+      <td style="vertical-align: top;">Zugriff auf Datenbank,
+mySQL-spezifisch. Sollten weitere Datenbankmanagementsystem dazukommen,
+so sind die in anderen Modulen (z.B. db_postgres.php) mit genau den
+gleichen Funktionen vorhanden. Die Einbindung des richtigen DB-Moduls
+erfolgt automatisch (in classes.php), so dass die Schnittstelle
+DB-unabh&auml;ngig ist.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">gui.php<br>
+      </td>
+      <td style="vertical-align: top;">Ausgabe der Oberfl&auml;che:<br>
+Ausgabe von HTML-Elementen: Formular-Elemente, Links, ...<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">util.php<br>
+      </td>
+      <td style="vertical-align: top;">Wiki-Parser, Stringhandling, ...<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>Um diesen Code zu nutzen, muss nur in den Quellcode des Module die
+Anweisung <code>include "classes.php"; </code>
+eingetragen werden.<br>
+<span style="font-weight: bold;">Tipp:</span> Das Modul basemod.php
+enth&auml;lt die Routinen zur Ausgabe und Auswertung der Basis-Seiten,
+ist also nicht zum Einbinden geeignet, jedoch als Beispiel f&uuml;r die
+Anwendung der anderen Module.<br>
+</p>
+<h3><a name="Nutzung_der_Sessiondaten"></a>Nutzung der Sessiondaten</h3>
+Die Sessiondaten sind in einer Inkarnation der Klasse Session
+gespeichert. Dort sind die Benutzerdaten, Datenbank-Zugangsdaten,
+Makro-Informationen usw. gespeichert. Diese Info wird in fast allen
+Funktion als Parameter &uuml;bergeben.<br>
+Jedes Modul kann seine Daten auch hier ablegen. Daf&uuml;r ist die
+Variable fModuleData vorgesehen. Sie ist ein assoziatives Array, das
+den Modulnamen mit einem beliebigen Objekt verkn&uuml;pft.<br>
+<p><span style="font-weight: bold;">Beispiel:</span><code></code></p>
+<p><code></code></p>
+<code>$session-&gt;fModuleData ['calendar'] = new Calendar ();<br>
+...<br>
+$calendar = $session-&gt;fModuleData ['calendar'];<br>
+$calendar-&gt;getDaysPerMonth (time());<br>
+</code>
+<h2><a name="Rechte"></a>Rechte</h2>
+Rechte sind an Gruppen gebunden. Damit k&ouml;nnen sie zentral f&uuml;r
+viele Objekte gepflegt werden. Da die Gruppenanzahl nicht begrenzt ist,
+ist das keine Einschr&auml;nkung. Notfalls bekommt halt jedes Objekt
+seine Gruppe.<br>
+Jedes Modul wei&szlig;, welche Rechte f&uuml;r seine Objekte relevant
+sind.<br>
+<h3>Beispiel 1: Verwaltung Benutzerkonto:</h3>
+Hier sind zwei Objektklassen relevant: <span
+ style="font-style: italic;">user</span> und <span
+ style="font-style: italic;">userother.</span> Will ein Benutzer seine
+eigenen Daten &auml;ndern/ansehen, wird die Objektberechtigung von user
+abgefragt, bei anderen Benutzer <span style="font-style: italic;">userother.</span><br>
+Die Routine Benutzerkontoverwaltung (BKV) ermittelt die <a
+ href="#effektive_Objektberechtigung">effektive Objektberechtigung</a>
+f&uuml;r user. Ist das <a href="#Teilrecht">Teilrecht</a> Lesen
+gesetzt, werden die Daten angezeigt, sonst nicht.&nbsp; Ist das
+Teilrecht Schreiben gesetzt, sind die Felder edierbaren, sonst nicht.<br>
+Des weiteren ermittelt BKV die effektive Objektberechtigung von <span
+ style="font-style: italic;">userother.</span><br>
+Ist das Teilrecht Erzeugen gesetzt, wird der Button "Hinzuf&uuml;gen"
+angeboten.<br>
+...<br>
+<h3>Beispiel 2: Anzeige Wiki-Seite:<br>
+</h3>
+Siehe <a href="#Beispiel_einer_Gruppe_mit_usergroup">Beispiel einer
+Gruppe mit usergroup</a><br>
+<h2><a name="Gruppen"></a>Gruppen</h2>
+In Gruppen werden haupts&auml;chlich Rechte definiert. Eine Gruppe hat
+folgende Eigenschaften:<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Eigenschaft</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiel</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">name<br>
+      </td>
+      <td style="vertical-align: top;">Name, der nur innerhalb einer
+Objektklasse eindeutig sein muss.<br>
+      </td>
+      <td style="vertical-align: top;">admin<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">description<br>
+      </td>
+      <td style="vertical-align: top;">Beschreibung<br>
+      </td>
+      <td style="vertical-align: top;">Berechtigung f&uuml;r andere
+Benutzerkonten<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">class<br>
+      </td>
+      <td style="vertical-align: top;"><a href="#Objektklasse">Objektklasse</a><br>
+      </td>
+      <td style="vertical-align: top;">userother<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">rights<br>
+      </td>
+      <td style="vertical-align: top;">Liste der <a href="#Teilrecht">Teilrechte</a>.<br>
+      </td>
+      <td style="vertical-align: top;">+-?=#<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">members<br>
+      </td>
+      <td style="vertical-align: top;">Liste der Mitglieder. Dies ist
+eine mit ':' getrennte Liste von Ids.<br>
+      </td>
+      <td style="vertical-align: top;">:1:33:<br>
+// Ids beziehen sich auf Tabelle user<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">usergroup<br>
+      </td>
+      <td style="vertical-align: top;">Bezieht sich members nicht auf
+die Tabelle user, dann steht hier die Id der Gruppe, auf deren User
+sich die Rechte auswirken sollen. <br>
+      </td>
+      <td style="vertical-align: top;">siehe Beispiel<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3><a name="Beispiel_einer_Gruppe_mit_usergroup"></a>Beispiel einer
+Gruppe mit usergroup</h3>
+Das Basismodul gestattet die Klassifizerung von Wiki-Seiten. So kann
+z.B. eine Gruppe <span style="font-style: italic;">admin</span> auf
+bestimmte Seiten zugreifen, eine Gruppe <span
+ style="font-style: italic;">gast</span> jedoch nicht.<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Id</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Name</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">description</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">class</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">rights</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">members</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">usergroup</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">22<br>
+      </td>
+      <td style="vertical-align: top;">admin<br>
+      </td>
+      <td style="vertical-align: top;">Administratoren<br>
+      </td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+      <td style="vertical-align: top;">+-?=#<br>
+      </td>
+      <td style="vertical-align: top;">:1:<br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">33<br>
+      </td>
+      <td style="vertical-align: top;">gast<br>
+      </td>
+      <td style="vertical-align: top;">Nicht registrierte Besucher<br>
+      </td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+      <td style="vertical-align: top;">?=<br>
+      </td>
+      <td style="vertical-align: top;">:2:<br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">44<br>
+      </td>
+      <td style="vertical-align: top;">admin<br>
+      </td>
+      <td style="vertical-align: top;">Beschreibung der Adminstration
+von Wiki-Seiten<br>
+      </td>
+      <td style="vertical-align: top;">page<br>
+      </td>
+      <td style="vertical-align: top;">+-?=#<br>
+      </td>
+      <td style="vertical-align: top;">:34:77:238:<br>
+      </td>
+      <td style="vertical-align: top;">22<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">55<br>
+      </td>
+      <td style="vertical-align: top;">gast<br>
+      </td>
+      <td style="vertical-align: top;">Beschreibung von Benutzung von
+Wiki-Seiten<br>
+      </td>
+      <td style="vertical-align: top;">page<br>
+      </td>
+      <td style="vertical-align: top;">+?<br>
+      </td>
+      <td style="vertical-align: top;">:23:29:53:<br>
+      </td>
+      <td style="vertical-align: top;">33<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>Die Routine, die Wiki-Seiten anzeigt, pr&uuml;ft, ob eine Gruppe mit
+der Objektklasse <span style="font-style: italic;">page</span>
+existiert, in deren <span style="font-style: italic;">members</span>
+die Seite aufgef&uuml;hrt ist.<br>
+Wenn nein, wird die Seite angezeigt.<br>
+Wenn ja, wird &uuml;berpr&uuml;ft, ob der aktuelle Benutzer in der
+Gruppe, deren Id in <span style="font-style: italic;">usergroup</span>
+gespeichert ist (hier also <span style="font-style: italic;">admin</span>),
+enthalten ist. <br>
+</p>
+<div style="margin-left: 40px;">Wenn nein, wird die Seite nicht
+angezeigt<br>
+Wenn ja, erfolgt die Anzeige abh&auml;ngig vom <a href="#Teilrecht">Teilrecht</a>
+Lesen.<br>
+</div>
+<br>
+<h2>Programmcode</h2>
+Jedes Modul liefert seinen PHP-Programmcode mit in einer Datei
+modulname.php. <br>
+Siehe auch <a href="#Ablauf_in_einem_hypothetischen_Modul">Ablauf in
+einem hypothetischen Modul Calendar.</a><br>
+<h2>Datenbanktabellen</h2>
+Damit Module auch wieder entfernt werden k&ouml;nnen, mu&szlig;
+festgehalten werden, welche Objekte es benutzt. Beim Entfernen
+d&uuml;rfen dann nur die Objekte entfernt werden, die <span
+ style="font-weight: bold;">nicht</span> von anderen Module
+ben&ouml;tigt werden.<br>
+<h2><a name="Objektklassen_der_Grundversion_des"></a>Objektklassen der
+Grundversion des InfoBasars:</h2>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Name</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">members
+bezieht sich auf</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">html</td>
+      <td style="vertical-align: top;">HTML-Seiten</td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">page<br>
+      </td>
+      <td style="vertical-align: top;">Klassifizierung von Seiten (Wiki
+oder HTML). Siehe auch <a href="#Beispiel_einer_Gruppe_mit_usergroup">Beispiel
+einer Gruppe mit usergroup</a><br>
+      </td>
+      <td style="vertical-align: top;">page<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">posting<br>
+      </td>
+      <td style="vertical-align: top;">Beitrag zu einem Thema in einem
+Forum<br>
+      </td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">thread</td>
+      <td style="vertical-align: top;">Thema in einem Forum</td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">user<br>
+      </td>
+      <td style="vertical-align: top;">Eigenes Benutzerkonto<br>
+      </td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">userother<br>
+      </td>
+      <td style="vertical-align: top;">Andere Benutzerkonten<br>
+      </td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">wiki<br>
+      </td>
+      <td style="vertical-align: top;">Wiki-Seiten<br>
+      </td>
+      <td style="vertical-align: top;">user<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+</body>
+</html>
