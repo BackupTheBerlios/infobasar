@@ -1,10 +1,11 @@
 # Dateien Infobasar
-# $Id: ib_install.lst,v 1.1 2004/06/08 12:33:52 hamatoma Exp $
+# $Id: ib_install.lst,v 1.2 2004/06/28 22:11:11 hamatoma Exp $
 ./license
 ./db_mysql.php
 ./gui.php
 ./index.php
 ./util.php
+./forum.php
 ./pic/logo.png
 ./tool/mk_arch.pl
 ./docu/overview.html
