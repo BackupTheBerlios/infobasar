@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.8 2004/06/08 11:28:08 hamatoma Exp $
+// $Id: gui.php,v 1.9 2004/06/10 19:40:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -195,13 +195,13 @@ function guiExternLinkString(&$session, $link, $text) {
 	$session->trace (TC_Gui2, 'guiExternLinkString');
 	if (empty ($text))
 		$text = $link;
-	return "<a href=\"$link\">" . htmlToText ($text) . "</a>\n";
+	return "<a href=\"$link\">" . htmlToText ($session, $text) . "</a>\n";
 }
 
 function guiExternLink (&$session, $link, $text) {
 	$session->trace (TC_Gui2, 'guiExternLink');
 	echo "<a href=\"$link\">";
-	echo htmlToText ($text);
+	echo htmlToText ($session, $text);
 	echo "</a>\n";
 }
 function guiInternLink (&$session, $link, $text) {
@@ -585,7 +585,7 @@ function guiLoginAnswer (&$session) {
 			guiLogin ($session, $rc);
 		else {
 			setLoginCookie ($session, $login_user, $login_code);
-			ob_flush (); // ob_start() -->  index.php
+			ObFlush ($session); // ob_start() -->  index.php
 			$session->setPageName (P_Start);
 			$login_again = false;
 		}
@@ -626,14 +626,19 @@ function guiAccount (&$session, $message) {
 	echo "<table border=\"0\">\n<tr><td>Benutzername:</td><td>";
 	guiHiddenField ('account_user', $account_user);
 	guiHeadline ($session, 2, $account_user);
-	echo "</td></tr>\n<tr><td>Passwort:</td><td>";
-	guiPasswordField ("account_code", "", 64, 32);
-	echo "</td></tr>\n<tr><td>Wiederholung:</td><td>";
-	guiPasswordField ("account_code2", "", 64, 32);
-	echo "</td></tr>\n<tr><td>EMail:</td><td>";
-	guiTextField ("account_email", $account_email, 64, 64);
-	echo "</td></tr>\n<tr><td>Rechte:</td><td>";
-	guiTextField ("account_rights", $account_rights, 64, 64);
+	echo '</td></tr>' . "\n" . '<tr><td>Passwort:</td><td>';
+	guiPasswordField ('account_code', '', 64, 32);
+	echo '</td></tr>' . "\n" . '<tr><td>Wiederholung:</td><td>';
+	guiPasswordField ('account_code2', '', 64, 32);
+	echo '</td></tr>' . "\n" . '<tr><td>EMail:</td><td>';
+	guiTextField ('account_email', $account_email, 64, 64);
+	echo '</td></tr>' . "\n" . '<tr><td>Rechte:</td><td>';
+	if ($session->hasRights (R_Rights, R_Put))
+		guiTextField ('account_rights', $account_rights, 64, 64);
+	else {
+		guiHiddenField ('account_rights', $account_rights);
+		echo $account_rights;
+	}
 	echo "</td></tr>\n<tr><td>Gesperrt:</td><td>";
 	guiCheckBox ("account_locked", "Gesperrt", $account_locked == C_CHECKBOX_TRUE);
 	echo "</td></tr>\n<tr><td>Design:</td><td>";
@@ -664,13 +669,15 @@ function guiAccount (&$session, $message) {
 	guiTextField ("account_startpage", $account_startpage, 32, 128);
 	echo "</td></tr>\n<tr><td></td><td>";
 	guiButton ("account_change", "&Auml;ndern");
-	if ($session->hasRight ('uadd') || $session->hasRight ('uadd')){
+	$change = $session->hasRight (R_User, R_Put);
+	$new = $session->hasRight (R_User, R_New);
+	if ($change || $new){
 		echo "</td></tr><tr></tr>\n<tr><td>Name:</td><td>";
 		guiTextField ("account_user2", $account_user2, 32, 32);
 		echo "</td></tr>\n<tr><td></td><td>";
-		if ($session->hasRight ('umod'))
+		if ($change)
 			guiButton ("account_other", "Benutzer wechseln");
-		if ($session->hasRight ('uadd')){
+		if ($new){
 			echo " "; guiButton ("account_new", "Neu");
 		}
 	}
