@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.15 2004/11/10 00:44:31 hamatoma Exp $
+// $Id: gui.php,v 1.16 2004/12/05 18:44:39 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -255,6 +255,15 @@ function outTableInternLink ($session, $prefix, $link, $text = null, $module = n
 	guiInternLink ($session, $link, $text, $module);
 	echo '</td>'; 
 }
+function outTableRecordInternLink ($session, $suffix, $link, $text = null, $module = null, 
+		$halignment = AL_None){
+	outTableDelim ($halignment);
+	guiInternLink ($session, $link, $text, $module);
+	echo '</td>'; 
+	if ($suffix != null)
+		outTableCell ($suffix);
+	echo "</tr>\n";
+}
 function outTableAuthorLink ($session, $author){
 	echo '<td>';
 	guiAuthorLink ($session, $author);
@@ -289,7 +298,7 @@ function guiFileField ($name){
 function guiHiddenField ($name, $text) {
 	guiField ($name, "hidden", $text, 0, 0, null);
 }
-function guiTextField ($name, $text, $size, $maxlength){
+function guiTextField ($name, $text, $size, $maxlength = 0){
 	if ($text == null)
 		$text = isset ($_POST [$name]) ? $_POST [$name] : "";
 	guiField ($name, "text", $text, $size, $maxlength, null);
@@ -319,6 +328,9 @@ function guiCheckBox ($name, $text, $checked = false){
 	guiField ($name, "checkbox", C_CHECKBOX_TRUE, 0, 0,
 		isset ($checked) && $checked ? "checked" : "");
 	echo htmlentities ($text) . " ";
+}
+function guiChecked($session, $name){
+	return isset ($_POST [$name]) && $_POST [$name] == C_CHECKBOX_TRUE;
 }
 function guiComboBox ($name, $options, $values = null, $ix_selected = 0) {
 	echo '<select name="';
