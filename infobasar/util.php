@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.19 2004/12/31 20:58:42 hamatoma Exp $
+// $Id: util.php,v 1.20 2005/01/04 23:37:02 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -154,12 +154,20 @@ function writeWikiName ($name, $text, &$status) {
 			guiPageReference ($status->fSession, $link, $text);
 	}
 }
+function showArray (&$array, $start){
+	$rc = 0+count ($array);
+	while ($start < count ($array)){
+		$rc .= " " . ($start + 0) . ": " . $array [$start];
+		$start++;
+	}
+	return $rc;
+}
 		// Klammer 0: Vorspann Klammer 1: Muster, das evt. ersetzt wird
 		// unterstrichen, (kursiv, fett, kursiv-fett),
 define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		//  Extern-Link
-		// Klammer 2: URL Klammer 3: Text
-		. '|\[([a-z]+:\S+)(\s+[^]]*)?\]'
+		// Klammer 2: [[...]] Klammer 3: Text
+		. '|\[\[([a-z]+:[^|\]]+)(\|[^]]*)?\]\]'
 		// http-Link, ftp-Link, mailto
 		// Klammer 4: Protokollname
 		. '|(https?|ftp):\/\/\S+'
@@ -167,18 +175,18 @@ define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		. '|!?' . CC_WikiName_Uppercase . '+' . CC_WikiName_Lowercase . '+[' . CC_WikiName_Uppercase
 			. CC_WikiName . '*'
 		// Genau ein Zeichen:
-		. '|\[.\]'
-		// Zeilenwechsel:
-		. '|\[Newline\]'	// TM_Newline
+		. '|\[\[.\]\]'
+		// Klammer 5: Makros
+		. '|\[(newline|\/?big|\/?small)\]'	// TM_Newline
 		// Wiki-Verweis
-		// Klammer 5: Wikiname Klammer 6: Text
-		# '|\[([A-Za-zÄÖÜääöü]+[-äöüßa-zA-Z_0-9]+)\s*([^]]*)?\]'
-		. '|\[(' . CC_WikiName . '+)\s*([^]]*)?\]'
+		// Klammer 6: Wikiname Klammer 7: Text
+		# '|\[\[([A-Za-zÄÖÜääöü]+[-äöüßa-zA-Z_0-9]+)\s*([^]]*)?\]\]'
+		. '|\[\[(' . CC_WikiName . '+)\|([^]]*)?\]\]'
 		// Plugin
-		// Klammer 7: Plugin-Name Klammer 8: Parameter
+		// Klammer 8: Plugin-Name Klammer 9: Parameter
 		. '|<\?plugin\s+(\w+)(.*)\?>'
 		// Hex-Anzeige:
-		// Klammer 9:  Hexdumplbereich
+		// Klammer 10:  Hexdumplbereich
 		. '|%hex\((.*?)\)'
 		. ')/');
 function writeText ($body, &$status) {
@@ -192,34 +200,44 @@ function writeText ($body, &$status) {
 		$count++;
 		if ($match[1] != '')
 			echo htmlentities ($match[1]);
+		#$status->trace (TC_X, "writeText-2:" . showArray ($match, 2));
+			
 		switch ($match [2]){
 		case '__': $status->handleEmphasis ('u'); break;
-		case '\'\'': $status->handleEmphasis ('b'); break;
-		case '\'\'\'': $status->handleEmphasis ('i'); break;
+		case '\'\'': $status->handleEmphasis ('i'); break;
+		case '\'\'\'': $status->handleEmphasis ('b'); break;
 		case '\'\'\'\'': $status->handleEmphasis ('x'); break;
 		default:
 			if (strpos ($match [2], "hex(") == 1){
 				for ($ii = 5; $ii < strlen ($match [2]) - 1; $ii++){
 					printf ("%02x ", ord (substr ($match [2], $ii, 1)));
 				}
-			} elseif ($args == 8 &&  $match [6] != '')
-				writeWikiName ($match [6], $match [7], $status);
-			elseif ($args > 5 && $match [5] != '')
-				writeExternLink ($match [2], '', $status);
+			} elseif ($args == 9 &&  $match [7] != '')
+				writeWikiName ($match [7], $match [8], $status);
+			elseif ($args > 4 && $match [4] != '')
+				writeExternLink ($match [3], substr ($match [4], 1), $status);
+			elseif ($args > 3 && $match [3] != '')
+				writeExternLink ($match [3], '', $status);
 			elseif ( ($pos = strpos ($match [2], '[')) == 0 && is_int ($pos)) {
-				if ($args <= 4){
-					if (strlen ($match [2]) == 3)
-						echo substr ($match [2], 1, 1);
-					else if ($match [2] == '[Newline]')
-						echo '<br />';
-					else
-						echo $match [2];
+				if ($args == 3 && strlen ($match [2]) == 5)
+					echo substr ($match [2], 2, 1);
+				elseif ($args <= 7){
+					switch ($match [6]){
+					case 'newline': echo '<br />'; break;
+					case 'big': case '/big': case 'small': case '/small': 
+						echo TAG_PREFIX;
+						echo $match [6];
+						echo TAG_SUFFIX;
+						break;
+					default:
+						echo $match [2]; break;
+					}
 				} else
-					writeExternLink ($match [3], $match [4], $status);
+					writeExternLink ($match [3], substr ($match [4], 1), $status);
 			} elseif ($args > 9 && ($pos = strpos ($match [2], '<?')) == 0 && is_int ($pos))
 				writePlugin ($match [8], $match [9], $status);
 			else
-				writeWikiName ($match [2], '', $status);
+				echo $match [2];
 			break;
 		} // switch
 
@@ -259,7 +277,7 @@ function writeOrderedList ($line, &$status) {
 }
 function writeIndent ($line, &$status) {
 	$status->trace (TC_Util3, "writeIndent: $line");
-	$count = countRepeats ($line, ' ');
+	$count = countRepeats ($line, ';');
 	$status->changeIndentLevel ($count);
 	writeLine (substr ($line, $count), $status);
 }
@@ -331,7 +349,7 @@ function wikiToHtml (&$session, $wiki_text) {
 				} else
 					$linetype = 'x'; 
 				break;
-			case '!': case ' ': case '*': case '#': case '|':
+			case '!': case ';': case '*': case '#': case '|':
 				break;
 			default:
 				$linetype = 'x'; break;
@@ -353,7 +371,7 @@ function wikiToHtml (&$session, $wiki_text) {
 				if (! empty ($line))
 					writeLine ($line, $status); 
 				break;
-			case ' ': writeIndent ($line, $status); break;
+			case ';': writeIndent ($line, $status); break;
 			case '*': writeUList ($line, $status); break;
 			case '#': writeOrderedList ($line, $status); break;
 			case '|': writeTable ($line, $status); break;
