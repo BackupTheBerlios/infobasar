@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.25 2005/01/06 16:58:04 hamatoma Exp $
+// $Id: classes.php,v 1.26 2005/01/07 21:12:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -37,6 +37,7 @@ define ('CC_WikiName_Lowercase', '[' . CL_WikiName_Lowercase . ']');
 define ('CC_WikiName', '[' . CL_WikiName . ']');
 
 // Standard page names:
+define ('P_Home', '!home');
 define ('P_Login', '!login');
 define ('P_Logout', '!logout');
 
@@ -99,7 +100,8 @@ define ('Th_CSSFile', 102);
 define ('Th_StandardHeader', 111); // aus 141
 define ('Th_StandardBodyStart', 112);
 define ('Th_StandardBodyEnd', 113);
-
+define ('Th_LoginHeader', 114);
+define ('Th_LoginBodyEnd', 115);
 
 
 // Macros:
