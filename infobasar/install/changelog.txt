@@ -1,5 +1,5 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.5 2005/01/08 13:09:32 hamatoma Exp $
+$Id: changelog.txt,v 1.6 2005/01/09 23:53:11 hamatoma Exp $
 
 Legende: F(ehler) N(eu) A(enderung)
 
@@ -13,7 +13,8 @@ Version 0.7.0 vom 2005.01.05
  -N: Unterscheidung eingebettetes Bild (Link) und Bild-Verweis ([[link]]).
  -A: Parameternummern: 100-149 jetzt modul- und designunabhängig, 150-199 modulunabh, designabhängig
  -N: sql_update_06_07.sql
-Version 0.6.6.1 vom 2004.12.25
+ -N: cat_src.pl: Erstellen einer optimierten Version: Geschwindigkeitsgewinn: Faktor 5-10
+ Version 0.6.6.1 vom 2004.12.25
  -F: Aufzählung mit verschiedenem Einrücktiefen
  -F: Tipps im Änderungsmodus. Hilfeseiten
  -F: Tabellenende, wenn keine Leerzeile danach
