@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.2 2004/09/15 21:41:59 hamatoma Exp $
+// $Id: util.php,v 1.3 2004/09/20 23:03:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de M¸nchen
@@ -121,14 +121,41 @@ function writeWikiName ($name, $text, &$status) {
 	if (substr ($name, 0, 1) == "!")
 		echo htmlentities (substr ($name, 1));
 	else {
-		$name = encodeWikiName ($status->fSession, $name);
+		$link = encodeWikiName ($status->fSession, $name);
 		if (dbPageId ($status->fSession, $name) > 0)
-			guiInternLink ($status->fSession, $name, $text);
+			guiInternLink ($status->fSession, $link, $text);
 		else
-			guiPageReference ($status->fSession, $name, $text);
+			guiPageReference ($status->fSession, $link, $text);
 	}
 }
+define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
+		//  Extern-Link
+		// Klammer 2: URL Klammer 3: Text
+		. '|\[([a-z]+:\S+)(\s+[^]]*)?\]'
+		// http-Link, ftp-Link, mailto
+		// Klammer 4: Protokollname
+		. '|(https?|ftp):\/\/\S+'
+		// (Nicht-)Wiki-Name
+		# '|!?[A-Z\xc4\xd6\xdc][a-z_0-9\xf6\xe4\xfc\xdf]+[A-Z0-0_\xc4\xd6\xdc][A-Za-z0-9_\xc4\xd6\xdc\xf6\xe4\xfc\xdf]*'
+		. '|!?' . CC_WikiName_Uppercase . CC_WikiName_Lowercase . '+[' . CC_WikiName_Uppercase
+			. CC_WikiName . '*'
+		// Genau ein Zeichen:
+		. '|\[.\]'
+		// Zeilenwechsel:
+		. '|\[Newline\]'	// TM_Newline
+		// Wiki-Verweis
+		// Klammer 5: Wikiname Klammer 6: Text
+		# '|\[([A-Za-zƒ÷‹‰‰ˆ¸][-‰ˆ¸ﬂa-zA-Z_0-9]+)\s*([^]]*)?\]'
+		. '|\[(' . CC_WikiName . '+)\s*([^]]*)?\]'
+		// Plugin
+		// Klammer 7: Plugin-Name Klammer 8: Parameter
+		. '|<\?plugin\s+(\w+)(.*)\?>'
+		// Hex-Anzeige:
+		// Klammer 9:  Oktalbereich
+		. '|%hex\((.*?)\)'
+		. ')/');
 function writeText ($body, &$status) {
+	global $ib_reg_expr;
 	$status->trace (TC_Util2, "writeText: $body");
 	#$status->trace (TC_X, "writeText: $body");
 	$count = 0;
@@ -140,29 +167,7 @@ function writeText ($body, &$status) {
 	while (strlen ($body) > 0
 		// Klammer 0: Vorspann Klammer 1: Muster, das evt. ersetzt wird
 		// unterstrichen, (kursiv, fett, kursiv-fett),
-		&& preg_match ('/^(.*?)(__|\'{2,4}'
-		//  Extern-Link
-		// Klammer 2: URL Klammer 3: Text
-		. '|\[([a-z]+:\S+)(\s+[^]]*)?\]'
-		// http-Link, ftp-Link, mailto
-		// Klammer 4: Protokollname
-		. '|(https?|ftp):\/\/\S+'
-		// (Nicht-)Wiki-Name
-		. '|!?[A-Z\xc4\xd6\xdc][a-z_0-9\xf6\xe4\xfc\xdf]+[A-Z0-0_\xc4\xd6\xdc][A-Za-z0-9_\xc4\xd6\xdc\xf6\xe4\xfc\xdf]*'
-		// Genau ein Zeichen:
-		. '|\[.\]'
-		// Zeilenwechsel:
-		. '|\[Newline\]'	// TM_Newline
-		// Wiki-Verweis
-		// Klammer 5: Wikiname Klammer 6: Text
-		. '|\[([A-Za-zƒ÷‹‰‰ˆ¸][-‰ˆ¸ﬂa-zA-Z_0-9]+)\s*([^]]*)?\]'
-		// Plugin
-		// Klammer 7: Plugin-Name Klammer 8: Parameter
-		. '|<\?plugin\s+(\w+)(.*)\?>'
-		// Hex-Anzeige:
-		// Klammer 9:  Oktalbereich
-		. '|%hex\((.*?)\)'
-		. ')/',
+		&& preg_match (ib_reg_expr,
 			$body, $match)) {
 		$args = count ($match);
 		# $status->trace (TC_X, 'Args: ' . $args . " match[2]: ." . $match[2] . ".");
