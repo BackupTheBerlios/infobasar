@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.16 2005/01/14 03:03:05 hamatoma Exp $
+// $Id: admin.php,v 1.17 2005/01/17 02:23:29 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -107,7 +107,7 @@ if (successfullLogin ($session)){
 		elseif (isset ($_POST ['export_export']) || isset ($_POST ['export_preview']))
 			admExportPagesAnswer ($session);
 		elseif (isset ($_POST ['import_import']) 
-				|| admPostContainsNumberedVar ($session,'import_import'))
+				|| admPostContainsNumberedVar ($session,'import_import') != -1)
 			admImportPagesAnswer ($session);
 		else admHome ($session);
 	}
