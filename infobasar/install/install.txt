@@ -1,5 +1,5 @@
 Installation von Infobasar
-$Id: install.txt,v 1.3 2005/01/11 18:04:34 hamatoma Exp $
+$Id: install.txt,v 1.4 2005/01/11 18:34:35 hamatoma Exp $
 
 Version: siehe readme.txt
 
@@ -39,7 +39,8 @@ und als infobasar-VERSION.hma auf den Server gespielt werden.
 Ansonsten greift die Standardinstallation.
 
 Wenn das Archiv-Entpacken nicht funktioniert:
-Kopieren der Dateien *.php, *.css *.html auf den Server.
+Archiv lokal mittels extract_arch.pl entpacken.
+Kopieren der Dateien *.php, *.css *.html auf den Server (z.B. mit ftp).
 Ebenso die Unterverzeichnisse:
 css docu pic db import
 Genaue Liste: siehe ib_install.lst
@@ -71,6 +72,10 @@ Dann heisst der Pfad /privat/wiki.
 BaseModule muss dann statt /index.php/ /privat/wiki/index.php/ heissen usw. 
 Der gleiche Pfad muss auch bei Parameter Theme=11,Pos=152 (CSS-Datei) eingetragen werden.
 Das geht mit admin.php: "Parameter aendern"
+
+Wenn die Links nicht gesetzt werden koennen:
+Kopieren der Datei base_module.php (oder alternativ base_opt) als index.php
+Kopieren der Datei forum_module.php (oder alternativ forum_opt) als forum.php
 
 Admin-Passwort setzen:
 Aufruf von install/install.php, solange auf Weiter klicken, 
