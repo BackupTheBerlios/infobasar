@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.7 2004/10/30 10:44:49 hamatoma Exp $
+// $Id: install.php,v 1.8 2004/12/05 18:47:27 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -54,6 +54,13 @@ define ('TC_All', 0x7fffffff);
 define ('PREFIX_Warning', 'InfoBasar: Warnung: ');
 define ('PREFIX_Error', 'InfoBasar: Fehler: ');
 
+// DB-Typen:
+define ('DB_MySQL', 'MySQL');
+
+// Tabellen:
+define ('T_Page', 'page');
+define ('T_Text', 'text');
+
 // -----------------------------------
 class Session {
 	var $fDbType; // MySQL
@@ -100,12 +107,12 @@ class Session {
 				$this->trace (TC_All, $entry ['file'] . "-" . $entry ['line'] . ': '
 					. $entry ['function'] . ($message ? $message : ""));
 	}
-	function setDb($dbtype, $server, $db, $user, $passw, $prefix) {
+	function setDb($dbtype, $server, $db_name, $user, $passw, $prefix) {
 		$this->fDbType = $dbtype;
 		$this->fDbServer = $server;
 		$this->fDbUser = $user;
 		$this->fDbPassw = $passw;
-		$this->fDbName = $db;
+		$this->fDbName = $db_name;
 		$this->fDbTablePrefix = $prefix;
 	}
 	function setDbConnectionInfo ($connection, $info) {
@@ -195,6 +202,12 @@ function fatalError ($message){
 	echo '<h1>Ernster Fehler:</h1>';
 	echo $message;
 	echo '</body></html>';
+}
+function protoc ($message) {
+	echo $message; echo "<br />\n";
+}
+function error ($message) {
+	protoc ('<h1>+++ ' . $message . '</h1>');
 }
 function getMicroTime(&$session, $time = null){ 
 	$session->trace (TC_Util1, 'getMicroTime');
@@ -317,6 +330,9 @@ function instArchiveAnswer (&$session){
 }
 function instGetSqlFile (&$session){
 	return $session->fFileSystemBase . PATH_DELIM . '../db/infobasar_start.sql';
+}
+function instGetStandardPageFile (&$session){
+	return $session->fFileSystemBase . PATH_DELIM . '../db/infobasar_pages.wiki';
 }
 function instConfigFile (&$session, $message =  null) {
 	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
@@ -573,9 +589,9 @@ function checkTableStatus (&$session, &$exists) {
 	}
 	return $status;
 }
-function populate ($session, $fn_sql) {
+function populate (&$session, $fn_sql) {
 	global $db_prefix;
-	$sesssion->trace (TC_Init1, "populate:");
+	$session->trace (TC_Init, "populate:");
 	$message = '';
 	if (checkDB ($session, $message) == DB_EXISTS) {
 		if (! ($file = fopen ($fn_sql, "r"))) {
@@ -592,7 +608,7 @@ function populate ($session, $fn_sql) {
 					)
 					$comments++;
 				else if (strpos ($line, 'SE InfoBasar;') == 1)
-					$sesssion->trace (TC_Init1, "Use db gefunden");
+					$session->trace (TC_Init, "Use db gefunden");
 				else { 
 					$len = strlen ($line);
 					if ( ($pos = strpos ($line, ';', $len - 2)) > 0){
@@ -634,6 +650,8 @@ function populate ($session, $fn_sql) {
 			$message .= '<br>BaseModule wurde auf ' . $path . '/index.php gesetzt.';
 			sqlUpdate ($session, 'param', " text='" . $path . "/css/phpwiki.css'", "theme=11 and pos=102");
 			$message .= '<br>CSS wurde auf ' . $path . '/css/phpwiki.css gesetzt.';
+			$fn_pages = instGetStandardPageFile ($session);
+			$message .= '<br>' . instImportPages ($session, $fn_pages, true);
 		}
 	}
 	return $message;
@@ -644,12 +662,79 @@ function sqlUpdate (&$session, $table, $what, $where){
 	$query = 'update ' . $db_prefix . $table . " set " . $what . " where " . $where;
 	sqlStatement ($session, $query);
 }
+function dbInit (&$session){
+	if ($session->fDbType != DB_MySQL)
+		instGetConfig ($session);
+}
 function sqlStatement (&$session, $query) {
 	$session->trace (TC_Db1, 'sqlStatement: ' . $query);
+	dbInit ($session);
 	if (!mysql_query($query, $session->fDbInfo))
 		echo '<p>+++ SQL-Fehler: ' . htmlentities (mySql_error ()) . '<br/>' 
 			. htmlentities ($query) . '</p>';
 }
+function dbTable (&$session, $name) {
+	$session->trace (TC_Db3, 'dbTable');
+	dbInit ($session);
+	return $session->fDbTablePrefix . $name;
+}
+function dbSqlString (&$session, $value) {
+	$session->trace (TC_Db3 + TC_Convert, 'dbSqlString: ' . ".$value." );
+	$value = addcslashes ($value, "\'\\\n\r");
+	return '\'' . $value . '\'';
+}
+function dbDeleteByClause (&$session, $table, $what) {
+	dbInit ($session);
+	$query = 'delete from ' . dbTable ($session, $table) . ' where ' . $what;
+	$session->trace (TC_Db1 + TC_Update, "dbDeleteByClause: $query");
+	if (!mysql_query ($query, $session->fDbInfo))
+		error ('dbDelete: ' . mysql_error () . " $query");
+}
+function dbSingleValue (&$session, $query) {
+	$session->trace (TC_Db3 + TC_Query, "dbSingleValue: $query");
+	dbInit ($session);
+	$value = "";
+	$result = mysql_query ($query, $session->fDbInfo);
+	if (! $result)
+		protoc (mysql_error ());
+	else {
+		$row = mysql_fetch_row ($result);
+		if ($row) {
+			$value = $row [0];
+			mysql_free_result ($result);
+		} // $row
+	}
+	$session->trace ( TC_Query, "dbSingleValue Wert: $value");
+	return $value;
+} // dbSingleValue
+function dbInsert (&$session, $table, $idlist, $values){
+	$query = 'insert into ' . dbTable ($session, $table) 
+		. "($idlist) values ($values);";
+	$session->trace (TC_Db1 + TC_Insert, "dbInsert: $query");
+	#if (preg_match ('/TraceInsert/', $values)){
+	#	$session->backtrace ("dbInsert");
+	#}
+	$rc = null;
+	if (!mysql_query ($query, $session->fDbInfo))
+		error ('dbInsert: ' . mysql_error () . ": $table ($idlist) ($values)");
+	else
+		$rc = mysql_insert_id ();
+	return $rc;
+}
+function dbUpdate (&$session, $table, $id, $what) {
+	$session->trace (TC_Db1 + TC_Update, "dbUpdate: $table, $id, $what");
+	$query = 'update ' . dbTable ($session, $table) . ' set ' . $what
+		. 'changedat=now()' . ' where id=' . $id;
+	if (!mysql_query ($query, $session->fDbInfo))
+		error ('dbUpdate: ' . mysql_error () . " $query");
+}
+function dbPageId (&$session, $name){
+	$session->trace (TC_Db2 + TC_Query, "dbPageId: $name");
+	return dbSingleValue ($session, 'select id from ' 
+		. dbTable ($session, T_Page)
+		. ' where name=' . dbSqlString ($session, $name));
+}
+
 // -----------------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
 	echo "<input type=\"$type\" name=\"$name\"";
@@ -759,6 +844,7 @@ function guiExternLink (&$session, $link, $text) {
 }
 //----------------------------------------
 function instGetConfig (&$session){
+	// Zugriff indirekt!
 	global $db_server, $db_user, $db_passw, $db_name;
 	$session->trace (TC_Init, 'instGetConfig: ');
 	
@@ -775,6 +861,7 @@ function instGetConfig (&$session){
 			}
 		}
 		fclose ($file);
+		$session->setDb(DB_MySQL, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 	}
 }
 function getArchiveHexValue (&$file, $width){
@@ -866,4 +953,51 @@ function extractFromArchive (&$session, $archive, $compressed, $what){
 	}
 	return $rc;
 }
+function instImportPages (&$session,  $import_file, $import_replace) {
+	$message = null;
+	if (! file_exists ($import_file))
+		$message = "Datei nicht gefunden: " . $import_file;
+	else {
+		$file = fopen ($import_file, "r");
+		$count_inserts = 0;
+		$count_updates = 0;
+		$count_lines = 0;
+		while ($line = fgets ($file)){
+			if (preg_match ('/^#name=(\S+)\tlines=(\d+)\ttype=(\w+)\t/', $line, $param)){
+				$name = $param[1];
+				$lines = $param[2];
+				$type = $param [3];
+				$session->trace(TC_Gui1, 'instImportPagesAnswer-2: ' . $line);
+				if ( ($page = dbPageId ($session, $name)) > 0){
+					$count_updates++;
+					if ($import_replace)
+						dbDeleteByClause ($session, T_Text, 'page=' . $page);
+				} else {
+					$page = dbInsert ($session, T_Page, 'name,type', 
+						dbSqlString ($session, $name) . ',' 
+						. dbSqlString ($session, $type));
+					$count_inserts++;
+				}
+				$text = "";
+				$session->trace(TC_Gui1, 'instImportPagesAnswer-3: ' . $lines);
+				$count_lines += $lines;
+				for ($ii = 0; $ii < $lines; $ii++)
+					$text .= fgets ($file);
+				if ($import_replace)
+					$old_id = dbSingleValue ($session, 'select max(id) from ' . dbTable ($session, T_Text) 
+						. ' where page=' . (0+$page));
+				$text_id = dbInsert ($session, T_Text, 'page,type,text', 
+					$page . ',' . dbSqlString ($session, $type)
+					. ',' . dbSqlString ($session, $text));
+				if ($import_replace && $old_id > 0)
+					dbUpdate ($session, T_Text, $old_id, 'replacedby=' . $text_id);
+			}
+		}
+		fclose ($file);
+		$message = 'Datei ' . $import_file . ' wurde eingelesen. Neu: ' . (0 + $count_inserts)
+			. ' Geändert: ' . (0 + $count_updates) . ' Zeilen: ' . (0 + $count_lines);
+	}
+	return $message;
+}
+
 ?>
