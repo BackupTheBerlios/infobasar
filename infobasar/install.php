@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.8 2004/12/05 18:47:27 hamatoma Exp $
+// $Id: install.php,v 1.9 2004/12/07 00:07:25 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -216,6 +216,10 @@ function getMicroTime(&$session, $time = null){
 	list($usec, $sec) = explode(" ", $time); 
 	return ((float) $usec + (float)$sec); 
 }
+function getPos ($haystock, $needle){
+	$rc = strpos ($haystock, $needle);
+	return is_int ($rc) ? $rc : -1;
+}
 function instArchive (&$session, $message =  null) {
 	global $archive_dir;
 	$session->trace (TC_Init, 'instArchive');
@@ -294,6 +298,9 @@ function instArchive (&$session, $message =  null) {
 	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen', $archive_dir);
 	echo ' ';
 	guiButton ('archive_show', 'Aktualisieren');
+	outNewline();
+	echo 'Kommentare aus PHP-Quellen entfernen: ';
+	guiButton ('archive_strip', 'Optimieren');
 	guiLine ($session, 2);
 	guiButton ('inst_next', 'weiter');
 	guiFinishForm ($session);
@@ -301,7 +308,7 @@ function instArchive (&$session, $message =  null) {
 }
 function instArchiveAnswer (&$session){
 	global $archive_dir, $archive_name, $HTTP_POST_VARS, 
-		$archive_uploadfile, $archive_upload;
+		$archive_uploadfile, $archive_upload, $archive_strip;
 	$session->trace (TC_Init, "instArchiveAnswer");
 	$message = null;
 	if (isset ($archive_upload)){
@@ -313,6 +320,16 @@ function instArchiveAnswer (&$session){
 			$message = 'Problem beim Hochladen von ' . $name . ': ' 
 				. $_FILES['archive_uploadfile']['error'];
 		}
+	} elseif (isset ($archive_strip)){
+		$dir_name = preg_replace ('|/[^/]+$|', '', $session->fFileSystemBase);
+		$dir = opendir ($dir_name);
+		while ($file = readdir ($dir)) {
+			if (strpos ($file, '.php') == strlen ($file) - 4){
+				$file = $dir_name . '/' . $file;
+				$message .= '<br/>' . stripPhpSource ($session, $file, $file);
+			}
+		}
+		closedir($dir); 
 	} else {
 		for ($no = 1; $no < 100; $no++){
 			$ref = 'archive_extract' . $no;
@@ -578,7 +595,7 @@ function checkTableStatus (&$session, &$exists) {
 			$count1 = $count2 = 0;
 			while ($row = mysql_fetch_row($result)) {
 				$count1++;
-				if ( ($pos = strpos ($row[0], $db_prefix)) >= 0 && is_int ($pos))
+				if (getPos ($row[0], $db_prefix) >= 0)
 					$count2++;
 			}
 			$status = ($count1 + 0) . ' Tabelle(n), davon ' . ($count2 + 0)
@@ -603,9 +620,7 @@ function populate (&$session, $fn_sql) {
 				$line_count++;
 				$line = fgets ($file, 64000);
 				if (strlen ($line) <= 3 
-					|| ($pos = strpos ($line, '#')) == 0 && is_int ($pos)
-					|| ($pos = strpos ($line, '//')) == 0 && is_int ($pos)
-					)
+					|| getPos ($line, '#') >= 0 || getPos ($line, '//') >= 0)
 					$comments++;
 				else if (strpos ($line, 'SE InfoBasar;') == 1)
 					$session->trace (TC_Init, "Use db gefunden");
@@ -617,21 +632,21 @@ function populate (&$session, $fn_sql) {
 					}
 					if ($status == 'create') {
 						$sql .= ' ' . $line;
-						if ( ($pos = strpos ($line, ')')) == 0 && is_int ($pos)) {
+						if ( getPos ($line, ')') >= 0) {
 							sqlStatement ($session, $sql);
 							$status = null;
 						} else {
 						}
-					} elseif ( ($pos = strpos ($line, 'CREATE TABLE')) == 0 && is_int ($pos)) {
+					} elseif (getPos ($line, 'CREATE TABLE') == 0) {
 							$sql = str_replace ('infobasar_', $db_prefix, $line);
 							$status = 'create';
 					} else {
-						if ( ($pos = strpos ($line, 'ROP TABLE')) == 1)
+						if (strpos ($line, 'ROP TABLE') == 1)
 							$line = str_replace ('infobasar_', $db_prefix, $line);
-						elseif ( ($pos = strpos ($line, 'NSERT INTO')) == 1)
+						elseif (strpos ($line, 'NSERT INTO') == 1)
 							$line = str_replace (' INTO infobasar_', ' INTO ' . $db_prefix,
 								$line);
-						elseif ( ($pos = strpos ($line, 'PDATE ')) == 1)
+						elseif (strpos ($line, 'PDATE ') == 1)
 							$line = str_replace ('UPDATE infobasar_', 'UPDATE ' . $db_prefix,
 								$line);
 						sqlStatement ($session, $line);
@@ -786,7 +801,9 @@ function guiComboBox ($name, $options, $values, $ix_selected = 0) {
 function guiUploadFile ($name){
 echo '<input name="' . $name . '" type="file">' . "\n";
 }
-
+function outNewline(){
+	echo '<br/>';
+}
 function guiLine (&$session, $width) {
 	if (! isset ($width))
 		$width = 2;
@@ -845,7 +862,7 @@ function guiExternLink (&$session, $link, $text) {
 //----------------------------------------
 function instGetConfig (&$session){
 	// Zugriff indirekt!
-	global $db_server, $db_user, $db_passw, $db_name;
+	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 	$session->trace (TC_Init, 'instGetConfig: ');
 	
 	$name = $session->fFileSystemBase . PATH_DELIM . ".." . PATH_DELIM . "config.php";
@@ -999,5 +1016,60 @@ function instImportPages (&$session,  $import_file, $import_replace) {
 	}
 	return $message;
 }
-
+function stripPhpSource (&$session, $fn_source, $fn_target){
+	$message = null;
+	if (! ($file = fopen ($fn_source, "r")))
+		$message = "+++ Kann Datei nicht öffnen: $fn_source";
+	else {
+		$lines = array ();
+		$line_count = $old_size = $new_size = 0;
+		$comment = false;
+		while ( ($line = fgets ($file))) {
+			$line_count++;
+			$old_size += strlen ($line);
+			if ($comment) {
+				if ( ($pos = getPos ($line, '*/')) >= 0){
+					$line = substr ($line, $pos + 2);
+					$comment = false;
+				} else
+					$line = "\n";
+			}  // comment
+			$line = preg_replace ('/^[ \t]+/', '', $line);
+			$line = preg_replace ('/\s+$/', "\n", $line);
+			if (preg_match ("!^([^\"']*)(//|#)!", $line, $match))
+				$line = $match [1]  . "\n";
+			# $session->trace (TC_X, 'Zeile: ' . $line);
+			if (getPos ($line, "'")< 0 && getPos ($line, '"') < 0){
+				# $session->trace (TC_X, '1: ' . $line);
+				$line = preg_replace ('|\s*/\*.*?\*/\s*|', ' ', $line);
+				# $session->trace (TC_X, '2: ' . $line);
+				if ( ($pos = getPos ($line, '/*')) >= 0){
+					$line = ($pos > 0 ? substr ($line, 0, $pos) : '') . "\n";
+					$comment = true;
+				}
+			}
+			if (preg_match ('/->trace\b.*;\s*$/', $line) 
+					&& ! preg_match ('/TC_(Warning|Error)/', $line))
+				$line = "\n";
+			array_push ($lines, $line);
+			$new_size += strlen ($line);
+		} // while
+		fclose ($file);
+		if ($comment)
+			$message = "Kommentar offen";
+		else {
+			$diff = $old_size - $new_size;
+			$message = $fn_source . ': ' . ($diff) . " Zeichen entfernt ("
+				. ($old_size == 0 ? 0 : round (100 * $diff / $old_size)) . '%)';
+			if (! ($file = fopen ($fn_target, "w"))) {
+				$message = "+++ Kann Datei nicht öffnen: $fn_target";
+			} else {
+				for ($ii = 0; $ii < $line_count; $ii++)
+					fwrite ($file, $lines [$ii]);
+				fclose ($file);
+			} // $no_comment
+		}
+	}
+	return $message;
+}
 ?>

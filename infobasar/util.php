@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.15 2004/11/10 00:46:24 hamatoma Exp $
+// $Id: util.php,v 1.16 2004/12/07 00:07:44 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -461,4 +461,6 @@ function textTypeToMime ($type){
 	default: return M_Undef;
 	}
 }
+
+
 ?>
