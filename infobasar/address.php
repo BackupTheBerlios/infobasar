@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.9 2004/12/05 18:41:07 hamatoma Exp $
+// $Id: address.php,v 1.10 2005/01/06 16:55:58 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -15,20 +15,13 @@ define ('PHP_ModuleVersion', '0.6.5.4 (2004.12.5)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
-session_start();
-
- // If this is a new session, then the variable $user_id
- if (!session_is_registered("session_user")) {
-	session_register("session_user");
-	session_register("session_start");
-	session_register("session_no");
-	$start = time();
- }
- $session_id = session_id();
-define ('C_ScriptName', 'index.php');
+define ('C_ScriptName', 'address.php');
 
 include "config.php";
 include "classes.php";
+
+$session_id = sessionStart ();
+
 include "modules.php";
 // ----------- Definitions
 
@@ -52,26 +45,10 @@ define ('Th_AddressBodyEnd', 225);
 define ('Tab_Book', 'address_book');
 define ('Tab_Card', 'address_card');
 
-$session = new Session ($start_time);
-
-	// All requests require the database
-dbOpen($session);
-if (isset ($session_no) && $session_no > 0){
-	$session_no++;
-	$session->trace (TC_Init, "session_no: $session_no");
-}
-if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
-	&& dbCheckUser ($session, $user, $code) == ''){
-	$session->trace (TC_Init, 'address.php: Cookie erfolgreich gelesen');
-}
-$rc = dbCheckSession ($session);
-#$session->dumpVars ("Init");
-#$session->trace (TC_X, 'address_init: rc: ' . ($rc == null ? "null" : rc));
-if ($rc != null) {
-	$session->trace (TC_Init, 'keine Session gefunden: ' . $rc . ' ' 
-		. (empty($login_user) ? "-" : '>' . $login_user));
-	putHeaderBase ($session);
-} else {
+$session = new Session ($start_time, $session_id, 
+	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
+	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
+if (successfullLogin ($session)){
 	$session->trace (TC_Init, 'address.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($action)) {
 		$session->trace (TC_Init, "action.php: action: $action");
