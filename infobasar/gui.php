@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.11 2004/10/30 23:52:49 hamatoma Exp $
+// $Id: gui.php,v 1.12 2004/11/05 17:53:25 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -334,7 +334,7 @@ function guiUploadFileAnswerUnique (&$session, $destination,
 	} else {
 		$message = "+++ Problem beim Hochladen von $name ($temp_name) -> $target: " 
 			. $_FILES[$var_file]['error'];
-		$message->traceArray (TC_WARNING, "_FILE", $_FILE);
+		$session->traceArray (TC_Warning, "_FILE", $_FILE);
 	}
 	return $message;
 }
