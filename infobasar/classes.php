@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.9 2004/10/15 23:24:15 hamatoma Exp $
+// $Id: classes.php,v 1.10 2004/10/17 21:16:49 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -298,7 +298,7 @@ class Session {
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
-		$this->fTraceInFile = true;
+		$this->fTraceInFile = false;
 		$this->fTraceFile = "/tmp/trace.log";
 		$this->trace (TC_Init, "Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
 			. $this->fPageURL . "' ($pos) <== '" . $uri . "'");
@@ -318,7 +318,7 @@ class Session {
 	}
 	function dumpVars($header){
 		$this->Write ("HTTP_POST_VARS: $header");
-		foreach ($HTTP_POST_VARS as $name => $val){
+		foreach ($_POST as $name => $val){
 			$this->Write ($name . ": " . textToHtml ($val) . "<br>");
 		}
 	}
