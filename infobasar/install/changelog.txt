@@ -1,5 +1,5 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.3 2005/01/06 12:27:07 hamatoma Exp $
+$Id: changelog.txt,v 1.4 2005/01/06 16:54:52 hamatoma Exp $
 
 Legende: F(ehler) N(eu) A(enderung)
 
@@ -8,6 +8,7 @@ Version 0.7.0 vom 2005.01.05
  -A: Wiki-Syntax: ; Einrückung, Verweise mit [[]] [newline] statt [Newline] wichtig und Zitat getauscht
  -A: TM_Newline von [Newline] auf [newline]
  -N: admin.php: Wiki-Syntax-Konversion
+ -N: Wiki-Syntax: tt, sup, sub, teletype, superscript, subscript, %%%
 Version 0.6.6.1 vom 2004.12.25
  -F: Aufzählung mit verschiedenem Einrücktiefen
  -F: Tipps im Änderungsmodus. Hilfeseiten
