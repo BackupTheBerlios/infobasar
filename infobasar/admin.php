@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.5 2004/10/13 22:20:55 hamatoma Exp $
+// $Id: admin.php,v 1.6 2004/10/27 22:43:33 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -675,10 +675,10 @@ function admImportPagesAnswer (&$session){
 	$session->trace(TC_Gui1, 'admImportPagesAnswer');
 	$message = null;
 	if (isset ($import_upload)){
-		$message = guiUploadFileAnswer ($session,  $session->fullPath ("import"),
-			$import_file, "import_upload", "upload_file"); 
-		# $destination = PATH_DELIM,
-		# $filename = null, $button = 'upload_go', $file = 'upload_file'
+		$message = guiUploadFileAnswer ($session,  "/import/",
+			null, "import_upload", "import_file"); 
+		#function guiUploadFileAnswer (&$session, $destination = PATH_DELIM,
+		#$filename = null, $button = 'upload_go', $file = 'upload_file'){
 	} elseif (isset ($import_import)){
 		if (! file_exists ($import_file))
 			$message = "Datei nicht gefunden: " . $import_file;
