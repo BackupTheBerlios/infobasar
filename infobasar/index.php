@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.3 2004/09/20 23:01:26 hamatoma Exp $
+// $Id: index.php,v 1.4 2004/09/21 09:59:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -404,14 +404,12 @@ function baseAccount (&$session, $message) {
 	if (! $reload)
 		$id = dbUserId ($session, $account_user);
 	else {
-		list ($id, $account_rights, $account_locked, $account_width,
+		list ($id, $account_locked, $account_width,
 			$account_height, $account_maxhits,
 			$account_theme, $account_startpage, $account_email)
 			= dbGetRecordByClause ($session, T_User,
-			'id,rights,locked,width,height,maxhits,theme,startpage,email',
+			'id,locked,width,height,maxhits,theme,startpage,email',
 			'name=' . dbSqlString ($session, $account_user));
-			baseSplitRights ($session, $account_right_user, $account_right_rights, $account_rights_posting,
-				$account_rights_pages);
 	}
 	guiStandardHeader ($session, 'Einstellungen f&uuml;r ' . $account_user,
 		Th_StandardHeader, Th_StandardBodyStart);
@@ -498,7 +496,7 @@ function baseAccountAnswer(&$session, $user) {
 			'count(*)', 'name=' + dbSqlString ($session, $account_user)) > 0)
 			$message = '+++ Name schon vorhanden: ' + $account_user2;
 		else {
-			$uid = dbUserAdd ($session, $account_user2, $code, $session->fUserRights,
+			$uid = dbUserAdd ($session, $account_user2, $code,
 				dbSqlString ($session, false), $account_theme, $account_width, $account_height,
 				$account_maxhits, $account_startpage, $account_email);
 			modUserStoreData ($session, true, $uid);
@@ -515,8 +513,7 @@ function baseAccountAnswer(&$session, $user) {
 		else {
 			if (empty ($account_theme))
 				$account_theme = Theme_Standard;
-			$what = 'rights=' . dbSqlString ($session, $account_rights) . ',locked='
-				. $locked . ',';
+			$what = 'locked=' . $locked . ',';
 			if (! empty ($account_code))
 				$what .= 'code=' . dbSqlString ($session, $code) . ",";
 			$what .= "theme=$account_theme,width=$account_width,"

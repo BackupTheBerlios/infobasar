@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.2 2004/09/20 22:59:21 hamatoma Exp $
+// $Id: db_mysql.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -210,7 +210,7 @@ function dbCheckUser (&$session, $user, $code) {
 		$rc = 1;
 	else {
 		$fields = dbSingleRecord ($session,
-			'select id,code,rights,locked,theme,width,height,maxhits,postingsperpage,'
+			'select id,code,locked,theme,width,height,maxhits,postingsperpage,'
 			. 'threadsperpage,startpage from '
 			. dbTable ($session, "user") . ' where name="' . $user . '";');
 		if ($fields == null)
@@ -219,26 +219,35 @@ function dbCheckUser (&$session, $user, $code) {
 			$rc = 0;
 		else {
 			$code = encryptPassword ($session, $user, $code);
-			$session->trace (TC_Db1, 'dbCheckUser-2:' . $code . " / " . $fields [1]);
+			$session->trace (TC_Db1, 'dbCheckUser akt/db: ' . $code . " / " . $fields [1]);
 			$rc = strcmp ($code, $fields [1]) == 0 ? 0 : 2;
 		}
 	} // $count != 0
 	switch ($rc) {
-	case 1: $rc = "Nicht definiert: $user"; break;
-	case 2: $rc = "Passwort nicht korrekt!"; break;
-	case 3: $rc = "Benutzer gesperrt!"; break;
+	case 1: 
+		$rc = "Nicht definiert: $user"; 
+		break;
+	case 2: 
+		$session->trace (TC_Db1, 'dbCheckUser-4:' . $code . " / " . $fields [1]);
+		$rc = "Passwort nicht korrekt!";
+		break;
+	case 3: 
+		$rc = "Benutzer gesperrt!"; 
+		break;
 	default:
 		$rc = '';
 		$session_user = $fields [0];
-		$session->setUserData ($session_user, $user, $fields [2],
+	#function setUserData ($id, $name, $theme, $width, $height,
+	#	$maxhits, $postingsperpage, $threadsperpage, $startpage) {
+		$session->setUserData ($session_user, $user, $fields [3],
 			$fields [4], $fields [5], $fields [6], $fields [7], $fields [8],
-			$fields [9], $fields [10]);
+			$fields [9]);
 		$session->setMacros ();
 		break;
 	}
 	return $rc;
 }
-function dbUserAdd (&$session, $user, $code, $rights, $locked,
+function dbUserAdd (&$session, $user, $code, $locked,
 	$theme, $width, $height,$maxhits, $startpage, $email) {
 	$session->trace (TC_Db1, 'dbUserAdd');
 	$theme = 10; 
@@ -246,10 +255,10 @@ function dbUserAdd (&$session, $user, $code, $rights, $locked,
 	$height = max ($height, 1);
 	$maxhits = max ($maxhits, 1);
 	return dbInsert ($session, T_User,
-		'name,createdat,code,rights,locked,theme,width,height,maxhits,'
+		'name,createdat,code,locked,theme,width,height,maxhits,'
 			. 'startpage,email',
 		dbSqlString ($session, $user) . ',now(),' . dbSqlString ($session, $code)
-		. ',' . dbSqlString ($session, $rights) . ',' . dbSqlBool ($session, $locked)
+		. ',' . dbSqlBool ($session, $locked)
 		. ",$theme,$width,$height,$maxhits,"
 		. dbSqlString ($session, $startpage) . ',' . dbSqlString ($session, $email));
 }
@@ -261,18 +270,18 @@ function dbCheckSession (&$session) {
 		$fields = null;
 	else
 		$fields = dbSingleRecord ($session,
-			'select name,rights,locked,theme,width,height,maxhits,postingsperpage,'
+			'select name,locked,theme,width,height,maxhits,postingsperpage,'
 			. 'threadsperpage,startpage from '
 				. dbTable ($session, "user") . " where id=$session_user;");
 	if ($fields == null)
 		$rc = 'Unbekannter Benutzer: ' . $session_user;
 	else {
-		if (false && dbStringToBool ($session, $fields[2]))
+		if (false && dbStringToBool ($session, $fields[1]))
 			$rc = "Benutzer $session_user ist gesperrt";
 		else {
 			$session->setUserData ($session_user, $fields[0], $fields [1],
-				$fields[3], $fields[4], $fields[5], $fields[6], $fields[7],
-				$fields[8], $fields[9]);
+				$fields[2], $fields[3], $fields[4], $fields[5], $fields[6],
+				$fields[7]);
 			$uri = substr ($REQUEST_URI, strlen ($SCRIPT_NAME) + 1);
 			while (strpos ($uri, "index") == 0 && strpos ($uri, '/') > 0)
 				$uri = substr ($uri, strpos ($uri, "/") + 1);

@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.3 2004/09/20 23:03:05 hamatoma Exp $
+// $Id: util.php,v 1.4 2004/09/21 09:59:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -84,12 +84,20 @@ function decodeWikiName (&$session, $name){
 	$session->trace (TC_Util2, 'decodeWikiName');
 	return urldecode ($name);
 }
+define ('CC_NotWikiChars', '/[^' . CL_WikiName . ']/');
 function normalizeWikiName (&$session, $name){
 	$session->trace (TC_Util2, 'normalizeWikiName');
-	return preg_replace ('/[^a-z0-9A-Z_\xc4\xd6\xdc\xe4\xf6\xfc\xdf]/', 
-		"", $name);
+	return preg_replace (CC_NotWikiChars, "", $name);
 }
-
+function normWikiName (&$session, &$name){
+	$name2 = normalizeWikiName ($session, $name);
+	if ($name2 == $name)
+		return false;
+	else {
+		$name = $name2;
+		return true;
+	}
+}
 function writeExternLink ($link, $text, &$status) {
 	if ($text == '')
 		$text = $link;
@@ -157,7 +165,6 @@ define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 function writeText ($body, &$status) {
 	global $ib_reg_expr;
 	$status->trace (TC_Util2, "writeText: $body");
-	#$status->trace (TC_X, "writeText: $body");
 	$count = 0;
 	// iso-8859-1: ÄÖÜäöüß : 196 214 220 ! 228 246 252 223
 	// octal: 0304 326 334 ! 344 366 374 337
@@ -170,17 +177,15 @@ function writeText ($body, &$status) {
 		&& preg_match (ib_reg_expr,
 			$body, $match)) {
 		$args = count ($match);
-		# $status->trace (TC_X, 'Args: ' . $args . " match[2]: ." . $match[2] . ".");
 		$count++;
 		if ($match[1] != '')
 			echo htmlentities ($match[1]);
 		switch ($match [2]){
 		case '__': $status->handleEmphasis ('u'); break;
-		case '\'\'': $status->handleEmphasis ('i'); break;
-		case '\'\'\'': $status->handleEmphasis ('b'); break;
+		case '\'\'': $status->handleEmphasis ('b'); break;
+		case '\'\'\'': $status->handleEmphasis ('i'); break;
 		case '\'\'\'\'': $status->handleEmphasis ('x'); break;
 		default:
-			# $status->trace (TC_X, '$#match: ' . count ($match) . " LenMatch0: ." . $match [0] . ".");
 			if (strpos ($match [2], "hex(") == 1){
 				for ($ii = 5; $ii < strlen ($match [2]) - 1; $ii++){
 					printf ("%02x ", ord (substr ($match [2], $ii, 1)));
@@ -296,13 +301,10 @@ function wikiToHtml (&$session, $wiki_text) {
 		if ( ($line_trimmed = trim ($line)) == '')
 			writeParagraphEnd ($status);
 		else {
-			#$session->trace (TC_X, "Neue Zeile: '$line_trimmed' $line]");
 			if ($line_trimmed == '[code]')
 				$session->startCode();
 			elseif ($line_trimmed == '[/code]')
 				$session->finishCode();
-			#elseif (strpos ('code', $line_trimmed) > 0)
-			#	$session->trace (TC_X, ":$line_trimmed: statt [/code]");
 			elseif ($session->fPreformated) {
 				echo htmlentities ($line);
 			} else

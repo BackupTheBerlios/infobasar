@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.2 2004/09/20 22:58:59 hamatoma Exp $
+// $Id: classes.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 
-define ('PHP_ClassVersion', '0.6.2 (2004.09.01)');
+define ('PHP_ClassVersion', '0.6.5 (2004.09.20)');
 
 define ('PATH_DELIM', '/');
 define ('COOKIE_NAME', 'infobasar');
@@ -263,16 +263,16 @@ class Session {
 			$this->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 		} // mysql
 		$this->fTraceFlags
-			= 0 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1
-			+ 1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3
-			+ 1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3
-			+ 1 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
+			= 0 * (0 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
+			+ 0 * (1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3)
+			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
+			+ 1 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
 			+ 0 * TC_Layout1
-			+ 0 * TC_Update + 0 * TC_Insert + 1 * TC_Query
-			+ 0 * TC_Convert + 0 * TC_Init + 0 * TC_Diff2
+			+ 1 * (0 * TC_Update + 0 * TC_Insert + 1 * TC_Query)
+			+ 0 * (0 * TC_Convert + 0 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
-		$this->fTraceFlags = TC_All;
+		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 	}
 	function trace($class, $msg){
@@ -365,12 +365,12 @@ class Session {
 	function setDbConnectionInfo ($connection, $info) {
 		$this->fDbInfo = $info; $this->fDbConnection = $connection;
 	}
-	function setUserData ($id, $name, $rights, $theme, $width, $height,
+	function setUserData ($id, $name, $theme, $width, $height,
 		$maxhits, $postingsperpage, $threadsperpage, $startpage) {
-		$this->trace (TC_Session1, "setUserData: $id, $name, $rights, $theme, $startpage");
+		$this->trace (TC_Session1, "setUserData: $id, $name, $theme, $startpage");
 		$this->fUserId = $id;
 		$this->fUserName = $name;
-		$this->fUserRights = $rights; 
+		$this->fUserRights = null; 
 		$this->fUserTheme = $theme;
 		$this->fUserTextareaWidth = $width; $this->fUserTextareaHeight = $height;
 		$this->fUserMaxHits = $maxhits;
@@ -448,9 +448,10 @@ class Session {
 		while ($again) {
 			$again = false;
 			if ( ($pos = strpos ($text, TM_MacroPrefix)) >= 0 && is_int ($pos)) {
-				$text = preg_replace ($this->fMacroReplacementKeys,
+				$text2 = preg_replace ($this->fMacroReplacementKeys,
 					$this->fMacroReplacementValues, $text);
-				$this->trace (TC_Session3, 'replaceMacrosNoHTML-3: ' . $text);
+				$this->trace (TC_Session3, 'replaceMacrosNoHTML-3: ' . $text . ' --> ' . $text2);
+				$text = $text2;
 				if (++$count < 6) 
 					$again = true;
 				else {

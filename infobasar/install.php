@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.2 2004/09/20 23:02:22 hamatoma Exp $
+// $Id: install.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -14,7 +14,7 @@ $start_time = microtime ();
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
-define ('Install_Version', '0.1 (2004.05.22)');
+define ('Install_Version', '0.6.5 (2004.09.21)');
 define ('PATH_DELIM', '/');
 define ('REXPR_PATH_DELIM', '\/');
 define ('C_ScriptName', 'install.php');
@@ -609,11 +609,26 @@ function populate ($session, $fn_sql) {
 			$message = 'Die Infobasar-Tabellen wurden initialisiert: '
 				 . (0+$line_count) . ' Zeilen gelesen, davon '
 				. (0+$comments) . ' Kommentare';
+			$path = $session->fScriptBase;
+			$path = preg_replace ('/^(\w+:)?\/\/.+?\//', '/', $path);
+			$path = preg_replace ('/\/install$/', "", $path);
+			sqlUpdate ($session, 'macro', " value='" . $path . "/index.php/'", "name = 'BaseModule'");
+			sqlUpdate ($session, 'macro', " value='" . $path . "/forum.php/'", "name = 'ForumModule'");
+			$message .= '<br>BaseModule wurde auf ' . $path . '/index.php gesetzt.';
+			sqlUpdate ($session, 'param', " text='" . $path . "/css/phpwiki.css'", "theme=11 and pos=102");
+			$message .= '<br>CSS wurde auf ' . $path . '/css/phpwiki.css gesetzt.';
 		}
 	}
 	return $message;
 }
-function sqlStatement ($session, $query) {
+function sqlUpdate (&$session, $table, $what, $where){
+	global $db_prefix;
+	$session->trace (TC_Db1, 'sqlUpdate: ' .$table .', ' . $what . ',' .  $where);
+	$query = 'update ' . $db_prefix . $table . " set " . $what . " where " . $where;
+	sqlStatement ($session, $query);
+}
+function sqlStatement (&$session, $query) {
+	$session->trace (TC_Db1, 'sqlStatement: ' . $query);
 	if (!mysql_query($query, $session->fDbInfo))
 		echo '<p>+++ SQL-Fehler: ' . htmlentities (mySql_error ()) . " <br/>$query</p>";
 }

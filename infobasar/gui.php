@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.2 2004/09/20 23:00:07 hamatoma Exp $
+// $Id: gui.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -269,7 +269,7 @@ function guiBacklinks ($session, $page_name) {
 	$session->trace (TC_Gui1, 'pluginBacklinks');
 	$name = $page_name;
 	$condition = '(text like ' . dbSqlString ($session, '%' . $name . '%');
-	if (normWikiName ($session, $name))
+	if (normalizeWikiName ($session, $name))
 		$condition .= ' or text like '
 			. dbSqlString ($session, '%' . $name . '%');
 	$condition .= ') and replacedby is NULL';
