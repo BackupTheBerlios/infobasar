@@ -1,5 +1,5 @@
 <?php
-// $Id: base_module.php,v 1.3 2005/01/11 00:11:39 hamatoma Exp $
+// $Id: base_module.php,v 1.4 2005/01/11 00:39:07 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -546,7 +546,7 @@ function baseEditPageAnswerNoSave (&$session){
 			$session->trace (TC_Gui1, 'guiEditPageSaveAnswer:');
 			$message = guiUploadFileAnswerUnique ($session, "/pic/",
 				null, 'edit_upload_file', $name);
-			$_POST ['edit_content'] .= "\n\n[http:pic/$name $name]\n\n";
+			$_POST ['edit_content'] .= "\n\nhttp:pic/$name\n\n";
 		}
 		baseEditPage ($session, C_LastMode, $message, null, $_POST ['edit_mimetype']);
 	}
