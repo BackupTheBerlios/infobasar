@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.10 2004/09/02 21:25:20 hamatoma Exp $
+// $Id: classes.php,v 1.11 2004/09/08 06:13:19 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -23,6 +23,25 @@ define ('C_Preview', 'preview');
 
 define ('C_CHECKBOX_TRUE', 'J');
 
+// iso-8859-1: Umlaute A O U a o u sz : 196 214 220 . 228 246 252 . 223
+// Hex:  c4 d6 dc f6 e4 fc df
+// Character lists: (Buchstabenlisten für Wiki-Namen)
+define ('CL_WikiName_Uppercase', '_A-Z\xc4\xd6\xdc');
+define ('CL_WikiName_Lowercase', '_a-z0-9\xe4\xf6\xfc\xdf');
+define ('CL_WikiName', '_A-Za-z0-9\xc4\xd6\xdc\xe4\xf6\xfc\xdf');
+# Umlaute: ÄÖÜ: \xc4\xd6\xdc äöü: \xe4\xf6\xfc ß: \xdf
+
+// Character classes: (Buchstabenklassen für Wiki-Namen)
+define ('CC_WikiName_Uppercase', '[' . CL_WikiName_Uppercase . ']');
+define ('CC_WikiName_Lowercase', '[' . CL_WikiName_Lowercase . ']');
+define ('CC_WikiName', '[' . CL_WikiName . ']');
+
+// Special page names:
+define ('PN_SystemLog', '!log!');
+
+// Regular Expressions:
+define ('RExpr_Not_A_WikiName', '/[^' . CL_WikiName . ']/');
+
 // Module
 define ('Module_Base', 'index.php');
 define ('Module_Forum', 'forum.php');
@@ -42,9 +61,12 @@ define ('T_Module', 'module');
 define ('M_Undef', '?');
 define ('M_Wiki', 'wiki');
 define ('M_HTML', 'html');
+define ('M_Text', 'text');
+
 // Text types
 define ('TT_Wiki', 'w');
 define ('TT_HTML', 'h');
+define ('TT_Text', 't');
 
 // Themes: Index in Tabelle param: Einträge als HTML!
 define ('Theme_All', 1);
@@ -79,6 +101,7 @@ define ('TM_CurrentDate', '[Date]');
 define ('TM_CurrentDateTime', '[DateTime]');
 define ('TM_CurrentUser', '[User]');
 define ('TM_PageName', '[PageName]');
+define ('TM_PageLink', '[PageLink]');
 define ('TM_PageTitle', '[PageTitle]');
 define ('TM_PageChangedAt', '[PageChangedAt]');
 define ('TM_PageChangedBy', '[PageChangedBy]');
@@ -207,6 +230,7 @@ class Session {
 	var $fStartTime; // 
 
 	var $fModules; // array: module_names => Plugin-Klasse (Module<Name>)
+	var $fLogPageId; // Id der Seite SystemLog
 	
 	function Session ($start_time){
 		global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
@@ -228,7 +252,7 @@ class Session {
 		$this->fPageChangedBy = "";
 		$this->fPageTitle = "";
 		$this->fUserTheme = Theme_Standard;
-		
+		$this->fLogPageId = null;
 		// Basisverzeichnis relativ zu html_root
 		$this->setScriptBase ("http://$HTTP_HOST$PHP_SELF", $SCRIPT_FILENAME);
 	
@@ -240,7 +264,7 @@ class Session {
 		$this->fTraceFlags
 			= 0 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1
 			+ 1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3
-			+ 0 * TC_Db1 + 0 * TC_Db2 + 0 * TC_Db3
+			+ 1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3
 			+ 1 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
 			+ 0 * TC_Layout1
 			+ 0 * TC_Update + 0 * TC_Insert + 1 * TC_Query
@@ -271,6 +295,19 @@ class Session {
 	}
 	function SetLocation($location){
 		$this->fLocation = $location;
+	}
+	function getLogPageId(){
+		$this->trace (TC_Session1, 'getLogPageId');
+		if ($this->fLogPageId == null){
+			$this->fLogPageId = dbPageId ($this, PN_SystemLog);
+			if ($this->fLogPageId <= 0)
+				$this->fLogPageId = dbInsert ($this, T_Page,
+					'name,type,createdat,changedat,readgroup,writegroup',
+					dbSqlString ($this, PN_SystemLog) 
+					. ',' . dbSqlString ($this, TT_Text)
+					. ',now(),now(),0,0');
+		}
+		return $this->fLogPageId;
 	}
 	function PutHeader(){
 		global $_SERVER;
@@ -353,7 +390,8 @@ class Session {
 		global $last_pagename;
 		$this->trace (TC_Init, 'setPageName: ' . $uri
 			. " last_pagename: ($last_pagename)");
-		$this->fPageName = preg_replace ('/\?.*$/', '', $uri);
+		$this->fPageName = decodeWikiName ($this,
+			preg_replace ('/\?.*$/', '', $uri));
 		if (strpos ($this->fPageName, '.php') > 0){
 			$this->fPageName = empty ($last_pagename)
 				? P_Undef : $last_pagename;
@@ -424,6 +462,8 @@ class Session {
 			$text = str_replace (TM_CurrentDate, strftime ('%Y.%m.%d'), $text);
 			$text = str_replace (TM_CurrentDateTime, strftime ('%Y.%m.%d %H:%M'), $text);
 			$text = str_replace (TM_PageName, $this->fPageName, $text);
+			$text = str_replace (TM_PageLink, 
+				encodeWikiName ($this, $this->fPageName), $text);
 			$text = str_replace (TM_PageTitle, $this->fPageTitle, $text);
 			$text = str_replace (TM_BasarName, $this->fMacroBasarName, $text);
 			$text = str_replace (TM_PageChangedAt, $this->fPageChangedAt, $text);
@@ -431,7 +471,7 @@ class Session {
 				$time =  getMicroTime ($this) - $this->fStartTime;
 				$pos = strpos ($time, '.');
 				$text = str_replace (TM_RuntimeSecMilli, substr ($time, 0, $pos + 4), $text);
-				$text = str_replace (TM_RuntimeSecMicro, substr ($time, 0, $pos + 7), $text);
+				$text = str_replace (TM_RuntimeSecMicro, substr ($time, 0, $pos + 4), $text);
 			}
 			$text = str_replace (TM_PageChangedBy, htmlentities ($this->fPageChangedBy),
 					$text);		
