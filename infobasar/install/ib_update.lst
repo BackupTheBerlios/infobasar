@@ -1,5 +1,5 @@
 # Dateien Infobasar
-# $Id: ib_update.lst,v 1.3 2005/01/08 23:49:45 hamatoma Exp $
+# $Id: ib_update.lst,v 1.4 2005/01/10 18:08:03 hamatoma Exp $
 ../overwrite/modules.php	../modules.php
 ../db/std_pages.wiki
 ../db/update_0.6_0.7.sql
@@ -7,6 +7,8 @@
 ../install/changelog.txt
 ../install/readme.txt
 ../install/release-notes.txt
+../install/base_opt.php	../base_opt.php
+../install/forum_opt.php	../forum_opt.php
 ../docu/overview.html
 ../docu/index.html
 ../docu/module.html
@@ -14,8 +16,8 @@
 ../docu/Infobasar.html
 ../db_mysql.php
 ../gui.php
-../index.php
+../base_module.php
+../forum_module.php
 ../util.php
-../forum.php
 ../classes.php
 ../admin.php
