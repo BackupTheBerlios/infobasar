@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.10 2004/10/30 10:42:04 hamatoma Exp $
+// $Id: gui.php,v 1.11 2004/10/30 23:52:49 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -24,6 +24,21 @@ function outStrong($text = null){
 		echo '<strong>';
 		echo $text;
 		echo '</strong>';
+	}
+}
+function tagQuotation($text = null){
+	if ($text == null)
+		return '<cite>';
+	else
+		return '<cite>' . $text . '</cite>';
+}
+function outQuotation($text = null){
+	if ($text == null)
+		echo '<cite>';
+	else {
+		echo '<cite>';
+		echo $text;
+		echo '</cite>';
 	}
 }
 function tagStrongEnd(){
@@ -54,9 +69,13 @@ function outParagraphEnd(){
 function tagTable($border = 0){
 	return "\n<table border=\"" . (0+$border) . '">'; 
 }
-function outTable($border = 0){
+function outTable($border = 0, $width = 0){
 	echo "\n<table border=\"";
 	echo (0+$border);
+	if ($width != null){
+		echo '" width="';
+		echo $width;
+	}
 	echo '">'; 
 }
 function tagTableEnd(){
@@ -102,9 +121,16 @@ function outTableDelim($halignment = AL_None){
 		echo '<td>';
 	else{
 		echo '<td text-align: ';
-		echo $alignment;
+		echo $halignment;
 		echo  '>';
 	}
+}
+function tagTableRecordAndDelim($halignment = AL_None){
+	return tagTableRecord . tagTableDelim ($halignment);
+}
+function outTableRecordAndDelim($halignment = AL_None){
+	outTableRecord ();
+	outTableDelim ($halignment);
 }
 function tagTableDelimEnd(){
 	return '</td>';
@@ -181,6 +207,13 @@ function outTableComboBox ($prefix, $name, $names, $values, $index, $halignment 
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiComboBox ($name, $names, $values, $index);
+	outTableDelimEnd(); 
+}
+function outTableInternLink ($prefix, $link, $text = null, $module = null, $halignment = AL_None){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim ($halignment);
+	guiInternLink ($link, $text, $module);
 	outTableDelimEnd(); 
 }
 // --- Allgemeine Funktionen --------------
