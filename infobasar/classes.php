@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.23 2005/01/06 11:47:10 hamatoma Exp $
+// $Id: classes.php,v 1.24 2005/01/06 11:56:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -110,7 +110,7 @@ define ('TM_PageTitle', '[PageTitle]');
 define ('TM_PageChangedAt', '[PageChangedAt]');
 define ('TM_PageChangedBy', '[PageChangedBy]');
 define ('TM_Theme', '[Theme]');
-define ('TM_Newline', '[Newline]');
+define ('TM_Newline', '[newline]');
 define ('TM_BasarName', '[BasarName]');
 define ('TM_RuntimePrefix', '[Runtime');
 define ('TM_RuntimeSecMilli', '[RuntimeSecMilli]');
