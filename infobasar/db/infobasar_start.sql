@@ -118,7 +118,7 @@ INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'BaseModul
 INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'ForumModule', 'PHP-Datei Forumsmodul', '/forum.php/');
 INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'ScriptBase', 'Pfad zur PHP-Datei', '/');
 
-INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'HintFormating', 'Formatierungshilfe bei Wikiseitenbearbeitung', '<small><a href="[M_S_BaseModule]HilfeFormatierungen]">Textformatierung:</a></small>\r\n<table border="1">\r\n<tr><td><small>Zeilenanfang</small></td><td><small>Im Text</small></td><td><small>Links</small></td></tr>\r\n<tr><td><small>! &Uuml;berschrift<br>* Aufz&auml;hlung<br># num. Aufz&auml;hlung<br>LEER Einr&uuml;ckung<br>---- Linie (4 -)<br>!| Tabellenkopf<br>| Tabelle</small></td>\r\n<td><small>\'\'<b>wichtig</b>\'\' (je 2 mal \')<br>\'\'\'<i>Zitat</i>\'\'\' (je 3 mal \')<br>__<u>unterstrichen</u>__ (je 2 mal _)<br> [Newline] Zeilenwechsel</small></td>\r\n<td><small>WikiName<br/> !GmbH<br/>[URL]<br>[URL Text]</small></td>\r\n</tr></table>');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'HintFormating', 'Formatierungshilfe bei Wikiseitenbearbeitung', '<small><a href="[M_S_BaseModule]HilfeFormatierungen]">Textformatierung:</a></small>\n<table border="1">\n</td><td><small><b>Im Absatz</b></small></td><td><small><b>Zeilenanfang</b></small></td>\n<td><small><b>Links</b></small></td>\n<td><small><b>Schriften</b></small></td>\n<td><small><b>Sonstiges</b></small></td></tr><tr>\n<td><small>\'\'\'<b>wichtig</b>\'\'\' (je 3 mal \')<br>\'\'<i>Zitat</i>\'\' (je 2 mal \')<br>__<u>unterstrichen</u>__ (je 2 _)<br>%%% Zeilenwechsel<br>[[!]] Zeichen !<br></small></td>\n<td><small>! &Uuml;berschrift<br>* Aufz&auml;hlung<br># num. Aufz.<br>; Einr&uuml;ckung<br>---- Linie (4 -)<br></td>\n<td><small>WikiName<br/> ["Seite"|Text]<br>!GmbH<br/>[[URL]]<br>[URL|Text]</small></td>\n<td><small>[big]Groß[/big]<br>[small]klein[/small]<br>[sup]<sup>hoch</sup>[/sup]<br>[sub]<sub>tief</sub>[/sub]<br>[tt]<tt>Fixfont</tt>[/tt]</small></td>\n<td><small>[code]<br>Quellcode<br>[/code]<br>!| Tabellenkopf<br>| Tabellenzeile<br>&lt;?plugin ...?&gt;</small></td></tr></table>\n');
 
 INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'ButtonEdit', 'Button Bearbeiten', '<a class="wikiaction" href="[PageLink]?action=edit">Bearbeiten</a>');
 INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'ButtonSearch', 'Button Wikisuche', '<a class="wikiaction" href="[M_S_BaseModule]!search">Wikisuche</a>');
@@ -166,10 +166,13 @@ CREATE TABLE infobasar_param (
 
 # ===================================
 # Daten für Tabelle `infobasar_param`
-# Alle Module (111-199):
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Standard-Head', 11, 111, '<title>[BasarName]</title></head>\r\n');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Standard Body-Start', 11, 112, '[M_T_BodyWikiText]');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten Body-Abschnitt-Ende', 11, 113, '[M_T_BodyEndWikiTextTitleSearch]');
+# Alle Module, alle Designs (100-149):
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Standard-Head', 1, 101, '<title>[BasarName]</title></head>\r\n');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Standard Body-Start', 1, 102, '[M_T_BodyWikiText]');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten Body-Abschnitt-Ende', 1, 103, '[M_T_BodyEndWikiTextTitleSearch]');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Login-Head-Bodystart', 1, 105, '<title>Anmeldung fu&uml;r den InfoBasar</title>\r\n<body>\r\n<h1>Willkommen beim Infobasar</h1>');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Login-Body-End', 1, 106, '<p><small>Passwort vergessen? EMail an hamatoma AT gmx DOT de</small></p>[M_S_RuntimeSec]');
+
 
 # ===================================
 # Daten für Tabelle `infobasar_param`
@@ -182,17 +185,17 @@ INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('BasarName', 1, 13,
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Script-Basis', 1, 15, '');
 
 /* ----------------- */
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Design-Name', 10, 100, 'Minimal');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Header für alle Seiten', 10, 101, '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">\r\n');
+# Design Minimal:
+# Alle Module:
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Design-Name', 10, 150, 'Minimal');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Header für alle Seiten', 10, 151, '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">\r\n');
+# Basismodul:
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Seiten-Head-Abschnitt', 10, 211, '<title>[PageName] (HTML)</title></head>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Seiten Body-Abschnitt-Anfang', 10, 212, '<body>\r\n<h1>[PageName]</h1>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Seiten Body-Abschnitt-Ende', 10, 213, '<hr style="width: 100%; height: 2px;">\r\n[M_S_PageLastChange]<br>\r\n[M_S_ButtonEdit]\r\n | [M_S_ButtonSearch]\r\n[M_S_RuntimeSec]');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Änderung Head-Abschnitt', 10, 214, '<title>[PageTitle]</title></head>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Änderung Body-Abschnitt-Anfang', 10, 215, '<body>\r\n<h1>[PageTitle]</h1>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Änderung Body-Abschnitt-Ende', 10, 216, '[M_S_BodyEnd]');
-
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Login-Head-Bodystart', 10, 221, '<title>Anmeldung fu&uml;r den InfoBasar</title>\r\n<body>\r\n<h1>Willkommen beim Infobasar</h1>');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Login-Body-End', 10, 222, '<p><small>Passwort vergessen? EMail an w.kappeler AT gmx DOT de</small></p>[M_S_RuntimeSec]');
 
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten-Head-Abschnitt', 10, 241, '<title>[PageName] (Wiki)</title></head>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten Body-Abschnitt-Anfang', 10, 242, '<body>\r\n<h1>[PageName]</h1>\r\n');
@@ -202,11 +205,13 @@ INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Änderung Body
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Änderung Body-Abschnitt-Ende', 10, 246, '[M_S_HintFormating][M_S_RuntimeSec]');
 
 /* ============================= */
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Design-Name', 11, 100, 'PHPWiki');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Header für alle Seiten', 11, 101, '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">\r\n');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('CSS-Datei', 11, 102, '/infobasar/css/phpwiki.css');
-/*----------- */
+# Design PHPWiki:
+# Alle Module:
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Design-Name', 11, 150, 'PHPWiki');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Header für alle Seiten', 11, 151, '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">\r\n');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('CSS-Datei', 11, 152, '/infobasar/css/phpwiki.css');
 
+# Basismodul:
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Seiten-Head-Abschnitt', 11, 211, '<title>[PageName] (HTML)</title></head>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Seiten Body-Abschnitt-Anfang', 11, 212, '<body><table border="0" width="100%"><tr><td>[M_S_ButtonEdit]\r\n[M_S_ButtonSearch]\r\n[M_S_ButtonLastChanges]\r\n[M_S_ButtonNewWiki]\r\n[M_S_ButtonPageInfo]</td>[M_T_TopRightButtons]\r\n<h1>[PageName]</h1>\r\n<div class="wikitext">');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Seiten Body-Abschnitt-Ende', 11, 213, '</div><br />\r\n<table border="0" width="100%"><tr><td>[M_S_ButtonOverview]\r\n[M_S_ButtonSearch]\r\n[M_S_ButtonForums]\r\n[M_S_ButtonForumSearch]\r\n[M_S_ButtonLastChanges]\r\n[M_S_ButtonInfo]\r\n</td><td style="text-align: right">\r\n[M_S_ButtonUserStart]\r\n</td></tr></table>[M_S_RuntimeSec]');
@@ -214,8 +219,6 @@ INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Änderung Head
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Änderung Body-Abschnitt-Anfang', 11, 215, '<body>\r\n<h1>[PageTitle]</h1>\r\n<div class="wikitext">');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('HTML-Änderung Body-Abschnitt-Ende', 11, 216, '</div>[M_S_RuntimeSec]');
 
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Login-Head-Bodystart', 11, 221, '<title>Anmeldung fu&uml;r den InfoBasar</title><body>\r\n<h1>Willkommen beim Infobasar</h1>\r\n<div class="wikitext">');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Login-Body-End', 11, 222, '<p><small>Passwort vergessen? EMail an [AdminEMail]</small></p>[M_S_RuntimeSec]');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Info-Head', 11, 224, '<title>[BasarName]</title></head>\r\n<body>\r\n<table border="0" width="100%"><tr><td><h1>[PageTitle]</h1>\r\n</a></td>[M_T_TopRightButtons]\r\n<div class="wikitext">');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Info- Body-End', 11, 225, '[M_T_BodyEndWikiTextTitleSearch]');
 /*---------------*/
