@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.16 2004/12/07 00:07:44 hamatoma Exp $
+// $Id: util.php,v 1.17 2004/12/26 12:54:02 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -10,6 +10,7 @@ Näheres siehe Datei LICENCE.
 InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
+
 function panicExit (&$session, $errormsg) {
 	static $exitwiki = 0;
 	global $dbi;
@@ -20,19 +21,19 @@ function panicExit (&$session, $errormsg) {
 
 
 	if($errormsg <> '') {
-		print "<P><hr noshade><h2>Schwerer Fehler</h2>\n";
+		print TAG_PARAGRAPH . TAG_HRULE . TAG_H2 . "Schwerer Fehler" . TAG_H2_END;
 		print $errormsg;
-		print "\n</body></html>";
+		print TAG_BODY_HTML_END;
 	}
 	dbClose($session);
 
 	exit;
 }
 function protoc ($message) {
-	echo $message; echo "<br />\n";
+	echo $message; outNewline ();
 }
 function error ($message) {
-	protoc ('<h1>+++ ' . $message . '</h1>');
+	protoc (TAG_H1 . '+++ ' . $message . TAG_H1_END);
 }
 function textToHtml ($text){
 	return htmlentities ($text);
@@ -47,8 +48,8 @@ function p ($message){
 	echo "<p>$message</p>\n";
 }
 function extractHtmlBody ($page){
-	$page = preg_replace ( '/^.*<\s*body\s*>/si', '', $page);
-	$page = preg_replace ('/<\s*\/\s*body\s*>.*$/si', "", $page);
+	$page = preg_replace (TAG_REXPR_BODY, '', $page);
+	$page = preg_replace (TAG_REXPR_BODY_END, '', $page);
 	return $page;
 }
 function getPos ($haystock, $needle){
@@ -65,9 +66,9 @@ function findTextInLine ($body, $tofind, $count) {
 	foreach ($lines as $ii => $line) {
 		if ( ($pos = strpos ($line, $tofind)) >= 0 && is_int ($pos)) {
 			$line = ($ii + 1) . ": " . str_replace ($tofind,
-				'<b>' . $tofind . '</b>', htmlentities ($line));
+				TAG_STRONG . $tofind . TAG_STRONG_END, htmlentities ($line));
 			if ($rc)
-				$rc .= "<br/>\n" . $line;
+				$rc .= TAG_NEWLINE . $line;
 			else
 				$rc = $line;
 			if (--$count == 0)
@@ -113,12 +114,12 @@ function writeExternLink ($link, $text, &$status) {
 			$link = "http:" . $status->fSession->fScriptBase . "/" . substr ($link, 5);
 			$status->fSession->trace (TC_Util2, "writeExternLink: link: $link");
 		}
-		echo '<img alt="' . $text . '" title="' . $text . '"src="' . $link
-			. '">';
+		echo  TAG_IMAGE_ALT . $text . TAG_IMAGE_TITLE . $text . TAG_IMAGE_SOURCE . $link
+			. TAG_APO_SUFFIX;
 	} else {
-		echo '<a href="' . $link . '">';
+		echo TAG_ANCOR_HREF . $link . TAG_APO_SUFFIX;
 		echo htmlentities ($text);
-		echo '</a>';
+		echo TAG_ANCOR_END;
 	}
 }
 function writePlugin ($name, $param, &$status) {
@@ -224,31 +225,33 @@ function writeText ($body, &$status) {
 }
 function writeTagPair ($tag, $body, &$status) {
 	$status->trace (TC_Util3, "writeTagPair: $tag, $body");
-	echo "<" . $tag . ">";
+	echo TAG_PREFIX . $tag . TAG_SUFFIX;
 	writeText ($body, $status);
 	$status->stopSentence ();
-	echo "</" . $tag . ">\n";
+	echo TAG_ENDPREFIX;
+	echo $tag;
+	echo TAG_SUFFIX_NEWLINE;
 }
 function writeHeader ($line, &$status) {
 	$status->trace (TC_Util2, "writeHeader: $line");
 	$status->stopSentence ();
 	$count = countRepeats ($line, '!');
-	$tag = "h$count";
-	writeTagPair ($tag, substr ($line, $count), $status);
+	writeTagPair (TAGN_HEADLINE . $count, substr ($line, $count), $status);
 }
 function writeUList ($line, &$status) {
 	$status->trace (TC_Util3, "writeUList: $line");
 	$count = countRepeats ($line, '\*');
 	if ($status->fUListLevel != $count)
 		$status->changeUListLevel ($count);
-	writeTagPair ('li', substr ($line, $count), $status);
+	writeTagPair (TAGN_LISTITEM, substr ($line, $count), $status);
 }
+
 function writeOrderedList ($line, &$status) {
 	$status->trace (TC_Util3, "writeOrderedList: $line");
 	$count = countRepeats ($line, '#');
 	if ($status->fOrderedListLevel != $count)
 		$status->changeOrderedListLevel ($count);
-	writeTagPair ('li', substr ($line, $count), $status);
+	writeTagPair (TAGN_LISTITEM, substr ($line, $count), $status);
 }
 function writeIndent ($line, &$status) {
 	$status->trace (TC_Util3, "writeIndent: $line");
@@ -258,35 +261,39 @@ function writeTable ($line, &$status) {
 	$status->trace (TC_Util3, "writeTable: $line");
 	$status->startTable ();
 	$cols = explode ('|', substr ($line, 1));
-	echo '<tr>';
+	echo TAG_TABLE_RECORD;
 	foreach ($cols as $ii => $col) {
-		writeTagPair ('td', $col, $status);
+		writeTagPair (TAGN_TABLE_DELIM, $col, $status);
 	}
-	echo "</tr>\n";
+	echo TAG_TABLE_RECORD_END;
 }
+
 function writeTableHeader ($line, &$status) {
 	$status->trace (TC_Util3, "writeTableHeader: $line");
 	$status->stopTable ();
 	$status->startTable ();
 	$cols = explode ('|', substr ($line, 2));
-	echo '<tr>';
+	echo TAG_TABLE_RECORD;
 	foreach ($cols as $ii => $col) {
-		echo '<td><b>';
+		echo TAG_TABLE_DELIM;
+		echo TAG_STRONG;
 		writeText ($col, $status);
 		$status->stopSentence();
-		echo '</b></td>';
+		echo TAG_STRONG_END;
+		echo TAG_TABLE_DELIM_END;
 	}
-	echo "</tr>\n";
-}
-function writeParagraphEnd (&$status) {
-	$status->trace (TC_Util3, 'writeParagraphEnd');
-	$status->stopParagraph ();
+	echo TAG_TABLE_RECORD_END;
 }
 function writeLine ($line, &$status) {
 	$status->trace (TC_Util3, "writeLine: $line");
-	$status->startParagraph ();
-	writeText ($line, $status);
-	echo " ";
+	if ($status->fPreformatted){
+		echo htmlentities ($line);
+		outNewline ();
+	} else {
+		$status->startParagraph ();
+		writeText ($line, $status);
+		echo " ";
+	}
 }
 function writeHoricontalLine ($line, &$status) {
 	$status->trace (TC_Util2, 'writeHoricontalLine');
@@ -301,32 +308,44 @@ function wikiToHtml (&$session, $wiki_text) {
 	$session->trace (TC_Util1, 'wikiToHtml: ' . (0+count ($lines)) . ' Zeilen'
 		. "($lines[0])");
 	$status = new LayoutStatus ($session);
+	$last_linetype = '';
 	foreach ($lines as $ii => $line) {
 		if ( ($line_trimmed = trim ($line)) == '')
-			writeParagraphEnd ($status);
+			$status->changeOfLineType ($last_linetype, '');
 		else {
-			if ($line_trimmed == '[code]')
-				$session->startCode();
-			elseif ($line_trimmed == '[/code]')
-				$session->finishCode();
-			elseif ($session->fPreformated) {
-				echo htmlentities ($line);
-			} else
-				switch (substr ($line, 0, 1)) {
-				case '!':
-					if (substr ($line, 1, 1) == '|')
-						writeTableHeader ($line, $status);
-					else
-						writeHeader ($line, $status);
-					break;
-				case ' ': writeLine ($line, $status); break;
-					# writeIndent ($line, $status); break;
-				case '*': writeUList ($line, $status); break;
-				case '#': writeOrderedList ($line, $status); break;
-				case '|': writeTable ($line, $status); break;
-				case '-': writeHoricontalLine ($line, $status); break;
-				default: writeLine ($line, $status); break;
+			$linetype = substr ($line, 0, 1);
+			$status->changeOfLineType ($last_linetype, $linetype);
+			switch ($linetype) {
+			case '!':
+				if (strpos ($line, '|') != 1)
+					writeHeader ($line, $status);
+				else {
+					writeTableHeader ($line, $status);
+					$linetype = '|';
 				}
+				break;
+			case ' ': writeLine ($line, $status); break;
+				# writeIndent ($line, $status); break;
+			case '*': writeUList ($line, $status); break;
+			case '#': writeOrderedList ($line, $status); break;
+			case '|': writeTable ($line, $status); break;
+			case '-': writeHoricontalLine ($line, $status); break;
+			case '[':
+				if (strpos ($line, 'code]') == 1){
+					$session->startCode();
+					$line = substr ($line_trimmed, 6);
+					if (! empty ($line))
+						echo htmlentities ($line);
+				} elseif ($line_trimmed == '[/code]'){
+					$session->finishCode();
+					writeline (substr ($line, 7), $status);
+				} else
+					writeLine ($line, $status); 
+				break;
+			default: 
+				writeLine ($line, $status); break; 
+			}
+			$last_linetype = $linetype;
 		}
 	} // foreach
 	$session->trace (TC_Util1, 'wikiToHtml-Ende');
@@ -440,10 +459,13 @@ function putHeaderBase(&$session){
 	$uri = $session->fScriptBase . "/index.php/!login"; 
 	if ($uri != $_SERVER['REQUEST_URI'])
 		header ('Location: http://' . $_SERVER['HTTP_HOST'] . $uri);
-	echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">';
-	echo "\n<html>\n<body>";
-	echo "\nBitte erst anmelden: <a href=\"" . $uri . "\">\n";
-	echo "</body>\n</html>\n";
+	echo TAG_DOC_TYPE;
+	echo TAG_HTML_BODY;
+	echo "\nBitte erst anmelden: ";
+	echo TAG_ANCOR_HREF;
+	echo $uri;
+	echo TAG_APO_SUFFIX_NEWLINE;
+	echo TAG_BODY_HTML_END;
 }
 function mimeToTextType ($mime){
 	switch ($mime){
@@ -461,6 +483,4 @@ function textTypeToMime ($type){
 	default: return M_Undef;
 	}
 }
-
-
 ?>
