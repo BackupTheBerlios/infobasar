@@ -10,7 +10,7 @@
 # Datenbank: infobasar
 # 
 #CREATE DATABASE infobasar;
-# USE test;
+USE InfoBasar;
 
 
 # --------------------------------------------------------
