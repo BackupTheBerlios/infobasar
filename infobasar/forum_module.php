@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum_module.php,v 1.6 2005/01/13 03:58:28 hamatoma Exp $
+// $Id: forum_module.php,v 1.7 2005/01/14 03:11:37 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -125,7 +125,7 @@ function baseForumSearch (&$session, $message){
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiParagraph ($session, 'Hinweis: vorl&auml;ufig nur ein Suchbegriff m&ouml;glich', false);
-	guiStartForm ($session, 'search', P_ForumSearch);
+	guiStartForm ($session);
 	outTableAndRecord ();
 	outTableTextFieldButton ($session, 'Im Titel:', 'forum_titletext', null, 32, 64, 
 		' ', 'forum_title', 'Suchen');
@@ -353,7 +353,7 @@ function basePosting (&$session, $message, $mode) {
 	}
 	getUserParam ($session, U_TextAreaWidth, $textarea_width);
 	getUserParam ($session, U_TextAreaHeight, $textarea_height);
-	guiStartForm ($session, 'thread');
+	guiStartForm ($session);
 	outHiddenField ($session, 'std_answer', 'j');
 	outHiddenField ($session, 'last_pagename', null);
 	outHiddenField ($session, 'forum_id',null);
@@ -525,7 +525,7 @@ function baseThread (&$session) {
 function baseCallStandardPage (&$session) {
  $session->trace (TC_Gui2, 'baseCallStandardPage');
  $found = true;
- switch ($session->fPageName) {
+ switch ($session->fPageURL) {
  case P_Login: guiLogin ($session, null); break;
  case P_Logout: guiLogout ($session); null;
  case P_ForumHome: baseForumHome ($session); break;

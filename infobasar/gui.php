@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.26 2005/01/13 03:46:56 hamatoma Exp $
+// $Id: gui.php,v 1.27 2005/01/14 03:13:29 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -73,13 +73,13 @@ function outParagraphEnd (&$session) {
 }
 function outDivision (&$session) {
 	echo TAG_DIV;
-	if ($session->fIsInParagraph)
-		$session->trace(TC_Warning, "outDivision: verschachtelt!");
+//	if ($session->fIsInParagraph)
+//		$session->trace(TC_Warning, "outDivision: verschachtelt!");
 	$session->fIsInParagraph = true;
 }
 function outDivisionEnd (&$session) {
-	if (!$session->fIsInParagraph)
-		$session->trace(TC_Warning, "outDivisionEnd: ohne Start");
+//	if (!$session->fIsInParagraph)
+//		$session->trace(TC_Warning, "outDivisionEnd: ohne Start");
 	$session->fIsInParagraph = false;
 	echo TAG_DIV_END;
 }
@@ -133,7 +133,7 @@ function tagTableDelim($halignment = AL_None) {
 	if ($halignment == AL_None)
 		return TAG_TABLE_DELIM;
 	else
-		return TAG_TABLE_DELIM_ALIGN.$alignment.TAG_SUFFIX;
+		return TAG_TABLE_DELIM_ALIGN.$alignment.TAG_APO_SUFFIX;
 }
 function outTableDelim($halignment = AL_None) {
 	if ($halignment == AL_None)
@@ -141,7 +141,7 @@ function outTableDelim($halignment = AL_None) {
 	else {
 		echo TAG_TABLE_DELIM_ALIGN;
 		echo $halignment;
-		echo TAG_SUFFIX;
+		echo TAG_APO_SUFFIX;
 	}
 }
 function tagTableRecordAndDelim($halignment = AL_None) {
@@ -279,7 +279,7 @@ function outTableInternLink (&$session, $prefix, $link, $text = null, $module = 
 	echo TAG_TABLE_DELIM_END;
 }
 function outTableRecordInternLink (&$session, $suffix, $link, $text = null, $module = null, $halignment = AL_None) {
-	outTableDelim($halignment);
+	outTableRecordAndDelim($halignment);
 	guiInternLink($session, $link, $text, $module);
 	echo TAG_TABLE_DELIM_END;
 	if ($suffix != null)
@@ -397,7 +397,8 @@ function outButton2 (&$session, $name, $text, $delim, $name2, $text2) {
 	outButton($session, $name2, $text2);
 }
 function guiLinkAsButton (&$session, $command, $text) {
-	guiInternLink($session, encodeWikiName($session, $session->fPageName).'?action='.$command, $text);
+	guiInternLink($session, encodeWikiName($session, $session->fPageURL)
+		.'?action='.$command, $text);
 }
 function outRadioButton (&$session, $name, $text, $checked) {
 	outField($session, $name, TAGAV_RADIO, $text, 0, 0, isset ($checked) && $checked ? "checked" : "");
@@ -434,10 +435,10 @@ function outComboBox (&$session, $name, $options, $values = null, $ix_selected =
 	echo TAG_SELECT_END;
 }
 function guiUploadFile(&$session, $prefix = null, $button = null, $max_file_size = null, $custom_field = null, $custom_value = null, $caption = null, $file = null) {
-	outDivision ($session);
 	echo TAG_FORM_MULTIPART_POST_ACTION;
 	echo $session->fScriptURL;
 	echo TAG_APO_SUFFIX_NEWLINE;
+	outDivision ($session);
 	if ($custom_field != null)
 		outHiddenField($session, $custom_field, $custom_value);
 	outHiddenField($session, 'MAX_FILE_SIZE', empty ($max_file_size) ? MAX_UPLOAD_FILESIZE : $max_file_size);
@@ -448,15 +449,18 @@ function guiUploadFile(&$session, $prefix = null, $button = null, $max_file_size
 	echo TAG_APO_SUFFIX_NEWLINE;
 	echo ' ';
 	outButton($session, empty ($button) ? BUTTON_UPLOAD : $button, empty ($caption) ? 'Hochladen' : $caption);
+	outDivisionEnd ($session);
 	guiFinishForm($session);
-	outDivision ($session);
 }
-function guiUploadFileAnswer (&$session, $button, $destination = PATH_DELIM, $new_target_name = null, $file = TEXTFIELD_UPLOAD) {
+function guiUploadFileAnswer (&$session, $button, $destination = PATH_DELIM,
+		$new_target_name = null, $file = TEXTFIELD_UPLOAD) {
 	$session->trace(TC_Gui2, "guiUploadFileAnswer: dest: $destination new_name: $new_target_name name");
-	return guiUploadFileAnswerUnique($session, $button, $destination, $dummy, null, $file, false);
+	return guiUploadFileAnswerUnique($session, $button, $destination, $dummy,
+		$new_target_name, $file, false);
 }
 // Benennt Datei auf dem Server solange um, bis der Name eindeutig ist.<altername><nummer>.<altertyp>
-function guiUploadFileAnswerUnique (&$session, $button, $destination, & $name, $new_target_name = null, $file = TEXTFIELD_UPLOAD, $unique = true) {
+function guiUploadFileAnswerUnique (&$session, $button, $destination, &$name,
+		$new_target_name = null, $file = TEXTFIELD_UPLOAD, $unique = true) {
 	$session->trace(TC_Gui2, "guiUploadFileAnswerUnique: dest: $destination new_name: $new_target_name name");
 	$message = null;
 	if (!isset ($_FILES[$file]['tmp_name']))
@@ -504,6 +508,8 @@ function guiFinishBody (&$session, $param_no) {
 	else {
 		guiLine($session, 1);
 		modStandardLinks($session);
+		guiParagraph ($session, 'Laufzeit auf dem Server: ' 
+			. $session->getMacro (TM_RuntimeSecMilli), false);
 		echo TAG_BODY_HTML_END;
 	}
 }
@@ -555,13 +561,11 @@ function guiHeadline (&$session, $level, $text) {
 	echo $level;
 	echo TAG_SUFFIX_NEWLINE;
 }
-function guiStartForm (&$session, $pagename = null) {
+function guiStartForm (&$session) {
 	$session->trace(TC_Gui2, 'guiStartForm');
 	echo TAG_FORM_POST_ACTION;
 	echo $session->fScriptURL;
 	echo TAG_APO_SUFFIX_NEWLINE;
-	if ($pagename)
-		outHiddenField($session, 'last_pagename', $pagename);
 }
 function guiFinishForm (&$session) {
 	$session->trace(TC_Gui2, 'guiFinishForm');
@@ -644,9 +648,9 @@ function guiStandardHeader (&$session, $title, $pos_header, $pos_body) {
 		echo TAG_HEAD_TITLE;
 		echo htmlentities($title);
 		echo TAG_TITLE_HEAD_END;
-	}
-	else
+	} else {
 		echo $session->replaceMacrosNoHTML($header);
+	}
 	if ($pos_body > 0) {
 		$header = dbGetText($session, $pos_body);
 		if (empty ($header))
@@ -662,15 +666,19 @@ function guiStandardHeader (&$session, $title, $pos_header, $pos_body) {
 }
 function guiStandardBodyEnd (&$session, $pos) {
 	$session->trace(TC_Gui1, 'guiStandardBodyEnd');
+	$session->trace (TC_X, "guiStandardBodyEnd" . (0+Th_LoginBodyEnd));
 	$html = guiParam($session, $pos, null);
 	if (!empty ($html))
 		echo $session->replaceMacrosNoHTML($html);
 	else {
 		if (!defined('Th_LoginBodyEnd'))
 			define('Th_LoginBodyEnd', 0);
+		$session->trace (TC_X, "guiStandardBodyEnd: Pos: $pos " . (0+Th_LoginBodyEnd));
 		if ($pos != Th_LoginBodyEnd) {
 			guiLine($session, 1);
 			modStandardLinks($session);
+			guiParagraph ($session, 'Laufzeit auf dem Server: ' 
+				. $session->getMacro (TM_RuntimeSecMili), false);
 			echo TAG_BODY_END;
 		}
 	}
@@ -800,11 +808,12 @@ function guiShowPageById (&$session, $page, $text_id) {
 	}
 	$session->trace(TC_Gui1, 'guiShowPageById-2: '.$count_newer);
 	list ($content, $created_at, $created_by) = dbGetRecordById($session, T_Text, $text_id, 'text,createdat,createdby');
-	$has_changed = $name != $session->fPageName;
+	$has_changed = $name != $session->fPageURL;
 	$session->SetPageData($name, $created_at, $created_by);
 	if ($has_changed)
 		$session->SetLocation($name);
-	$header = $count_newer == 0 ? $session->fPageName : $session->fPageName.' (Version '.$text_id.')';
+	$header = $count_newer == 0 ? $session->fPageURL 
+		: $session->fPageURL . ' (Version ' . $text_id.')';
 	if ($type == TT_Wiki)
 		guiStandardHeader($session, $header, Th_HeaderWiki, Th_BodyStartWiki);
 	else
@@ -815,12 +824,13 @@ function guiShowPageById (&$session, $page, $text_id) {
 	guiStandardBodyEnd($session, $type == TT_Wiki ? Th_BodyEndWiki : Th_BodyEndHTML);
 }
 function guiLogin (&$session, $message) {
-	guiStandardHeader($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader, null);
-	guiStartForm($session, 'login', P_Login);
+	guiStandardHeader($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader, Th_LoginBodyStart);
+	guiStartForm($session);
 	if (!empty ($message)) {
 		$message = preg_replace('/^\+/', '+++ Fehler: ', $message);
 		guiParagraph($session, $message, false);
 	}
+	outDivision ($session);
 	if (!isset ($_POST['login_user'])) {
 		$_POST['login_user'] = $session->fUserName;
 		$_POST['login_email'] = '';
@@ -843,6 +853,7 @@ function guiLogin (&$session, $message) {
 	outNewline();
 	outStrong('Achtung:');
 	echo 'Benutzername muss ausgefüllt sein!';
+	outDivisionEnd ($session);
 	guiFinishForm($session, $session);
 	guiStandardBodyEnd($session, Th_LoginBodyEnd);
 	return 1;
