@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.4 2004/12/31 01:32:30 hamatoma Exp $
+// $Id: forum.php,v 1.5 2005/01/06 11:54:54 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.6 (2004.12.22)');
+define ('PHP_ModuleVersion', '0.7.0 (2005.01.05)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -19,10 +19,11 @@ define ('PARAM_BASE', 300);
 
 session_start();
 
- // If this is a new session, then the variable $user_id
  if (!session_is_registered("session_user")) {
 	session_register("session_user");
 	session_register("session_start");
+	session_register("session_no");
+	$_SESSION ['session_user'] = $_SESSION ['session_start'] = $_SESSION ['session_no'] = null;
 	$start = time();
  }
  $session_id = session_id();
@@ -70,12 +71,13 @@ define ('P_Home', '!home');
 // ----------- Program
 
 
-$session = new Session ($start_time);
+$session = new Session ($start_time, $session_id, 
+	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
+	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
 
 	// All requests require the database
 dbOpen($session);
 
-//p ('User,Id,Login: ' . $session_user . "," . $session_id . "/" . $login_user);
 if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	&& dbCheckUser ($session, $user, $code) == ''){
 	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
@@ -85,12 +87,12 @@ $rc = dbCheckSession ($session);
 $do_login = false;
 if (! empty ($rc)) {
 	// p ("Keine Session gefunden: $session_id / $session_user ($rc)");
-	if (! empty ($login_user))
+	if (! empty ($user))
 		baseLoginAnswer ($session);
 	else 
 		$do_login = true;
 } else {
-		if (isset ($login_user))
+		if (isset ($_POST ['login_user']))
 			baseLoginAnswer ($session);
 }
 if ($do_login){
@@ -98,9 +100,9 @@ if ($do_login){
 		baseLogin ($session, '');
 } else {
 	$session->trace (TC_Init, 'forum.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
-	if (isset ($action)) {
-		$session->trace (TC_Init, "forum.php: action: $action");
-		switch ($action){
+	if (isset ($_GET ['action'])) {
+		$session->trace (TC_Init, 'index.php: action: ' . $_GET ['action']);
+		switch ($_GET ['action']){
 		case A_NewThread: basePosting ($session, '', C_New); break;
 		case A_Answer: basePosting ($session, '', C_New); break;
 		case A_ChangeThread: basePostingChange ($session); break;
@@ -112,15 +114,14 @@ if ($do_login){
 			baseFormTest ($session);
 			break;
 		}
-	} elseif (isset ($std_answer) || ! baseCallStandardPage ($session)) {
-		$session->trace (TC_Init, 'forum.php: keine Standardseite'
-			. (isset ($edit_save) ? " ($edit_save)" : ' []'));
+	} elseif (isset ($_REQUEST ['std_answer']) || ! baseCallStandardPage ($session)) {
+		$session->trace (TC_Init, 'forum.php: keine Standardseite');
 		if (isset ($test))
 			baseTest ($session);
-		elseif (isset ($forum_title) || isset ($forum_body))
+		elseif (isset ($_POST ['forum_title']) || isset ($_POST ['forum_body']))
 			baseForumSearchAnswer ($session, null);
-		elseif (isset ($posting_preview) || isset ($posting_insert)
-			|| isset ($posting_change))
+		elseif (isset ($_POST ['posting_preview']) || isset ($_POST ['posting_insert'])
+			|| isset ($_POST ['posting_change']))
 			basePostingAnswer ($session);
 		else {
 			$session->SetLocation (P_ForumHome);
@@ -156,29 +157,26 @@ function getModuleInfo (&$name, &$description, &$copyright, &$version){
 	$version = PHP_ModuleVersion;
 }
 function baseForumSearch (&$session, $message){
-	global $forum_titletext, $search_maxhits, $forum_bodytext;
-
 	$session->trace (TC_Gui1, 'baseForumSearch');
-	getUserParam ($session, U_MaxHits, $search_maxhits);
+	getUserParam ($session, U_MaxHits, $maxhits);
 	guiStandardHeader ($session, 'Forumsuche', Th_SearchHeader, Th_SearchBodyStart);
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiParagraph ($session, 'Hinweis: vorl&auml;ufig nur ein Suchbegriff m&ouml;glich', false);
 	guiStartForm ($session, 'search', P_ForumSearch);
-	echo "<table border=\"0\">\n<tr><td>Im Titel:</td><td>";
-	guiTextField ('forum_titletext', $forum_titletext, 32, 64);
-	echo " "; guiButton ('forum_title', "Suchen");
-	echo "</td></tr>\n<tr><td>Im Beitrag:</td><td>";
-	guiTextField ('forum_bodytext', $forum_bodytext, 32, 64);
-	echo " "; guiButton ('forum_body', "Suchen");
-	echo "</td></tr>\n<tr><td>Maximale Trefferzahl:</td><td>";
-	guiTextField ("search_maxhits", $search_maxhits, 10, 10);
-	echo "</td></tr>\n</table>\n";
+	outTableAndRecord ();
+	outTableTextFieldButton ('Im Titel:', 'forum_titletext', null, 32, 64, 
+		' ', 'forum_title', 'Suchen');
+	outTableRecordDelim ();
+	outTableTextFieldButton ('Im Beitrag:', 'forum_bodytext', null, 32, 64,
+		' ', 'forum_body', 'Suchen');
+	outTableRecordDelim ();
+	outTableTextField ('Maximale Trefferzahl:', U_MaxHits, $maxhits, 10, 10);
+	outTableAndRecordEnd ();
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_SearchBodyEnd);
 }
 function forumSearch (&$session, $with_text, $condition, $to_find) {
-	global $search_maxhits;
 	$session->trace (TC_Gui2, 'forumSearch');
 	$rc = '';
 	$row = dbFirstRecord ($session,
@@ -186,7 +184,7 @@ function forumSearch (&$session, $with_text, $condition, $to_find) {
 			. ($with_text ? ',text from ' : ' from ')
 			. dbTable ($session, T_Posting)
 			. ' where ' . $condition . ' order by changedat desc limit '
-			. $search_maxhits);
+			. $_POST ['search_maxhits']);
 	if (! $row)
 		$rc = '+++ keine passenden Seiten gefunden';
 	else {
@@ -216,24 +214,21 @@ function forumSearch (&$session, $with_text, $condition, $to_find) {
 	return $rc;
 }
 function baseForumSearchAnswer (&$session){
-	global $forum_titletext, $forum_title, $search_maxhits,
-		$forum_bodytext, $forum_body;
-
 	$session->trace (TC_Gui1, 'baseForumSearchAnswer');
-	if (isset ($forum_title)) {
-		if (empty ($forum_titletext))
+	if (isset ($_POST ['forum_title'])) {
+		if (empty ($_POST ['forum_titletext']))
 			$message = '+++ kein Titelbestandteil angegeben';
 		else
 			$message = forumSearch ($session, false,
-				'subject like ' . dbSqlString ($session, "%$forum_titletext%"),
-				$forum_titletext);
+				'subject like ' . dbSqlString ($session, '%' . $_POST ['forum_titletext'] . '%'),
+				$_POST ['forum_titletext']);
 	} else {
-		if (empty ($forum_bodytext))
+		if (empty ($_POST ['forum_bodytext']))
 			$message = '+++ kein Suchtext angegeben';
 		else
 			$message = forumSearch ($session, true,
-				'text like ' . dbSqlString ($session, "%$forum_bodytext%"),
-				$forum_bodytext);
+				'text like ' . dbSqlString ($session, '%' . $_POST ['forum_bodytext'] . '%'),
+				$_POST ['forum_bodytext']);
 	}
 	guiForumSearch ($session, $message);
 }
@@ -277,13 +272,13 @@ function baseForumHome (&$session) {
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
 function baseForum (&$session) {
-	global $page_no, $forum_id;
-
 	$session->trace (TC_Gui1, 'baseForum');
-	if (! isset ($forum_id) || ! isInt ($forum_id))
-		$forum_id = 1;
-	if (empty ($page_no))
-		$page_no = 1;
+	if (! isset ($_POST ['forum_id']) || ! isInt ($_POST ['forum_id']))
+		$_POST ['forum_id'] = 1;
+	$forum_id = $_POST ['forum_id'];
+	if (empty ($_POST ['page_no']))
+		$_POST ['page_no'] = 1;
+	$page_no = $_POST ['page_no'];
 	$forum = dbGetRecordById ($session, T_Forum, $forum_id, 'name,description');
 	dbForumInfo ($session, $forum_id, $threads, $pages);
 	$headline = 'Forum ' . $forum [0];
@@ -291,22 +286,26 @@ function baseForum (&$session) {
 	guiParagraph ($session, $forum [1], true);
 	guiParagraph ($session, 'Seite ' . $page_no . ' von ' . $pages . ' ('
 		. (0 + $threads) . ($threads == 1 ? ' Thema)' : ' Themen)'), false);
-	echo '<table width="100%" border="0"><tr><td>';
-	guiInternLink ($session, P_Forum . '?forum_id=' . $forum_id
+	outTableAndRecord ();
+	outTableInternLink ($session, null, P_Forum . '?forum_id=' . $forum_id
 		. '&action=' . A_NewThread, 'Neues Thema');
-	echo '</td><td style="text-align: right">';
+	outTableDelim (AL_Right);
 	guiPageLinks ($session, P_Forum . '?action=' . A_ShowForum
 		. '&forum_id=' . $forum_id, $page_no, $pages);
-	echo '</td></tr></table>' . "\n";
-
+	outTableDelimAndRecordEnd ();
+	outTableEnd ();
+	
 	$id_list = dbIdListOfPage ($session, T_Posting,
 		"forum=$forum_id and top is null order by id desc",
 		$session->fUserThreadsPerPage, $page_no);
-	echo '<table width="100%" border="1">' . "\n"
-		. '<tr><td><b>Thema</b></td><td><b>Autor</b></td>'
-		. '<td><b>Antworten</b></td><td><b>Aufrufe</b></td>'
-		. '<td><b>Letzter Beitrag</b></td>'
-		. "</tr>\n";
+	outTableAndRecord (1);
+	outTableCellStrong ('Thema');
+	outTableCellStrong ('Autor');
+	outTableCellStrong ('Antworten');
+	outTableCellStrong ('Aufrufe');
+	outTableCellStrong ('Letzter Beitrag');
+	outTableCellStrong ('Thema');
+	outTableRecordEnd ();
 	foreach ($id_list as $ii => $id) {
 		$thread = dbGetRecordById ($session, T_Posting, $id,
 			'author,changedat,subject,changedby,calls');
@@ -319,49 +318,46 @@ function baseForum (&$session) {
 			$last = dbGetRecordById ($session, T_Posting, $last_id,
 				'author,changedat,subject');
 		}
-		echo '<tr><td>';
+		outTableRecordAndDelim ();
 		guiThreadPageLink ($session, $id, 1, $thread [2]);
-		echo '</td><td>' . htmlentities ($thread [0]) . '</td><td>';
-		echo $answers + 0;
-		echo '</td><td>' . ($thread [4] + 0) . '</td><td>';
-		echo $last [0] . ' ' . dbSqlDateToText ($session, $last [1])
-			. '<br/>';
-		guiInternLink ($session, P_Thread. '?action=' . A_ShowThread
-						. '&posting_id=' . $last_id,
+		outTableDelimEnd ();
+		outTableCell (htmlentities ($thread [0]));
+		outTableCell ($answers + 0);
+		outTableCell ($thread [4] + 0);
+		outTableDelim ();
+		echo $last [0];
+		echo ' ';
+		echo dbSqlDateToText ($session, $last [1]);
+		outNewline ();
+		guiInternLink ($session, P_Thread. '?action=' . A_ShowThread . '&posting_id=' . $last_id,
 			$last [2]);
-		echo '</td></tr>' . "\n";
+		outTableDelimAndRecordEnd ();
 	}
-	echo "</table>\n";
-	echo '<table width="100%" border="0"><tr><td>';
-	guiInternLink ($session, P_Forum . '?forum_id=' . $forum_id
+	outTableEnd ();
+	outTableAndRecord ();
+	outTableInternLink ($session, null, P_Forum . '?forum_id=' . $forum_id
 		. '&action=' . A_NewThread, 'Neues Thema');
-	echo '</td><td style="text-align: right">';
+	outTableDelim (AL_Right);
 	guiPageLinks ($session, P_Forum . '?action=' . A_ShowForum
 		. '&forum_id=' . $forum_id, $page_no, $pages);
-	echo '</td></tr></table>' . "\n";
+	outTableDelimAndRecordEnd ();
+	outTableEnd ();
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
 function basePostingChange (&$session) {
-	global $posting_id, $last_pagename;
 	$session->trace (TC_Gui1, 'basePostingChange');
 	list ($posting_subject, $posting_text) = dbGetRecordById ($session,
-		T_Posting, $posting_id, 'subject,text');
+		T_Posting, $_POST ['posting_id'], 'subject,text');
 	basePosting ($session, '', C_Change);
 }
 function basePosting (&$session, $message, $mode) {
-	global $forum_id, $thread_id, $reference_id,
-		$posting_id, $posting_subject, $posting_text,
-		$posting_preview,
-		$textarea_width, $textarea_height, $last_pagename;
 	$session->trace (TC_Gui1, 'basePosting: ' . $mode);
-	if (! isset ($last_pagename))
-		$last_pagename = $session->fPageName;
 	$headline = ($mode == C_New)
-		? (empty ($reference_id) ? 'Neues Thema' : 'Antworten')
-		: (empty ($reference_id) ? 'Thema ändern' : 'Antwort ändern');
+		? (empty ($_POST ['reference_id']) ? 'Neues Thema' : 'Antworten')
+		: (empty ($_POST ['reference_id']) ? 'Thema ändern' : 'Antwort ändern');
 	guiStandardHeader ($session, $headline, Th_AnswerHeader, Th_AnswerBodyStart);
-	if (! empty ($reference_id)
-		&& ($posting = dbGetRecordById ($session, T_Posting, $reference_id,
+	if (! empty ($_POST ['reference_id'])
+		&& ($posting = dbGetRecordById ($session, T_Posting, $_POST ['reference_id'],
 			'author,subject,text,forum'))) {
 		guiHeadline ($session, 1, 'Beitrag: ' . $posting [1]);
 		guiParagraph ($session, 'Autor: ' . $posting [0], true);
@@ -369,44 +365,48 @@ function basePosting (&$session, $message, $mode) {
 		guiLine ($session, 2);
 		if ($mode == C_New) {
 			$pos = strpos ($posting [1], 'Re: ');
-			$posting_subject = (is_int ($pos) ? '' : 'Re: ') . $posting [1];
+			$_POST ['posting_subject'] = (is_int ($pos) ? '' : 'Re: ') . $posting [1];
 		}
-		$forum_id = $posting [3];
-	} else
-		str_replace ($posting_text, "\\'", "'");
-	if (isset ($posting_preview)) {
+		$_POST ['forum_id'] = $posting [3];
+	} else {
+		if (isset ($_POST ['posting_text']))
+			$_POST ['posting_text'] = str_replace ($_POST ['posting_text'], "\\'", "'");
+		else
+			$_POST ['posting_text'] = '';
+	}
+	if (isset ($_POST ['posting_preview'])) {
 		guiHeadline ($session, 1, 'Vorschau');
-		wikiToHtml ($session, $posting_text);
+		wikiToHtml ($session, $_POST ['posting_text']);
 		guiLine ($session, 2);
 	}
 	guiHeadline ($session, 1, $headline);
 	if (! empty ($message))
 		guiParagraph ($session, $message, true);
-	if ($mode == C_Change && ! isset ($posting_text)) {
-		$posting = dbGetRecordById ($session, T_Posting, $posting_id,
+	if ($mode == C_Change && ! isset ($_POST ['posting_text'])) {
+		$posting = dbGetRecordById ($session, T_Posting, $_POST ['posting_id'],
 			'subject,text,forum');
-		$forum_id = $posting [2];
-		$posting_text = $posting [1];
-		$posting_subject = $posting [0];
+		$_POST ['forum_id'] = $posting [2];
+		$_POST ['posting_text'] = $posting [1];
+		$_POST ['posting_subject'] = $posting [0];
 	}
 	getUserParam ($session, U_TextAreaWidth, $textarea_width);
 	getUserParam ($session, U_TextAreaHeight, $textarea_height);
 	guiStartForm ($session, 'thread');
 	guiHiddenField ('std_answer', 'j');
-	guiHiddenField ('last_pagename', $last_pagename);
-	guiHiddenField ('forum_id', $forum_id);
-	guiHiddenField ('thread_id', $thread_id);
-	guiHiddenField ('posting_id', $posting_id);
-	guiHiddenField ('reference_id', $reference_id);
+	guiHiddenField ('last_pagename', null);
+	guiHiddenField ('forum_id',null);
+	guiHiddenField ('thread_id',null);
+	guiHiddenField ('posting_id', null);
+	guiHiddenField ('reference_id', null);
 	echo "<table border=\"0\">\n<tr><td>Thema:</td><td>";
-	guiTextField ('posting_subject', $posting_subject, $textarea_width, 64);
+	guiTextField ('posting_subject', null, $textarea_width, 64);
 	echo "</td></tr>\n<tr><td>Text</td><td>";
-	guiTextArea ('posting_text', $posting_text, $textarea_width,
+	guiTextArea ('posting_text', null, $textarea_width,
 		$textarea_height);
 	echo '</td></tr><tr><td></td><td style="text-align: right;">Eingabefeld: Breite: ';
-	guiTextField ('textarea_width', $textarea_width, 3, 3);
+	guiTextField (U_TextAreaWidth, $textarea_width, 3, 3);
 	echo " H&ouml;he: ";
-	guiTextField ('textarea_height', $textarea_height, 3, 3);
+	guiTextField (U_TextAreaHeight, $textarea_height, 3, 3);
 	echo "</td></tr>\n<tr><td></td><td>";
 	guiButton ('posting_preview', 'Vorschau');
 	echo ' | ';
@@ -420,49 +420,47 @@ function basePosting (&$session, $message, $mode) {
 	guiStandardBodyEnd ($session, Th_AnswerBodyEnd);
 }
 function basePostingAnswer (&$session) {
-	global $forum_id, $thread_id,
-		$posting_id, $posting_subject, $posting_text,
-		$posting_preview, $posting_insert, $posting_change,
-		$textarea_width, $textarea_height;
 	$session->trace (TC_Gui1, 'basePostingAnswer');
 	$message = null;
 	$mode = null;
-	$posting_text = textAreaToWiki ($session, $posting_text);
-	if (isset ($posting_preview)) {
-		$mode = (isset ($posting_id) && isInt ($posting_id)) ? C_Change : C_New;
-	} elseif (isset ($posting_insert)) {
+	$_POST ['posting_text'] = textAreaToWiki ($session, $_POST ['posting_text']);
+	if (isset ($_POST ['posting_preview'])) {
+		$mode = (isset ($_POST ['posting_id']) 
+			&& isInt ($_POST ['posting_id'])) ? C_Change : C_New;
+	} elseif (isset ($_POST ['posting_insert'])) {
 		$mode = C_New;
-		if (empty ($posting_subject))
+		if (empty ($_POST ['posting_subject']))
 			$message = '+++ Thema fehlt';
-		elseif (strlen ($posting_text) < 5)
+		elseif (strlen ($_POST ['posting_text']) < 5)
 			$message = '+++ Beitrag zu kurz';
 		else {
 			$date = dbSqlDateTime ($session, time ());
-			$thread_id = $posting_id = dbInsert ($session, T_Posting,
+			$_POST ['thread_id'] = $_POST ['posting_id'] = dbInsert ($session, T_Posting,
 				'createdat,changedat,forum,author,top,reference,subject,text',
-				"$date,$date,$forum_id," . dbSqlString ($session, $session->fUserName)
-					. ',' . (empty ($thread_id) ? 'null' : $thread_id)
-					. ',' . (empty ($reference_id) ? 'null' : $reference_id)
-					. ',' . dbSqlString ($session, $posting_subject)
-					. ',' . dbSqlString ($session, $posting_text));
+				"$date,$date," . $_POST ['forum_id'] . ',' 
+					. dbSqlString ($session, $session->fUserName)
+					. ',' . (empty ($_POST ['thread_id']) ? 'null' : $_POST ['thread_id'])
+					. ',' . (empty ($_POST ['reference_id']) ? 'null' : $_POST ['reference_id'])
+					. ',' . dbSqlString ($session, $_POST ['posting_subject'])
+					. ',' . dbSqlString ($session, $_POST ['posting_text']));
 			dbUpdateRaw ($session, T_User, $session->fUserId,
 				'postings=postings+1');
 			baseForum ($session);
 			$mode = NULL;
 		}
-	} elseif (isset ($posting_change)) {
+	} elseif (isset ($_POST ['posting_change'])) {
 		$mode = C_Change;
-		if (empty ($posting_subject))
+		if (empty ($_POST ['posting_subject']))
 			$message = '+++ Thema fehlt';
-		elseif (strlen ($posting_text) < 5)
+		elseif (strlen ($_POST ['posting_text']) < 5)
 			$message = '+++ Beitrag zu kurz';
 		else {
 			$date = dbSqlString ($session, time ());
-			dbUpdate ($session, T_Posting, $posting_id,
+			dbUpdate ($session, T_Posting, $_POST ['posting_id'],
 				'changedby=' . dbSqlString ($session, $session->fUserName)
 				. ',changedat=' . $date
-				. ',subject=' . dbSqlString ($session, $posting_subject)
-				. ',text=' . dbSqlString ($session, $posting_text) . ',');
+				. ',subject=' . dbSqlString ($session, $_POST ['posting_subject'])
+				. ',text=' . dbSqlString ($session, $_POST ['posting_text']) . ',');
 			baseThread ($session);
 			$mode = NULL;
 		}
@@ -471,27 +469,25 @@ function basePostingAnswer (&$session) {
 		basePosting ($session, $message, $mode);
 }
 function baseThread (&$session) {
-	global $thread_id, $posting_id, $page_no;
-
 	$session->trace (TC_Gui1, 'baseThread');
-	if (empty ($thread_id)) {
-		if (empty ($posting_id))
-			$thread_id = 1;
+	if (empty ($_POST ['thread_id'])) {
+		if (empty ($_POST ['posting_id']))
+			$_POST ['thread_id'] = 1;
 		else {
-			$thread_id = dbSingleValue ($session,
+			$_POST ['thread_id'] = dbSingleValue ($session,
 				'select top from ' . dbTable ($session, T_Posting)
-				. " where id=$posting_id");
-			if (empty ($thread_id))
-				$thread_id = $posting_id;
+				. ' where id=' . $_POST ['posting_id']);
+			if (empty ($_POST ['thread_id']))
+				$_POST ['thread_id'] = $_POST ['posting_id'];
 		}
 	}
-	if (! isset ($page_no))
-		$page_no = isset ($posting_id)
-			? dbPageOfPosting ($session, $thread_id, $posting_id) : 1;
-	$id_list = dbIdListOfThreadPage ($session, $thread_id, $page_no);
-	$thread = dbGetRecordById ($session, T_Posting, $thread_id,
+	if (! isset ($_POST ['page_no']))
+		$_POST ['page_no'] = isset ($_POST ['posting_id'])
+			? dbPageOfPosting ($session, $_POST ['thread_id'], $_POST ['posting_id']) : 1;
+	$id_list = dbIdListOfThreadPage ($session, $_POST ['thread_id'], $_POST ['page_no']);
+	$thread = dbGetRecordById ($session, T_Posting, $_POST ['thread_id'],
 		'author,subject,text,createdat,changedby,changedat,calls,forum');
-	dbThreadInfo ($session, $thread_id, $answers, $pages, $last);
+	dbThreadInfo ($session, $_POST ['thread_id'], $answers, $pages, $last);
 	$thread_date = dbSqlDateToText ($session, $thread [3]);
 	$forum = dbGetRecordById ($session, T_Forum, $thread [7], 'name');
 
@@ -507,17 +503,17 @@ function baseThread (&$session) {
 	if ($pages > 1) {
 		echo '</td><td style="text-align: right">';
 		guiPageLinks ($session, P_Thread . '?action=' . A_ShowThread
-			. '&thread_id=' . $thread_id, $page_no, $pages);
+			. '&thread_id=' . $_POST ['thread_id'], $_POST ['page_no'], $pages);
 	}
 	echo "</td></tr></table>\n";
 
-	dbUpdateRaw ($session, T_Posting, $thread_id,
+	dbUpdateRaw ($session, T_Posting, $_POST ['thread_id'],
 		'calls=calls+1');
 	echo '<table width="100%" border="0">' . "\n";
 	// Autor Thema-Text
 	foreach ($id_list as $ii => $id) {
 		# echo "alle Postings: $ii / $id<br>";
-		if ($id == $thread_id)
+		if ($id == $_POST ['thread_id'])
 			$posting = $thread;
 		else
 			$posting = dbGetRecordById ($session, T_Posting, $id,
@@ -532,11 +528,11 @@ function baseThread (&$session) {
 			echo '<br/>' . $avatar;
 		echo '</td><td>';
 		guiLine ($session, 1);
-		if ($id == $thread_id)
+		if ($id == $_POST ['thread_id'])
 			guiHeadline ($session, 3, 'Thema: ' . $posting [1]);
 		else
 			guiHeadline ($session, 3, 'Antwort '
-				. ($ii + $session->fUserPostingsPerPage * ($page_no - 1))
+				. ($ii + $session->fUserPostingsPerPage * ($_POST ['page_no'] - 1))
 				. ': ' . $posting [1]);
 		echo 'Geschrieben am ' . dbSqlDateToText ($session, $posting [3]);
 		if (strcmp ($posting [5], $posting [3]) != 0) {
@@ -549,12 +545,13 @@ function baseThread (&$session) {
 		wikiToHTML ($session, $posting [2]);
 		echo '<p>';
 		guiInternLink ($session, P_Thread
-			. '?action=' . A_Answer . "&thread_id=$thread_id&reference_id=$id",
+			. '?action=' . A_Answer . '&thread_id=' . $_POST ['thread_id'] . "&reference_id=$id",
 			'Antworten');
 		if (strcmp ($posting [0], $session->fUserName) == 0) {
 			echo ' ';
 		guiInternLink ($session, P_Thread
-			. '?action=' . A_ChangeThread . "&thread_id=$thread_id&posting_id=$id",
+			. '?action=' . A_ChangeThread . '&thread_id=' . $_POST ['thread_id'] 
+			. "&posting_id=$id",
 			'Ändern');
 		echo "</p>\n";
 		}
