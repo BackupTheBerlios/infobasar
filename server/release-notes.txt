@@ -1,7 +1,12 @@
 Release Notes (Hamatomas Infobasar)
-$Id: release-notes.txt,v 1.1 2004/05/24 00:26:34 hamatoma Exp $
+$Id: release-notes.txt,v 1.2 2004/05/26 22:33:11 hamatoma Exp $
 
 Installation: siehe installation.txt
+
+Version 0.5.1 vom 2004.05.26
+- Versionsnummer
+- EMail-Adresse in Einstellungen
+- Generieren und Versenden des Passwortes
 
 Version: 0.5 vom 2004.05.24
 erste Release auf BerliOS
