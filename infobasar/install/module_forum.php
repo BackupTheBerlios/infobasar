@@ -25,14 +25,13 @@ class ModuleForum {
 	}
 	function userStoreData (&$session, $isnew, $id){
 		$session->trace (TC_Gui3, 'forum.UserStoreData');
-		global $forum_postingsperpage, $forum_threadsperpage;
-		if ($forum_postingsperpage <= 0)
-			$forum_postingsperpage = 10;
-		if ($forum_threadsperpage <= 0)
-			$forum_threadsperpage = 10;
+		if ($_POST ['forum_postingsperpage'] <= 0)
+			$_POST ['forum_postingsperpage'] = 10;
+		if ($_POST ['forum_threadsperpage'] <= 0)
+			$_POST ['forum_threadsperpage'] = 10;
 		dbUpdate ($session, T_User, $id, 
-			'postingsperpage=' . $forum_postingsperpage
-			. ',threadsperpage=' . $forum_threadsperpage . ',');
+			'postingsperpage=' . $_POST ['forum_postingsperpage']
+			. ',threadsperpage=' . $_POST ['forum_threadsperpage'] . ',');
 	}
 	function userGetData (&$session){
 		$session->trace (TC_Gui3, 'forum.UserGetData');
@@ -40,7 +39,7 @@ class ModuleForum {
 	function overview(&$session){
 		$session->trace (TC_Gui3, 'forum.overview');
 		outTableRecord();
-		outNewLine();
+		outTableCell (' ');
 		outTableCellStrong(tagNewline () . 'Modul Foren');
 		outTableRecordEnd();
 		outTableRecordInternLink ($session, 'Auflistung der existierenden Foren.',
