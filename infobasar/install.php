@@ -1,6 +1,5 @@
 <?php
-// install.php: Installation of the infobasar
-// $Id: install.php,v 1.17 2005/01/10 22:48:58 hamatoma Exp $
+// $Id: install.php,v 1.18 2005/01/11 00:14:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -14,7 +13,7 @@ $start_time = microtime ();
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
-define ('Install_Version', '0.6.6 (2004.12.22)');
+define ('Install_Version', '0.7.0 (2005.01.10)');
 define ('PATH_DELIM', '/');
 define ('REXPR_PATH_DELIM', '\/');
 define ('C_ScriptName', 'install.php');
@@ -776,6 +775,17 @@ function executeSqlFile (&$session, $fn_sql, &$line_count, &$comments){
 	}
 	return $message;
 }
+function instUpdateMacro (&$session, $macro, $value, &$message){
+	$count = sqlUpdate ($session, 'macro', " value='" . $value . '\'', 
+		"name = '$macro'", true);
+	if ($count == 0)
+		$message .= "\n<br>+++ Update missglückt: Makro $name nicht gefunden.";
+	else {
+		$message .= "\n<br>$macro wurde auf $value gesetzt.";
+		if ($count > 1)
+			$message .= " $count mal!";
+	}
+}
 function populate (&$session, $fn_sql) {
 	$session->trace (TC_Init, "populate:");
 	$db_prefix = $session->fDbTablePrefix;
@@ -786,28 +796,40 @@ function populate (&$session, $fn_sql) {
 			$message = 'Die Infobasar-Tabellen wurden initialisiert: '
 				 . (0+$line_count) . ' Zeilen gelesen, davon '
 				. (0+$comments) . ' Kommentare';
-			$path = $session->fScriptBase;
-			$path = preg_replace ('/^(\w+:)?\/\/.+?\//', '/', $path);
-			$path = preg_replace ('/\/install$/', "", $path);
-			sqlUpdate ($session, 'macro', " value='" . $path . "/index.php/'", "name = 'BaseModule'");
-			sqlUpdate ($session, 'macro', " value='" . $path . "/forum.php/'", "name = 'ForumModule'");
-			$message .= '<br>BaseModule wurde auf ' . $path . '/index.php gesetzt.';
-			sqlUpdate ($session, 'macro', " value='" . $path . "/'", "name = 'ScriptBase'");
-			$message .= '<br>ScriptBase wurde auf ' . $path . ' gesetzt.';
+			$path = getParentDir ($session, $session->fScriptBase);
+			preg_match ('!(/[^/]+/)$!', $path, $match);
+			$path = $match [1];
+			if (empty ($path))
+				$path = PATH_DELIM;
+			instUpdateMacro ($session, 'BaseModule', $path . "index.php/", $message); 
+			instUpdateMacro ($session, 'ForumModule', $path . "forum.php/", $message); 
+			instUpdateMacro ($session, 'ScriptBase', $path, $message); 
+			instUpdateMacro ($session, 'ForumModule', $path . "forum.php/", $message); 
 			
-			sqlUpdate ($session, 'param', " text='" . $path . "/css/phpwiki.css'", "theme=11 and pos=102");
-			$message .= '<br>CSS wurde auf ' . $path . '/css/phpwiki.css gesetzt.';
+			$count = sqlUpdate ($session, 'param', " text='" . $path . "css/phpwiki.css'", 
+				"pos=152", true);
+			if ($count == 0)
+				$message .= "\n<br>+++ Parameter 152 (CSS-Datei) nicht gefunden.";
+			else
+				$message .= "\n<br>CSS wurde auf ' . $path . 'css/phpwiki.css gesetzt. ($count mal)";
 			$fn_pages = instGetStandardPageFile ($session);
 			$message .= '<br>' . instImportPages ($session, $fn_pages, true);
 		}
 	}
 	return $message;
 }
-function sqlUpdate (&$session, $table, $what, $where){
-	global $db_prefix;
+function sqlUpdate (&$session, $table, $what, $where, $return_count = false){
+	$rc = -1;
+	if ($return_count){
+		$query = 'select count(id) from ' . $session->fDbTablePrefix . $table
+			. ' where ' . $where;
+		$session->trace (TC_X, "sqlUpdate: $query");
+		$rc = dbSingleValue ($session, $query);
+	}
 	$session->trace (TC_Db1, 'sqlUpdate: ' .$table .', ' . $what . ',' .  $where);
-	$query = 'update ' . $db_prefix . $table . " set " . $what . " where " . $where;
+	$query = 'update ' . $session->fDbTablePrefix . $table . " set " . $what . " where " . $where;
 	sqlStatement ($session, $query);
+	return $rc;
 }
 function dbInit (&$session){
 	if ($session->fDbType != DB_MySQL)
