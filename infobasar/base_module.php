@@ -1,5 +1,5 @@
 <?php
-// $Id: base_module.php,v 1.10 2005/01/17 02:24:59 hamatoma Exp $
+// $Id: base_module.php,v 1.11 2005/03/14 20:14:24 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -313,7 +313,7 @@ function baseAccountAnswer(&$session, $user) {
 			if (! empty ($_POST ['account_code']))
 				$what .= 'code=' . dbSqlString ($session, $code) . ",";
 			$what .= 'theme=' . $_POST ['account_theme'] . ',width=' 
-			. $_POST ['account_width'] . ',height=' . (0 + $_POST ['account_height'])
+			. (0 + $_POST ['account_width']) . ',height=' . (0 + $_POST ['account_height'])
 			. ',maxhits=' . (0 + $_POST ['account_maxhits'])
 			. ',startpage=' . dbSqlString ($session, $_POST ['account_startpage'])
 			. ',email=' . dbSqlString ($session, $_POST ['account_email'])
