@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.17 2004/12/26 12:54:02 hamatoma Exp $
+// $Id: util.php,v 1.18 2004/12/31 01:35:36 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -21,9 +21,13 @@ function panicExit (&$session, $errormsg) {
 
 
 	if($errormsg <> '') {
-		print TAG_PARAGRAPH . TAG_HRULE . TAG_H2 . "Schwerer Fehler" . TAG_H2_END;
-		print $errormsg;
-		print TAG_BODY_HTML_END;
+		echo TAG_PARAGRAPH;
+		echo TAG_HRULE;
+		echo TAG_H2;
+		echo "Schwerer Fehler";
+		echo TAG_H2_END;
+		echo $errormsg;
+		echo TAG_BODY_HTML_END;
 	}
 	dbClose($session);
 
@@ -45,7 +49,9 @@ function htmlToText (&$session, $text){
 		return htmlspecialchars ($text);
 }
 function p ($message){
-	echo "<p>$message</p>\n";
+	echo TAG_PARAGRAPH;
+	echo $message;
+	echo TAG_PARAGRAPH_END;
 }
 function extractHtmlBody ($page){
 	$page = preg_replace (TAG_REXPR_BODY, '', $page);
@@ -255,7 +261,10 @@ function writeOrderedList ($line, &$status) {
 }
 function writeIndent ($line, &$status) {
 	$status->trace (TC_Util3, "writeIndent: $line");
-	echo "<br/>Einrücken fehlt noch<br/>";
+	$count = countRepeats ($line, ' ');
+	if ($status->fIndentLevel != $count)
+		$status->changeIndentLevel ($count);
+	writeLine (substr ($line, $count), $status);
 }
 function writeTable ($line, &$status) {
 	$status->trace (TC_Util3, "writeTable: $line");
@@ -285,23 +294,15 @@ function writeTableHeader ($line, &$status) {
 	echo TAG_TABLE_RECORD_END;
 }
 function writeLine ($line, &$status) {
-	$status->trace (TC_Util3, "writeLine: $line");
+	$status->trace (TC_Util3, "writeLine: $line " . ($status->fPreformatted ? "T" : "F"));
 	if ($status->fPreformatted){
 		echo htmlentities ($line);
-		outNewline ();
+		echo "\n";
 	} else {
 		$status->startParagraph ();
 		writeText ($line, $status);
 		echo " ";
 	}
-}
-function writeHoricontalLine ($line, &$status) {
-	$status->trace (TC_Util2, 'writeHoricontalLine');
-	$count = countRepeats ($line, '-');
-	if ($count < 4)
-		writeLine ($line, $status);
-	else
-		guiLine ($status->fSession, $count - 3);
 }
 function wikiToHtml (&$session, $wiki_text) {
 	$lines = explode ("\n", $wiki_text);
@@ -310,47 +311,67 @@ function wikiToHtml (&$session, $wiki_text) {
 	$status = new LayoutStatus ($session);
 	$last_linetype = '';
 	foreach ($lines as $ii => $line) {
-		if ( ($line_trimmed = trim ($line)) == '')
+		$start_code = false;
+		if (! $status->fPreformatted && ($line_trimmed = trim ($line)) == ''){
+			$last_linetype = '';
 			$status->changeOfLineType ($last_linetype, '');
-		else {
+		} else {
 			$linetype = substr ($line, 0, 1);
-			$status->changeOfLineType ($last_linetype, $linetype);
+			switch ($linetype){
+			case '-': 
+				$count = countRepeats ($line, '-');
+				if ($count < 4)
+					$linetype = 'x';
+				break;
+			case '[':
+				if (strpos ($line, 'code]') == 1)
+					$start_code = true;
+				elseif (strpos ($line, '/code]') == 1){
+					$status->finishCode();
+					$last_linetype = 'x';
+					$line = substr ($line, 7);
+					$session->trace (TC_Util2, 'wikiToHtml: /code-Restzeile: ' . $line);
+				} else
+					$linetype = 'x'; 
+				break;
+			case '!': case ' ': case '*': case '#': case '|':
+				break;
+			default:
+				$linetype = 'x'; break;
+			}
+			$last_linetype = $status->testChangeOfLineType ($last_linetype, $linetype);
 			switch ($linetype) {
 			case '!':
 				if (strpos ($line, '|') != 1)
 					writeHeader ($line, $status);
 				else {
 					writeTableHeader ($line, $status);
-					$linetype = '|';
+					$last_linetype = '|';
 				}
 				break;
-			case ' ': writeLine ($line, $status); break;
-				# writeIndent ($line, $status); break;
+			case '[':
+				if ($start_code)
+					$status->startCode();
+				$session->trace (TC_X, 'wikiToHtml-2:'  . ($status->fPreformatted ? 'T' : 'F'));
+				$line = substr ($line_trimmed, 7);
+				if (! empty ($line))
+					writeLine ($line, $status); 
+				break;
+			case ' ': writeIndent ($line, $status); break;
 			case '*': writeUList ($line, $status); break;
 			case '#': writeOrderedList ($line, $status); break;
 			case '|': writeTable ($line, $status); break;
-			case '-': writeHoricontalLine ($line, $status); break;
-			case '[':
-				if (strpos ($line, 'code]') == 1){
-					$session->startCode();
-					$line = substr ($line_trimmed, 6);
-					if (! empty ($line))
-						echo htmlentities ($line);
-				} elseif ($line_trimmed == '[/code]'){
-					$session->finishCode();
-					writeline (substr ($line, 7), $status);
-				} else
-					writeLine ($line, $status); 
-				break;
+			case '-': guiLine ($status->fSession, $count - 3); break;
 			default: 
 				writeLine ($line, $status); break; 
 			}
-			$last_linetype = $linetype;
 		}
 	} // foreach
+	if ($status->fPreformatted)
+		$session->trace (TC_Warning, PREFIX_Warning . '[/code] fehlt');
 	$session->trace (TC_Util1, 'wikiToHtml-Ende');
 }
-function getUserParam ($session, $name, &$param) {
+function getUserParam (&$session, $name, &$param) {
 	$session->trace (TC_Util2, "getUserParam: $name");
 	if (! isset ($param) || empty ($param))
 		switch ($name){
