@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.5 2004/05/31 23:18:27 hamatoma Exp $
+// $Id: gui.php,v 1.6 2004/06/02 00:06:26 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -61,6 +61,38 @@ function guiComboBox ($name, $options, $values, $ix_selected = 0) {
 			. ($values ? ' value="' . $values[$ix] . '"' : '')
 			. '>' . htmlentities ($text) . "\n";
 	echo "</select>\n";
+}
+function guiUploadFile (&$session, $prefix, $lastpage = null,
+		$custom_field = null, $custom_value = null,
+		$caption = 'Hochladen', 
+		$button = 'upload_go', $file = 'upload_file', $max_file_size = 100000) {
+	echo '<form enctype="multipart/form-data" action="' . C_ScriptName
+		. '" method="post">' . "\n";
+	guiHiddenField ('last_pagename', $lastpage ? $lastpage : $last_pagename);
+	if ($custom_field)
+		guiHiddenField ($custom_field, $custom_value);
+	guiHiddenField ('MAX_FILE_SIZE', $max_file_size);
+	if (! empty ($prefix))
+		echo $prefix . ' ';
+	echo '<input name="' . $file . '" type="file">' . "\n";
+	echo ' ';
+	guiButton ($button, $caption);
+	guiFinishForm ($session);
+}
+function guiUploadFileAnswer (&$session, $destination = PATH_DELIM,
+		$filename = null, $button = 'upload_go', $file = 'upload_file'){
+	$message = null;
+	$name =  $_FILES[$file]['name'];
+	if (move_uploaded_file($_FILES[$file]['tmp_name'],
+		$session->fFileSystemBase . $destination . ($filename ? $filename : $name))) {
+		$message = 'Datei erfolgreich hochgeladen: ' . $name;
+		if ($filename)
+			$message .= ' als ' . $filename;
+	} else {
+		$message = '+++ Problem beim Hochladen von ' . $name . ': ' 
+			. $_FILES['archive_uploadfile']['error'];
+	}
+	return $message;
 }
 function guiLine ($width) {
 	if (! isset ($width))
@@ -142,9 +174,11 @@ function guiHeadline (&$session, $level, $text) {
 	$session->trace (TC_Gui2, 'guiHeadline');
 	echo "<h$level>" . htmlentities ($text) . "</h$level>\n";
 }
-function guiStartForm (&$session) {
+function guiStartForm (&$session, $pagename = null) {
 	$session->trace (TC_Gui2, 'guiStartForm');
 	echo '<form name="form" action="' . C_ScriptName . '" method="post">' . "\n";
+	if ($pagename)
+		guiHiddenField ('last_pagename', $pagename);
 }
 function guiStartFormGet (&$session) {
 	$session->trace (TC_Gui2, 'guiStartForm');
@@ -483,7 +517,7 @@ function guiLogin (&$session, $message) {
 	global $login_user, $login_email;
 	guiStandardHeader ($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader,
 		null);
-	guiStartForm ($session, "login");
+	guiStartForm ($session, 'login', P_Login);
 	if (! empty ($message)) {
 		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
 		guiParagraph ($session, $message, false);
@@ -572,7 +606,7 @@ function guiAccount (&$session, $message) {
 		Th_StandardHeader, Th_StandardBodyStart);
 	if (! empty ($message))
 		guiParagraph ($session, $message, true);
-	guiStartForm ($session, 'account');
+	guiStartForm ($session, 'account', P_Account);
 	echo "<table border=\"0\">\n<tr><td>Benutzername:</td><td>";
 	guiHiddenField ('account_user', $account_user);
 	guiHeadline ($session, 2, $account_user);
@@ -895,7 +929,7 @@ function guiSearch (&$session, $message){
 	if (isset ($search_title) || isset ($search_body))
 		guiSearchResults ($session);
 	guiParagraph ($session, 'Hinweis: vorl&auml;ufig nur ein Suchbegriff m&ouml;glich', false);
-	guiStartForm ($session, 'search');
+	guiStartForm ($session, 'search', P_Search);
 	guiHiddenField ('last_pagename', $last_pagename);
 	echo "<table border=\"0\">\n<tr><td>Titel:</td><td>";
 	guiTextField ('search_titletext', $search_titletext, 32, 64);
@@ -975,7 +1009,7 @@ function guiForumSearch (&$session, $message){
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiParagraph ($session, 'Hinweis: vorl&auml;ufig nur ein Suchbegriff m&ouml;glich', false);
-	guiStartForm ($session, 'search');
+	guiStartForm ($session, 'search', P_ForumSearch);
 	echo "<table border=\"0\">\n<tr><td>Im Titel:</td><td>";
 	guiTextField ('forum_titletext', $forum_titletext, 32, 64);
 	echo " "; guiButton ('forum_title', "Suchen");
