@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.25 2005/01/13 03:38:57 hamatoma Exp $
+// $Id: util.php,v 1.26 2005/01/14 03:17:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -131,7 +131,7 @@ function writePlugin ($name, $param, &$status) {
 	$status->trace (TC_Util2, "writePlugin: $name ($param)");
 	if ($name == 'BackLinks') {
 		if (empty ($param))
-			$param = $status->fSession->fPageName;
+			$param = $status->fSession->fPageURL;
 		guiBackLinks ($status->fSession, $param);
 	} else
 		$status->fSession->trace (TC_Error, PREFIX_Error
@@ -153,7 +153,7 @@ function writeWikiName ($name, $text, &$status) {
 			guiPageReference ($status->fSession, $link, $text);
 	}
 }
-function showArray (&$array, $start){
+function showArray (&$array, $start = 0){
 	$rc = 0+count ($array);
 	while ($start < count ($array)){
 		$rc .= " " . ($start + 0) . ": " . $array [$start];
@@ -578,7 +578,7 @@ function successfullLogin (&$session){
 			$do_login = guiLoginAnswer ($session, $rc);
 		else {
 			$known_user = $session->fSessionUser != null && $session->fSessionUser > 0; 
-			$do_login = $session->fPageName == P_Login || ! $known_user;
+			$do_login = $session->fPageURL == P_Login || ! $known_user;
 			$session->trace (TC_Init, 'known_user: ' . ($known_user ? 't' : 'f'));
 		}
 	}
