@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.3 2004/05/31 23:20:46 hamatoma Exp $
+// $Id: install.php,v 1.4 2004/06/02 00:09:33 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -161,7 +161,7 @@ case 2:
 case 3: 
 	instFinish ($session); 
 	break;
-case 4:
+case 4: 
 	instExit ($session);
 	break;
 case 1:
@@ -172,10 +172,7 @@ case 1:
 	break;
 default:
 case 0:
-	if (isset ($archive_name))
-		instArchiveAnswer ($session);
-	else
-		instArchive ($session, null);
+	instArchiveAnswer ($session);
 	break;
 }
 exit (0);
@@ -185,20 +182,32 @@ function instArchive (&$session, $message =  null) {
 	global $archive_dir;
 	$session->trace (TC_Init, 'instArchive');
 	guiHeader ($session, 'Schritt 0');
-	guiHeadline ($session, 2, 'Archiv');
+	guiHeadline ($session, 1, 'Datei- und Archivverwaltung');
 		
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	
 	instGetConfig ($session);
+
+	guiHeadline ($session, 2, 'Archiv hochladen');
 	
 	if (empty ($archive_name))
 		$archive_name = $session->fFileSystemBase . PATH_DELIM . 'infobasar.hma';
 	$archive_exists = file_exists ($archive_name);
-	
+
+	echo '<form enctype="multipart/form-data" action="' . C_ScriptName
+		. '" method="post">' . "\n";
+	guiHiddenField ('inst_step', 0);
+	guiHiddenField ('MAX_FILE_SIZE', 1000000);
+	guiUploadFile ('archive_uploadfile');
+	echo ' ';
+	guiButton ('archive_upload', 'Hochladen');
+	guiFinishForm ($session);
+		
 	guiStartForm ($session, 'Form');
 	guiHiddenField ('inst_step', 0);
 	guiHiddenField ('archive_name', $archive_name);
+	
 	$path = $session->fFileSystemBase . PATH_DELIM;
 	if ($archive_dir == CHECKBOX_TRUE){
 		$dir = opendir ($path);
@@ -243,7 +252,7 @@ function instArchive (&$session, $message =  null) {
 		}
 	}
 	echo '</table>' . "\n";
-	
+	guiHeadline ($session, 2, 'Optionen');
 	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen', $archive_dir);
 	echo ' ';
 	guiButton ('archive_show', 'Aktualisieren');
@@ -253,22 +262,31 @@ function instArchive (&$session, $message =  null) {
 	guiFinishBody ($session);
 }
 function instArchiveAnswer (&$session){
-	global $archive_dir, $archive_name, $HTTP_POST_VARS;
+	global $archive_dir, $archive_name, $HTTP_POST_VARS, 
+		$archive_uploadfile, $archive_upload;
 	$session->trace (TC_Init, "instArchiveAnswer");
 	$message = null;
-	for ($no = 1; $no < 100; $no++){
-		$ref = 'archive_extract' . $no;
-		global $$ref;
-		if (isset ($$ref)){
-			$ref = 'archive_file' . $no;
-			$archive_name = $HTTP_POST_VARS[$ref];
-			if (! ($message = extractFromArchive ($session, $archive_name, false, "*")))
-				$message = "Archiv $archive_name wurde entpackt";
-			break;
+	if (isset ($archive_upload)){
+		$name =  $_FILES['archive_uploadfile']['name'];
+		if (move_uploaded_file($_FILES['archive_uploadfile']['tmp_name'],
+			$session->fFileSystemBase . PATH_DELIM . $name)) {
+			$message = 'Datei erfolgreich hochgeladen: ' . $name;
+		} else {
+			$message = 'Problem beim Hochladen von ' . $name . ': ' 
+				. $_FILES['archive_uploadfile']['error'];
 		}
-	}
-	
-	if (isset ($archive_extract)){
+	} else {
+		for ($no = 1; $no < 100; $no++){
+			$ref = 'archive_extract' . $no;
+			global $$ref;
+			if (isset ($$ref)){
+				$ref = 'archive_file' . $no;
+				$archive_name = $HTTP_POST_VARS[$ref];
+				if (! ($message = extractFromArchive ($session, $archive_name, false, "*")))
+					$message = "Archiv $archive_name wurde entpackt";
+				break;
+			}
+		}
 	}
 	instArchive ($session, $message);
 }
@@ -631,6 +649,10 @@ function guiComboBox ($name, $options, $values, $ix_selected = 0) {
 			. '>' . htmlentities ($text) . "\n";
 	echo "</select>\n";
 }
+function guiUploadFile ($name){
+echo '<input name="' . $name . '" type="file">' . "\n";
+}
+
 function guiLine ($width) {
 	if (! isset ($width))
 		$width = 2;
