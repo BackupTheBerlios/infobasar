@@ -1,10 +1,16 @@
 #!/bin/sh
+# $Id: mk_arch,v 1.4 2005/01/10 19:38:23 hamatoma Exp $
 if [ -z $1 ] ; then
 	echo "Aufruf: mk_arch VERSION"
 	echo "Bsp: mk_arch 0.5.3"
 	exit 1
 fi
 rm -f infobasar-*hma*
+cd ..
+perl install/opt_php_module.pl base_module.php install/base_opt.php
+perl install/opt_php_module.pl forum_module.php install/forum_opt.php
+perl install/opt_php_module.pl address_module.php install/address_opt.php
+cd install
 Version=$1
 name=infobasar-$Version.hma
 perl mk_arch.pl -v -a$name ib_install.lst

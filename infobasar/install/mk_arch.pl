@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# $Id: mk_arch.pl,v 1.3 2005/01/10 19:38:23 hamatoma Exp $
 # Erstellen eines Archivs aus einem Dateibaum
 #
 # Aufruf: mk_arch.pl <opts> file_list
