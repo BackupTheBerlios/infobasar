@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.19 2004/12/26 12:46:04 hamatoma Exp $
+// $Id: classes.php,v 1.20 2004/12/31 01:31:06 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -199,6 +199,8 @@ define ('TAG_BODY_HTML_END', "\n</body></html>");
 define ('TAG_BOLD_ITALIC', '<b><i>');
 define ('TAG_CITE', '<cite>');
 define ('TAG_CITE_END', '</cite>');
+define ('TAG_DIV_INDENT', '<div style="margin-left: 40px;">');
+define ('TAG_DIV_END', '</div>');
 define ('TAG_DOC_TYPE', '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">');
 define ('TAG_ENDPREFIX', '</'); 	
 define ('TAG_FORM_END', "</form>\n");
@@ -350,7 +352,6 @@ class Session {
 	var $fBodyLines; // null oder auszugebendes HTML (in guiHeader())
 
 	var $fTraceFlags;
-	var $fPreformatted;
 
 	var $fGroups; // array: gid => ",uid1,uid2,...uidX,";
 	var $fVersion; // php-Version
@@ -378,7 +379,6 @@ class Session {
 		$this->fVersion = 400;
 		$this->fModuleData = array ();
 		$this->fBodyLines = null;
-		$this->fPreformatted = false;
 		$this->fLocation = "";
 		$this->fFormExists = false;
 		$this->fPageChangedAt = "";
@@ -474,7 +474,8 @@ class Session {
 		}
 	}
 	function WriteLine ($line){
-		$this->Write ($line . ($this->fPreformatted ? "\n" : TAG_NEWLINE));
+		$this->Write ($line);
+		$this->Write (TAG_NEWLINE);
 	}
 	function setFeatureList ($list) {
 		$this->fFeatureList = $list;
@@ -515,24 +516,6 @@ class Session {
 			echo TAG_DOC_TYPE;
 			echo TAG_HTML;
 			$this->fHasHeader = true;
-		}
-	}
-	function startCode() {
-		$this->trace (TC_Session1, 'startCode');
-		if ($this->fPreformatted)
-			$this->trace (TC_Warning, PREFIX_Warning . 'Verschachtelung von [code]');
-		else {
-			echo TAG_PRE;
-			$this->fPreformatted = true;
-		}
-	}
-	function finishCode() {
-		$this->trace (TC_Session1, 'finishCode');
-		if (! $this->fPreformatted)
-			$this->trace (TC_Warning, PREFIX_Warning . '[/code] ohne [code]');
-		else {
-			echo TAG_PRE_END;
-			$this->fPreformatted = false;
 		}
 	}
 	function dump ($msg) {
@@ -695,7 +678,8 @@ class LayoutStatus {
 	var $fOpenParagraph;
 	var $fTableWidth;
 	var $fTableBorder;
-	function LayoutStatus ($session) {
+	var $fPreformatted;
+	function LayoutStatus (&$session) {
 		$this->fSession = $session;
 		$this->fEmphasisStack = "";
 		$this->fIndentLevel = $this->fUListLevel = $this->fOrderedListLevel = 0;
@@ -751,7 +735,7 @@ class LayoutStatus {
 		}
 	}
 	function stopSentence () {
-		$this->fSession->trace (TC_Layout1 + TC_Formating, 'stopSentence');
+		$this->fSession->trace (TC_Layout1 + TC_Formating, 'stopSentence: ' . ($this->fPreformatted ? 'T' : 'F'));
 		while ($this->fEmphasisStack != "")
 			$this->popEmphasis ($this->topEmphasis ());
 	}
@@ -784,6 +768,19 @@ class LayoutStatus {
 		$this->fSession->trace (TC_Layout2 + TC_Formating, "changeOrderedListLevel");
 		$this->changeListLevel ($val, $this->fOrderedListLevel, TAGN_OLIST);
 	}
+	function changeIndentLevel ($val) {
+		$this->fSession->trace (TC_Layout3 + TC_Formating, 'changeIndentLevel: ' . $val . '.' . $this->fIndentLevel);
+		$this->stopSentence ();
+		if ($val < $this->fIndentLevel) {
+			while ($val < $this->fIndentLevel) {
+				echo TAG_DIV_END;
+				$this->fIndentLevel--;
+			}
+		} else while ($val > $this->fIndentLevel) {
+			echo TAG_DIV_INDENT;
+			$this->fIndentLevel++;
+		}
+	}
 	function stopTable () {
 		if ($this->fOpenTable){
 			$this->fOpenTable = false;
@@ -794,15 +791,44 @@ class LayoutStatus {
 		$this->fSession->trace (TC_Layout1 + TC_Formating, "stopParagraph");
 		$this->stopTable();
 	}
-	function changeOfLineType ($oldtype, $type){
-		if ($oldtype != $type){
-			$this->changeUListLevel (0);
-			$this->changeOrderedListLevel (0);
-			$this->stopTable ();
-			if ($this->fOpenParagraph) {
-				$this->fOpenParagraph = false;
-				echo TAG_PARAGRAPH_END;
-			}
+	function changeOfLineType (){
+		$this->trace (TC_Layout1, 'changeOfLineType:');
+		$this->changeUListLevel (0);
+		$this->changeOrderedListLevel (0);
+		$this->changeIndentLevel(0);
+		$this->stopTable ();
+		if ($this->fOpenParagraph) {
+			$this->fOpenParagraph = false;
+			echo TAG_PARAGRAPH_END;
+		}
+	}
+	function testChangeOfLineType ($oldtype, $type){
+		$this->trace (TC_Layout1, "testChangeOfLineType: $oldtype $type " . ($this->fPreformatted ? 'T' : 'F'));
+		if ($this->fPreformatted)
+			$type = '[';
+		else {
+			if ($oldtype != $type)
+				$this->changeOfLineType ();
+		}
+		return $type;
+	}
+	function startCode() {
+		$this->trace (TC_Layout1, 'startCode');
+		if ($this->fPreformatted)
+			$this->trace (TC_Warning, PREFIX_Warning . 'Verschachtelung von [code]');
+		else {
+			echo TAG_PRE;
+			$this->fPreformatted = true;
+		}
+		$this->trace (TC_Layout1, 'startCode: ' . ($this->fPreformatted ? 'T' : 'F'));
+	}
+	function finishCode() {
+		$this->trace (TC_Layout1, 'finishCode');
+		if (! $this->fPreformatted)
+			$this->trace (TC_Warning, PREFIX_Warning . '[/code] ohne [code]');
+		else {
+			echo TAG_PRE_END;
+			$this->fPreformatted = false;
 		}
 	}
 	function trace ($class, $msg) {
