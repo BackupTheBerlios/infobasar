@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.2 2004/05/27 22:39:49 hamatoma Exp $
+// $Id: admin.php,v 1.3 2004/05/31 23:14:34 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -10,6 +10,15 @@ Näheres siehe Datei LICENCE.
 InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
+session_start();
+
+ // If this is a new session, then the variable $user_id
+ if (!session_is_registered("session_user")) {
+	session_register("session_user");
+	session_register("session_start");
+	$start = time();
+ }
+$session_id = session_id();
 
 define ('ADMIN', true);
 define ('C_ScriptName', 'admin.php');
@@ -31,22 +40,9 @@ include "gui.php";
 
 if ($db_type == 'MySQL')
 	include "db_mysql.php";
-
-session_start();
-
- // If this is a new session, then the variable $user_id
- if (!session_is_registered("session_user")) {
-	session_register("session_user");
-	session_register("session_start");
-	$start = time();
- }
-$session_id = session_id();
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <?php
-
-include "config.php";
-
 $session = new Session ();
 init ($session, $dbType);
 
@@ -100,15 +96,8 @@ if (! empty ($rc)) {
 // --------------------------------------------------------------------
 function init (&$session, $dbType) {
 	global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
-	global $db_type, $db_server, $db_user, $db_passw, $db_name;
-	// Basisverzeichnis relativ zu html_root
-	$session->setScriptBase ("http://$HTTP_HOST$PHP_SELF", $SCRIPT_FILENAME);
+	global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 
-	// MySQL
-	if ($dbType == 'MySQL') {
-		// MySQL server host:
-		$session->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
-	} // mysql
 	$session->fTraceFlags
 		= 0 * TC_Util1 + 1 * TC_Util2 + 0 * TC_Util1
 		+ 1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3
@@ -119,7 +108,16 @@ function init (&$session, $dbType) {
 		+ 0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2
 		+ TC_Error + TC_Warning + TC_X;
 	$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
-	# $session->fTraceFlags = TC_All;
+	#$session->fTraceFlags = TC_All;
+
+	// MySQL
+	if ($dbType == 'MySQL') {
+		// MySQL server host:
+		$session->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
+	} // mysql
+	// Basisverzeichnis relativ zu html_root
+	$session->setScriptBase ("http://$HTTP_HOST$PHP_SELF", $SCRIPT_FILENAME);
+
 } // Config
 
 // --------------------------------------------------------------------
@@ -128,8 +126,10 @@ function admHome (&$session){
 	guiHeader ($session, 'Adminstration-Startseite f&uuml;r ' . $session->fUserName);
 	guiParagraph ($session, 'Willkommen ' . $session->fUserName, false);
 	echo '<p>';	guiInternLink ($session, A_Param, "Parameter"); echo '</p>';
-	echo '<p>';	guiInternLink ($session, A_Forum, "Forum"); echo '</p>';
+	echo '<p>';	guiInternLink ($session, A_Forum, "Forumsverwaltung"); echo '</p>';
 	echo '<p>';	guiInternLink ($session, A_ExportPages, "Seitenexport"); echo '</p>';
+	echo '<p>';	guiInternLink ($session, A_Backup, "Datensicherung"); echo '</p>';
+	echo '<p>';	guiInternLink ($session, A_PHPInfo, "PHP-Info"); echo '</p>';
 	// echo 'Session-Id: ' . $session_id . ' User: ' . $session_user . '<br>';
 	guiFinishBody ($session, null);
 }
@@ -484,19 +484,24 @@ function admSaveTable (&$session, $table, $ignore_id, &$file){
 	return $bytes;
 }
 function admBackup (&$session, $with_header, $message){
-	global $backup_table, $backup_compressed, $backup_save;
+	global $backup_table, $backup_compressed, $backup_save, $backup_file;
 	$session->trace(TC_Gui1, 'admBackup');
 	if ($with_header)
 		guiHeader ($session, 'Datenbank-Backup');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
+	if (empty ($backup_file))
+		$backup_file = $session->fDbPrefix
+			. strftime ("_%Y_%m_%d") . '.sql';
 	guiHeadLine ($session, 1, 'Backup');;
 	guiStartForm ($session, "backup");
 	// guiHiddenField ('forum_id', $forum_id);
-	echo "<table border=\"0\">\n<tr>";
-	echo "<td>Tabelle:</td><td>";
+	echo "<table border=\"0\">\n";
+	echo "<tr><td>Dateiname:</td><td>";
+	guiTextField ('backup_file', $backup_file, 64, 64);
+	echo "</td></tr>\n<tr><td>Tabelle:</td><td>";
 	guiTextField ('backup_table', $backup_table, 64, 64);
-	echo "</td></tr>\n<tr><td></td></td>";
+	echo " (leer: alle Tabellen)</td></tr>\n<tr><td></td><td>";
 	guiCheckBox ('backup_compressed', 'komprimiert', $backup_compressed);
 	echo "</td></tr>\n<tr><td>";
 	guiButton ('backup_save', 'Sichern');
@@ -514,56 +519,61 @@ function admWriteOneTable (&$session, $table, $file){
 	return $bytes;
 }
 function admBackupAnswer (&$session){
-	global $backup_table, $backup_compressed, $backup_save;
+	global $backup_table, $backup_compressed, $backup_save, $backup_file;
 	$session->trace(TC_Gui1, 'admBackupAnswer');
 	$message = null;
 	
 	guiHeader ($session, 'Datenbank-Backup');
 	if (isset ($backup_save)) {
-		if (empty ($backup_table) ){
-			guiParagraph ($session, '+++ keine Tabelle angegeben!', false);
+		if (empty ($backup_table))
+			$backup_table = '*';
+		guiHeadline ($session, 1, 'Backup der Tabelle ' . $backup_table);
+		$filename = $backup_table == '*' ? 'db_infobasar' : 'table_' . $backup_table;
+		if (! is_dir ($dir = $session->fFileSystemBase . PATH_DELIM . 'backup'))
+			mkdir ($dir);
+		if (empty ($backup_file))
+			$backup_file = $session->fMacroBasarName 
+				. strftime ('_%Y_%m_%d.sql');
+		$filename = 'backup/' . $backup_file;
+		if ($backup_compressed)
+			$filename .= '.gz';
+		$open_name = $backup_compressed 
+			? 'compress.zlib://' .  $session->fFileSystemBase . '/' . $filename
+			: $session->fFileSystemBase . '/' . $filename;
+		$file = fopen ($open_name, $backup_compressed  ? 'wb9' : 'wb');
+		fwrite ($file, '# InfoBasar: SQL Dump / Version: ' . PHP_Version
+			. " \n# gesichert am " 
+			. strftime ('%Y.%m.%d %H:%M:%S', time ())
+			. "\n");
+		echo '<table border="0">';
+		if ($backup_table != '*') {
+			$bytes = admSaveTable ($session, $backup_table,
+				false, $file);
 		} else {
-			guiHeadline ($session, 1, 'Backup der Tabelle ' . $backup_table);
-			$filename = $backup_table == '*' ? 'db_infobasar' : 'table_' . $backup_table;
-			$filename = 'backup/' . $filename;
-			if ($backup_compressed)
-				$filename .= '.gz';
-			$open_name = $backup_compressed 
-				? 'compress.zlib://' .  $session->fFileSystemBase . '/' . $filename
-				: $session->fFileSystemBase . '/' . $filename;
-			$file = fopen ($open_name, $backup_compressed  ? 'wb9' : 'wb');
-			fwrite ($file, '# InfoBasar: SQL Dump / Version: ' . PHP_Version
-				. " \n# gesichert am " 
-				. strftime ('%Y.%m.%d %H:%M:%S', time ())
-				. "\n");
-			echo '<table border="0">';
-			if ($backup_table != '*') {
-				$bytes = admSaveTable ($session, $backup_table,
-					false, $file);
-			} else {
-				$bytes = admWriteOneTable ($session, dbTable ($session, T_Param),
-					$file);
-				$bytes += admWriteOneTable ($session, dbTable ($session, T_Macro),
-					$file);
-				$bytes += admWriteOneTable ($session, dbTable ($session, T_User),
-					$file);
-				$bytes += admWriteOneTable ($session, dbTable ($session, T_Group),
-					$file);
-				$bytes += admWriteOneTable ($session, dbTable ($session, T_Forum),
-					$file);
-				$bytes += admWriteOneTable ($session, dbTable ($session, T_Posting),
-					$file);
-				$bytes += admWriteOneTable ($session, dbTable ($session, T_Text),
-					$file);
-			}
-			fclose ($file);
-			$size = ! $backup_compressed ? $bytes
-				: filesize ( $session->fFileSystemBase . '/' . $filename);
-			echo '<tr><td>Summe:</td><td>' . (0 + $bytes) 
-				. ' (' . (0 + $size) . ')</td></tr></table>' . "\n";
-			echo '<br/>';
-			guiStaticDataLink ($session, '', $filename, 'Datei ' . $filename);
+			$bytes = admWriteOneTable ($session, dbTable ($session, T_Param),
+				$file);
+			$bytes += admWriteOneTable ($session, dbTable ($session, T_Macro),
+				$file);
+			$bytes += admWriteOneTable ($session, dbTable ($session, T_User),
+				$file);
+			$bytes += admWriteOneTable ($session, dbTable ($session, T_Group),
+				$file);
+			$bytes += admWriteOneTable ($session, dbTable ($session, T_Forum),
+				$file);
+			$bytes += admWriteOneTable ($session, dbTable ($session, T_Posting),
+				$file);
+			$bytes += admWriteOneTable ($session, dbTable ($session, T_Text),
+				$file);
 		}
+		fclose ($file);
+		$size = ! $backup_compressed ? $bytes
+			: filesize ( $session->fFileSystemBase . '/' . $filename);
+		echo '<tr><td>Summe:</td><td>' . (0 + $bytes);
+		if ($backup_compressed)
+			echo ' (' . (0 + $size) . ')';
+		echo '</td></tr></table>' . "\n";
+		echo '<br/>';
+		guiStaticDataLink ($session, '', $filename, 'Datei ' . $filename);
 	}
 	admBackup ($session, false, $message);
 }
