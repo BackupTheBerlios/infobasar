@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.7 2004/10/07 14:27:58 hamatoma Exp $
+// $Id: classes.php,v 1.8 2004/10/11 11:34:55 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -234,6 +234,7 @@ class Session {
 	var $fModules; // array: module_names => Plugin-Klasse (Module<Name>)
 	var $fLogPageId; // Id der Seite SystemLog
 
+	var $fTraceInFile; // true: trace() schreibt in Datei (statt in HTML-Ausgabe).
 	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.	
 	function Session ($start_time){
 		global $_SERVER;
@@ -260,7 +261,10 @@ class Session {
 		$this->fScriptURL = $uri;
 		$pos = strpos ($uri, ".php");
 		if ($pos <= 0){
-			$this->fScriptURL = $uri;
+			if (strpos ($uri, ".php") > 0)
+				$this->fScriptURL = $uri;
+			else
+				$this->fScriptURL = $uri . "/index.php";
 			$this->fPageURL = '';
 		} else {
 			$this->fScriptURL = substr ($uri, 0, $pos + 4);
@@ -271,8 +275,6 @@ class Session {
 			}
 		}
 		$this->fPageName = $this->fPageURL;
-		$this->traceInFile ("Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" . $this->fPageURL
-			. "' ($pos) <== '" . $uri . "'");
 		$this->fScriptFile = $_SERVER['SCRIPT_FILENAME'];
 		$this->fScriptBase = $_SERVER['PHP_SELF'];
 		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $this->fScriptFile);
@@ -296,10 +298,24 @@ class Session {
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
+		$this->fTraceInFile = false;
+		$this->fTraceFile = "trace.log";
+		$this->trace (TC_Init, "Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
+			. $this->fPageURL . "' ($pos) <== '" . $uri . "'");
+	}
+	function traceInFile($msg){
+		echo "TraceInfile: " . $msg . "<br>\n";	 
+		if ($this->fTraceFile != null && ($file = fopen ($this->fTraceFile, "a")) != null){
+			fwrite ($file, $msg . "\n");
+			fclose ($file);
+		}
 	}
 	function trace($class, $msg){
 		if (($class & $this->fTraceFlags) != 0)
-			$this->WriteLine (htmlentities ($msg));
+			if ($this->fTraceInFile)
+				$this->traceInFile ($msg);
+			else
+				$this->WriteLine (htmlentities ($msg));
 	}
 	function dumpVars($header){
 		$this->Write ("HTTP_POST_VARS: $header");
@@ -338,12 +354,6 @@ class Session {
 					. ',now(),now(),0,0');
 		}
 		return $this->fLogPageId;
-	}
-	function traceInFile($msg){
-		if ($this->fTraceFile != null && ($file = fopen ($this->fTraceFile, "a")) != null){
-			fwrite ($file, $msg . "\n");
-			fclose ($file);
-		}
 	}
 	function PutHeader(){
 		global $_SERVER;
