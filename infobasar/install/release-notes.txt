@@ -1,9 +1,15 @@
 Release Notes (Hamatomas Infobasar)
-$Id: release-notes.txt,v 1.3 2005/01/11 23:11:01 hamatoma Exp $
+$Id: release-notes.txt,v 1.4 2005/01/11 23:33:21 hamatoma Exp $
 
 Installation: siehe installation.txt
 Dokumentation der Änderungen: siehe changelog.txt
 
 Version 0.7.1 vom 2005.01.10
+Fehlerbereinigung.
+extract_arch.pl gestattet jetzt, Archive ohne PHP zu entpacken.
 Version 0.7.0 vom 2005.01.10
+Bei Updates: 
+Einspielen von db/sql_update-0.6_0.7.sql und std_pages.wiki (mit install.php)
+Umwandeln der Wiki-Syntax: admin.php - Ueberblick - Wiki-Syntax-Konversion
+Optimierung bringt Geschwindigkeitsfaktor 5-10.
 Version 0.6.6 vom 2004.12.22
