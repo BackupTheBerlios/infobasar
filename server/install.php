@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.4 2004/06/02 00:09:33 hamatoma Exp $
+// $Id: install.php,v 1.5 2004/06/10 19:45:32 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -128,6 +128,7 @@ class Session {
 	}
 };
 $session = new Session ();
+$session->Config();
 
 $session->fTraceFlags
 	= 0 * TC_Util1 + 1 * TC_Util2 + 0 * TC_Util1
@@ -343,9 +344,7 @@ function instConfigFile (&$session, $message =  null) {
 	guiParagraph ($session, "DB-Definitiondatei $file " . ($sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
 	guiButton ('inst_last', 'zurück');
 	echo ' | ';
-	if ($sql_exists && $status == DB_EXISTS){
-		guiButton ('inst_next', 'weiter');
-	}
+	guiButton ('inst_next', 'weiter');
 	guiFinishForm ($session);
 	guiFinishBody ($session);
 }
@@ -705,7 +704,7 @@ function guiAppendParagraph (&$session, $text, $appendix){
 function guiExternLink (&$session, $link, $text) {
 	$session->trace (TC_Gui2, 'guiExternLink');
 	echo "<a href=\"$link\">";
-	echo html_entity_decode ($text);
+	echo htmlspecialchars ($text);
 	echo "</a>\n";
 }
 //----------------------------------------
@@ -715,16 +714,18 @@ function instGetConfig (&$session){
 	
 	$name = $session->fFileSystemBase . "/config.php";
 	$session->trace (TC_Init, 'instGetConfig: ' . $name);
-	$file = fopen ($name, "r");
-	while ($line = fgets ($file)) {
-		if (preg_match (
-			'/^\$(db_(server|user|passw|name|prefix))\s*=\s*\'([^\']+)\'/',
-			$line, $match)) {
-			$$match[1] = $match[3];
-			$session->trace (TC_Init, 'instGetConfig: ' . $match[1] . '=' . $$match[1]);
+	if (is_file ($name)){
+		$file = fopen ($name, "r");
+		while ($line = fgets ($file, 128)) {
+			if (preg_match (
+				'/^\$(db_(server|user|passw|name|prefix))\s*=\s*\'([^\']+)\'/',
+				$line, $match)) {
+				$$match[1] = $match[3];
+				$session->trace (TC_Init, 'instGetConfig: ' . $match[1] . '=' . $$match[1]);
+			}
 		}
+		fclose ($file);
 	}
-	fclose ($file);
 }
 function getArchiveHexValue (&$file, $width){
 	$hexvalue = fread ($file, $width);
@@ -774,9 +775,9 @@ function extractFromArchive (&$session, $archive, $compressed, $what){
 						$node = PATH_DELIM . $name;
 					} else {
 						$path = $session->fFileSystemBase . PATH_DELIM 
-							. substr ($name, 0, strlen ($node));
-						if (! isdir ($path))
-							if (!mkdir ($path)){
+							. substr ($name, 0, strlen ($name) - strlen ($node));
+						if (! is_dir ($path))
+							if (!mkdir ($path, 0777)){
 								$rc = "mkdir $path missglückt";
 								break;
 							}
@@ -797,7 +798,6 @@ function extractFromArchive (&$session, $archive, $compressed, $what){
 								$blocksize = $size - $bytes;
 						}
 						fclose ($out);
-						$session->trace (TC_X, "bytes: $bytes");
 						$magic = fread ($file, 8);
 						if ($magic != "HaMaToMa"){
 							$rc = "Magic nicht gefunden: $magic statt HaMaToMa";
