@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.11 2004/10/28 09:42:51 hamatoma Exp $
+// $Id: classes.php,v 1.12 2004/10/29 23:22:37 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -63,7 +63,8 @@ define ('M_Wiki', 'wiki');
 define ('M_HTML', 'html');
 define ('M_Text', 'text');
 
-// Text types
+// Text types (in DB-Feldern)
+define ('TT_Undef', '?');
 define ('TT_Wiki', 'w');
 define ('TT_HTML', 'h');
 define ('TT_Text', 't');
@@ -500,8 +501,10 @@ class Session {
 	}
 	function setPageData ($name, $date, $by) {
 		$this->fPageName = $name;
-		$this->fPageChangedAt = dbSqlDateToText ($this, $date);
-		$this->fPageChangedBy = $by;
+		if ($date != null){
+			$this->fPageChangedAt = dbSqlDateToText ($this, $date);
+			$this->fPageChangedBy = $by;
+		}
 	}
 	function replaceMacrosNoHTML ($text){
 		$this->trace (TC_Session2, 'replaceMacrosNoHTML: ' . $text);
