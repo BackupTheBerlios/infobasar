@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.11 2004/10/28 21:16:41 hamatoma Exp $
+// $Id: util.php,v 1.12 2004/10/29 23:24:26 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -439,5 +439,20 @@ function putHeaderBase(&$session){
 	echo "\nBitte erst anmelden: <a href=\"" . $uri . "\">\n";
 	echo "</body>\n</html>\n";
 }
-
+function mimeToTextType ($mime){
+	switch ($mime){
+	case M_Wiki: return TT_Wiki;
+	case M_HTML: return TT_HTML;
+	case M_Text: return TT_Text;
+	default: return TT_Undef;
+	}
+}
+function textTypeToMime ($type){
+	switch ($mime){
+	case TT_Wiki: return M_Wiki;
+	case TT_HTML: return M_HTML;
+	case TT_Text: return M_Text;
+	default: return M_Undef;
+	}
+}
 ?>
