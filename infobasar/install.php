@@ -1,5 +1,5 @@
 <?php
-// $Id: install.php,v 1.18 2005/01/11 00:14:05 hamatoma Exp $
+// $Id: install.php,v 1.19 2005/01/11 00:17:26 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -823,7 +823,7 @@ function sqlUpdate (&$session, $table, $what, $where, $return_count = false){
 	if ($return_count){
 		$query = 'select count(id) from ' . $session->fDbTablePrefix . $table
 			. ' where ' . $where;
-		$session->trace (TC_X, "sqlUpdate: $query");
+		# $session->trace (TC_X, "sqlUpdate: $query");
 		$rc = dbSingleValue ($session, $query);
 	}
 	$session->trace (TC_Db1, 'sqlUpdate: ' .$table .', ' . $what . ',' .  $where);

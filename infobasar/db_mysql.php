@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.18 2005/01/11 00:12:27 hamatoma Exp $
+// $Id: db_mysql.php,v 1.19 2005/01/11 00:19:22 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -178,7 +178,7 @@ function dbUpdate (&$session, $table, $id, $what, $return_count = false) {
 	if ($return_count){
 		$query = 'select count(id) from ' . dbTable ($session, $table)
 			. ' where id=' . $id;
-		$session->trace (TC_X, "sqlUpdate: $query");
+		# $session->trace (TC_X, "sqlUpdate: $query");
 		$rc = dbSingleValue ($session, $query);
 	}
 	$query = 'update ' . dbTable ($session, $table) . ' set ' . $what
@@ -193,7 +193,7 @@ function dbUpdateRaw (&$session, $table, $id, $what, $return_count = false) {
 	if ($return_count){
 		$query = 'select count(id) from ' . dbTable ($session, $table)
 			. ' where id=' . $id;
-		$session->trace (TC_X, "sqlUpdate: $query");
+		# $session->trace (TC_X, "sqlUpdateRaw: $query");
 		$rc = dbSingleValue ($session, $query);
 	}
 	$query = 'update ' . dbTable ($session, $table) . ' set ' . $what
