@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.16 2004/12/05 18:41:57 hamatoma Exp $
+// $Id: classes.php,v 1.17 2004/12/07 00:06:37 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -300,7 +300,7 @@ class Session {
 		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $this->fScriptFile);
 	
 		// MySQL
-		if ($db_type == DB_Mysql) {
+		if ($db_type == DB_MySQL) {
 			// MySQL server host:
 			$this->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 		} // mysql
@@ -494,8 +494,9 @@ class Session {
 			$this->fMacroReplacementKeys,
 				$this->fMacroReplacementValues);
 		$this->trace (TC_Init, 'setMacros: ' . count ($this->fMacroReplacementKeys));
-		for ($ii = 0; $ii < count ($this->fMacroReplacementKeys); $ii++)
+		for ($ii = 0; $ii < count ($this->fMacroReplacementKeys); $ii++){
 			$this->trace (TC_Session3, $this->fMacroReplacementKeys [$ii] . ' -> ' . ($this->fMacroReplacementValues [$ii]));
+		}
 	}
 	function setDbResult ($result) { $this->fDbResult = $result; }
 	function hasRight ($area, $kind){
@@ -677,8 +678,9 @@ class LayoutStatus {
 		}
 	}
 	function trace ($class, $msg) {
-		if (($class & $this->fSession->fTraceFlags) != 0)
+		if (($class & $this->fSession->fTraceFlags) != 0){
 			$this->fSession->trace ($class, $msg);
+		}
 	}
 }
 class DiffEngine {
