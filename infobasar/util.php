@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.26 2005/01/14 03:17:18 hamatoma Exp $
+// $Id: util.php,v 1.27 2005/01/17 02:31:21 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -153,10 +153,10 @@ function writeWikiName ($name, $text, &$status) {
 			guiPageReference ($status->fSession, $link, $text);
 	}
 }
-function showArray (&$array, $start = 0){
+function dumpArray (&$array, $name, $start = 0){
 	$rc = 0+count ($array);
 	while ($start < count ($array)){
-		$rc .= " " . ($start + 0) . ": " . $array [$start];
+		$rc .= " | $name [$start]: " . $array [$start];
 		$start++;
 	}
 	return $rc;
@@ -193,7 +193,7 @@ function writeText ($body, &$status) {
 		$count++;
 		if ($match[1] != '')
 			echo htmlentities ($match[1]);
-		#$status->trace (TC_X, "writeText-2:" . showArray ($match, 2));
+		#$status->trace (TC_X, "writeText-2:" . dumpArray ($match, 'match', 2));
 		// Alle Ausdrücke ohne Klammern:	
 		if ($args == 3){
 			switch ($match [2]){
@@ -506,7 +506,7 @@ function clearLoginCookie (&$session){
 	setCookie (COOKIE_NAME, null);
 }
 function getMicroTime(&$session, $time = null){ 
-	$session->trace (TC_Util1, 'getMicroTime');
+	#$session->trace (TC_Util1, 'getMicroTime');
 	if (empty ($time))
 		$time = microtime ();
 	list($usec, $sec) = explode(" ", $time); 
