@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.22 2005/01/04 23:34:37 hamatoma Exp $
+// $Id: index.php,v 1.23 2005/01/06 12:00:01 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -17,11 +17,11 @@ error_reporting(E_ALL);
 
 session_start();
 
-// If this is a new session, then the variable $user_id
 if (!session_is_registered("session_user")) {
 	session_register("session_user");
 	session_register("session_start");
 	session_register("session_no");
+	$_SESSION ['session_user'] = $_SESSION ['session_start'] = $_SESSION ['session_no'] = null;
 	$start = time();
  }
  $session_id = session_id();
@@ -83,14 +83,13 @@ define ('Th_PreviewEnd', 248);
 
 // ------------Program
 
-$session = new Session ($start_time);
+$session = new Session ($start_time, $session_id, 
+	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
+	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
 
 	// All requests require the database
 dbOpen($session);
-if (isset ($session_no) && $session_no > 0){
-	$session_no++;
-	$session->trace (TC_Init, "session_no: $session_no");
-}
+
 if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	&& dbCheckUser ($session, $user, $code) == ''){
 	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
@@ -100,14 +99,17 @@ $do_login = false;
 #$session->dumpVars ("Init");
 if ($rc != null) {
 	$session->trace (TC_Init, 'keine Session gefunden: ' . $rc . ' ' 
-		. (empty($login_user) ? "-" : '>' . $login_user));
+		. (empty($_POST ['login_user']) ? "-" : '>' . $_POST ['login_user']));
 	$do_login = true;
 } else {
-		$session->trace (TC_Init, 'login_user: ' . (isset ($login_user) ? $login_user : '-')); 
-		if (isset ($login_user))
+		$session->trace (TC_Init, 'login_user: ' . getPostVar ('login_user')); 
+		if (isset ($_POST ['login_user']))
 			$do_login = baseLoginAnswer ($session, $rc);
-		else
-			$do_login = $session->fPageName == P_Login || ! isset ($session_user) || $session_user <= 0;
+		else {
+			$known_user = $session->fSessionUser != null && $session->fSessionUser > 0; 
+			$do_login = $session->fPageName == P_Login || ! $known_user;
+			$session->trace (TC_Init, 'known_user: ' . ($known_user ? 't' : 'f'));
+		}
 }
 $session->trace (TC_Init, "session_no: do_login: " . ($do_login ? "t" : "f"));
 if ($do_login){
@@ -115,13 +117,13 @@ if ($do_login){
 		baseLogin ($session, $rc);
 } else {
 		$session->trace (TC_Init, 'index.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
-	if (isset ($action)) {
-		$session->trace (TC_Init, "index.php: action: $action");
-		switch ($action){
+	if (isset ($_GET ['action'])) {
+		$session->trace (TC_Init, 'index.php: action: ' . $_GET ['action']);
+		switch ($_GET ['action']){
 		case A_Edit: baseEditPage ($session, C_Change); break;
 		case A_Search:	baseSearch ($session, ''); break;
 		case A_PageInfo: basePageInfo ($session); break;
-		case A_ShowText: guiShowPageById ($session, $page_id, $text_id); break;
+		case A_ShowText: guiShowPageById ($session, $_GET['page_id'], $_GET ['text_id']); break;
 		case A_Diff: baseDiff ($session); break;
 		case A_Show: baseShowCurrentPage ($session); break;
 		case '': break;
@@ -130,20 +132,20 @@ if ($do_login){
 			baseFormTest ($session);
 			break;
 		}
-	} elseif (isset ($std_answer) || ! baseCallStandardPage ($session)) {
+	} elseif (isset ($_REQUEST ['std_answer']) || ! baseCallStandardPage ($session)) {
 		$session->trace (TC_Init, 'index.php: keine Standardseite'
-			. (isset ($_POST ['edit_save']) 
-				? (" (" . $_POST ['edit_save'] . ")") : ' []'));
+			. (isset ($_REQUEST ['edit_save']) 
+				? (" (" . $_REQUEST ['edit_save'] . ")") : ' []'));
 		if (isset ($test))
 			baseTest ($session);
 		else if (substr ($session->fPageName, 0, 1) == '.')
 			baseNewPageReference ($session);
-		else if (isset ($last_refresh))
+		else if (isset ($_POST ['last_refresh']))
 			baseLastChanges ($session);
-		elseif (isset ($account_new) || isset ($account_change)
-			|| isset ($account_other))
-			baseAccountAnswer ($session, $account_user);
-		elseif (isset ($search_title) || isset ($search_body))
+		elseif (isset ($_POST ['account_new']) || isset ($_POST ['account_change'])
+			|| isset ($_POST ['account_other']))
+			baseAccountAnswer ($session, $_POST ['account_user']);
+		elseif (isset ($_POST ['search_title']) || isset ($_POST ['search_body']))
 			baseSearch ($session, null);
 		elseif (isset ($_POST ['edit_save']) 
 				|| isset ($_POST ['edit_previewandsave']))
@@ -153,8 +155,8 @@ if ($do_login){
 				|| isset ($_POST ['edit_appendtemplate']) 
 				|| isset ($_POST ['edit_upload']))
 			baseEditPageAnswerNosave ($session);
-		elseif (isset ($posting_preview) || isset ($posting_insert)
-			|| isset ($posting_change))
+		elseif (isset ($_POST ['posting_preview']) || isset ($_POST ['posting_insert'])
+			|| isset ($_POST ['posting_change']))
 			basePostingAnswer ($session);
 		elseif ( ($page_id = dbPageId ($session, $session->fPageName)) > 0)
 			guiShowPageById ($session, $page_id, null);
@@ -163,6 +165,7 @@ if ($do_login){
 		}
 	}
 }
+$session->storeSession ();
 exit (0);
 
 // ------------------------------------------------------
@@ -268,26 +271,21 @@ function baseLoginAnswer (&$session, &$message) {
 		if (! empty ($message))
 			$again = true;
 		else {
-			global $session_no;
 			setLoginCookie ($session, $user, $code);
 			$session->setPageName (P_Start);
-			$session_no = 1;
+			$session->setSessionNo (1);
 		}
 	}
 	return $again;
 }	
 function baseLogout (&$session){
-	global $session_user, $session_start, $session_no;
 	clearLoginCookie ($session);
 	setLoginCookie ($session, '?', '?');
-	$session_user = $session_start = null;
+	$session->clearSessionData ();
 	$session->fUserId = null;
 	$name = $session->fUserName;
 	$session->fUserName = null;
-	$session_no = -99999;
-	
 	baseLogin ($session, 'Daten für automatische Anmeldung wurden gelöscht: ' . $name);
-		
 }
 
 function baseSplitRights (&$session, &$account_right_user, &$account_right_rights, 
@@ -406,61 +404,57 @@ function baseAccount (&$session, $message) {
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
 function baseAccountAnswer(&$session, $user) {
-	global $account_user, $account_code, $account_code2, $account_email, $account_rights,
-		$account_locked, $account_new, $account_change, $account_name,
-		$account_other, $account_user2,  $account_theme,
-		$account_width, $account_height, $account_maxhits,
-		$account_startpage, $account_startpageoffer;
-
 	$session->trace (TC_Gui1, 'baseAccountAnswer');
 	$message = '';
-	$code = encryptPassword ($session, $account_user, $account_code);
-	$locked = dbSqlString ($session, ! empty ($account_locked));
-	if (! empty ($account_startpageoffer))
-		$account_startpage = $account_startpageoffer;
-	if (isset ($account_new)) {
-		if ($account_user2 == '')
+	$code = encryptPassword ($session, $_POST ['account_user'], $_POST ['account_code']);
+	$locked = dbSqlString ($session, ! empty ($_POST ['account_locked']));
+	if (! empty ($_POST ['account_startpageoffer']))
+		$_POST ['account_startpage'] = $_POST ['account_startpageoffer'];
+	if (isset ($_POST ['account_new'])) {
+		if ($_POST ['account_user2'] == '')
 			$message = '+++ Kein Benutzername angegeben';
 		elseif (dbGetValueByClause ($session, T_User,
-			'count(*)', 'name=' + dbSqlString ($session, $account_user)) > 0)
-			$message = '+++ Name schon vorhanden: ' + $account_user2;
+			'count(*)', 'name=' + dbSqlString ($session, $_POST ['account_user'])) > 0)
+			$message = '+++ Name schon vorhanden: ' + $_POST ['account_user2'];
 		else {
-			$uid = dbUserAdd ($session, $account_user2, $code,
-				dbSqlString ($session, false), $account_theme, $account_width, $account_height,
-				$account_maxhits, $account_startpage, $account_email);
+			$uid = dbUserAdd ($session, $_POST ['account_user2'], $code,
+				dbSqlString ($session, false), $_POST ['account_theme'], 
+				$_POST ['account_width'], $_POST ['account_height'],
+				$_POST ['account_maxhits'], $_POST ['account_startpage'], $_POST ['account_email']);
 			modUserStoreData ($session, true, $uid);
 			
-			$message = "Benutzer $account_user2 wurde angelegt. ID: " . $uid;
+			$message = 'Benutzer ' . $_POST ['account_user2'] . ' wurde angelegt. ID: ' . $uid;
 		}
-	} elseif (isset ($account_change)) {
-		if (! empty ($account_code) && $account_code <> $account_code2)
+	} elseif (isset ($_POST ['account_change'])) {
+		if (! empty ($_POST ['account_code']) 
+			&& $_POST ['account_code'] != $_POST ['account_code2'])
 			$message = '+++ Passwort stimmt mit Wiederholung nicht überein';
-		elseif (! ($uid = dbUserId ($session, $account_user)) || empty ($uid))
-			$message = '+++ unbekannter Benutzer: ' . $account_name;
+		elseif (! ($uid = dbUserId ($session, $_POST ['account_user'])) || empty ($uid))
+			$message = '+++ unbekannter Benutzer: ' . $_POST ['account_name'];
 		elseif ( ($message = modUserCheckData ($session, true, $uid)) != null)
 			;
 		else {
-			if (empty ($account_theme))
-				$account_theme = Theme_Standard;
+			if (empty ($_POST ['account_theme']))
+				$_POST ['account_theme'] = Theme_Standard;
 			$what = 'locked=' . $locked . ',';
-			if (! empty ($account_code))
+			if (! empty ($_POST ['account_code']))
 				$what .= 'code=' . dbSqlString ($session, $code) . ",";
-			$what .= "theme=$account_theme,width=$account_width,"
-			. 'height=' . (0 + $account_height)
-			. ',maxhits=' . (0 + $account_maxhits)
-			. ',startpage=' . dbSqlString ($session, $account_startpage)
-			. ',email=' . dbSqlString ($session, $account_email)
+			$what .= 'theme=' . $_POST ['account_theme'] . ',width=' 
+			. $_POST ['account_width'] . ',height=' . (0 + $_POST ['account_height'])
+			. ',maxhits=' . (0 + $_POST ['account_maxhits'])
+			. ',startpage=' . dbSqlString ($session, $_POST ['account_startpage'])
+			. ',email=' . dbSqlString ($session, $_POST ['account_email'])
 			 . ',';
 			dbUpdate ($session, T_User, $uid, $what);
 			modUserStoreData ($session, false, $uid);
-			$message = 'Daten für ' . $account_user . ' (' . $uid
+			$message = 'Daten für ' . $_POST ['account_user'] . ' (' . $uid
 				. ') wurden geändert';
 		}
-	} elseif ($account_other) {
-		if (empty ($account_user2))
+	} elseif ($_POST ['account_other']) {
+		if (empty ($_POST ['account_user2']))
 			$message = '+++ kein Benutzername angegeben';
-		elseif (! dbUserId ($session, $account_user2))
-			$message = '+++ Unbekannter Benutzer: ' . $account_user2;
+		elseif (! dbUserId ($session, $_POST ['account_user2']))
+			$message = '+++ Unbekannter Benutzer: ' . $_POST ['account_user2'];
 	} else {
 		$message = 'keine Änderung';
 	}
@@ -475,8 +469,6 @@ function baseOutStandardLink (&$session, $name, $description){
 	outTableRecordEnd();
 }
 function baseHome (&$session) {
-	global $session_id, $session_user;
-
 	$session->trace (TC_Gui1, 'baseHome');
 	if ( ($text = guiParam ($session, Th_Overview, null)) != null
 		&& ! empty ($text))
@@ -548,8 +540,8 @@ function baseEditPage (&$session, $mode,
 	}
 	$session->setPageData (empty ($pagename) ? 'Neue Seite' : $pagename,
 		 $changedat, $changedby);
-	getUserParam ($session, U_TextAreaWidth, $textarea_width);
-	getUserParam ($session, U_TextAreaHeight, $textarea_height);
+	getUserParam ($session, U_TextAreaWidth, $width);
+	getUserParam ($session, U_TextAreaHeight, $height);
 	if ($pageid <= 0)
 		$mode = C_New;
 	if ($mode == C_New)
@@ -622,7 +614,7 @@ function baseEditPage (&$session, $mode,
 	outTableEnd();
 	outTableDelimAndRecordEnd();
 	outTableRecordAndDelim();
-	guiTextArea ('edit_content', $content, $textarea_width, $textarea_height);
+	guiTextArea ('edit_content', $content, $width, $height);
 	outTableDelimAndRecordEnd();
 	outTableRecordAndDelim();
 	outTable (0, '100%');
@@ -635,11 +627,12 @@ function baseEditPage (&$session, $mode,
 	outTableCellDelim();
 	guiButton ('edit_cancel', ' Verwerfen'); 
 	if (! $session->testFeature (FEATURE_UPLOAD_ALLOWED)){
-		echo ' Breite: '; guiTextField ("textarea_width", $textarea_width, 3, 3);
+		echo ' Breite: '; 
+		guiTextField (U_TextAreaWidth, null, 3, 3);
 		echo ' H&ouml;he: ';
 	} else {	
 		outTableDelimEnd();
-		outTableTextField ('Breite:', 'textarea_width', $textarea_width, 3, 3);
+		outTableTextField ('Breite:', 'textarea_width',null, 3, 3);
 		outTableRecordEnd();
 		outTableRecord();
 		outTableCell ('Bild einf&uuml;gen:');
@@ -651,7 +644,7 @@ function baseEditPage (&$session, $mode,
 		outTableCell ('H&ouml;he:');
 		outTableDelim();
 	} 
-	guiTextField ("textarea_height", $textarea_height, 3, 3);
+	guiTextField (U_TextAreaHeight, null, 3, 3);
 	outTableAndRecordEnd();
 	outTableDelimEnd();
 	outTableAndRecordEnd();
@@ -692,8 +685,6 @@ function baseEditPageAnswerNoSave (&$session){
 
 function baseEditPageAnswerSave (&$session)
 {
-	global $_FILE;
-
 	$session->trace (TC_Gui1, 'baseEditPageAnswerSave');
 	$message2 = null;
 	$message = null;
@@ -777,34 +768,28 @@ function baseNewPageReference (&$session) {
 }
 
 function baseSearch (&$session, $message){
-	global $search_titletext, $search_maxhits, $search_bodytext, $last_pagename,
-		$search_title, $search_body;
 	$session->trace (TC_Gui1, 'baseSearch');
-	if (! isset ($last_pagename))
-		$last_pagename = $session->fPageName;
-	if (! isset ($search_bodytext) && isset ($search_titletext))
-		$search_bodytext = $search_titletext;
-	getUserParam ($session, U_MaxHits, $search_maxhits);
+	if (! isset ($_POST ['search_bodytext']) && isset ($_POST ['search_titletext']))
+		$_POST ['search_bodytext'] = $_POST ['search_titletext'];
+	getUserParam ($session, U_MaxHits, $_POST ['search_maxhits']);
 	guiStandardHeader ($session, 'Suchen auf den Wiki-Seiten',
 		Th_SearchHeader, Th_SearchBodyStart);
-	if (isset ($search_title) || isset ($search_body))
+	if (isset ($_POST ['search_title']) || isset ($_POST ['search_body']))
 		baseSearchResults ($session);
 	guiStartForm ($session, 'search', P_Search);
-	guiHiddenField ('last_pagename', $last_pagename);
 	outTableAndRecord();
 	outTableCell ('Titel:');
 	outTableDelim();
-	guiTextField ('search_titletext', $search_titletext, 32, 64);
+	guiTextField ('search_titletext', null, 32, 64);
 	echo " "; guiButton ('search_title', "Suchen");
 	outTableDelimAndRecordEnd();
 	outTableRecord();
 	outTableCell ('Beitrag:');
 	outTableDelim();
-	guiTextField ('search_bodytext', $search_bodytext, 32, 64);
-	echo " "; guiButton ('search_body', "Suchen");
+	guiTextField ('search_bodytext', null, 32, 64);
+	echo " "; guiButton ('search_body', 'Suchen');
 	outTableDelimAndRecordEnd();
-	outTableTextField('Maximale Trefferzahl:', 'search_maxhits',
-		$search_maxhits, 10, 10);
+	outTableTextField('Maximale Trefferzahl:', 'search_maxhits', null, 10, 10);
 	outTableAndRecordEnd();
 	guiFinishForm ($session, $session);
 	outParagraph ();
@@ -841,17 +826,15 @@ function baseSearch (&$session, $message){
 	guiStandardBodyEnd ($session, Th_SearchBodyEnd);
 }
 function baseSearchResults (&$session){
-	global $search_titletext, $search_title, $search_maxhits,
-		$search_bodytext, $search_body;
-
 	$session->trace (TC_Gui1, 'baseSearchAnswer');
-	if (isset ($search_title)) {
-		if (empty ($search_titletext))
+	if (isset ($_POST ['search_title'])) {
+		if (empty ($_POST ['search_titletext']))
 			guiParagraph ($session, $session, '+++ kein Seitentitel angegeben', false);
 		$row = dbFirstRecord ($session,
 				'select name,type from ' . dbTable ($session, T_Page)
-				. ' where name like ' . dbSqlString ($session, "%$search_titletext%")
-				. " limit $search_maxhits");
+				. ' where name like ' . dbSqlString ($session, '%' 
+				. $_POST ['search_titletext'] . '%') 
+				. ' limit ' . $_POST ['search_maxhits']);
 		if (! $row)
 			guiParagraph ($session, '+++ keine passenden Seiten gefunden', false);
 		else {
@@ -871,15 +854,15 @@ function baseSearchResults (&$session){
 			outTableEnd();
 		}
 	} else {
-		if (empty ($search_bodytext))
+		if (empty ($_POST ['search_bodytext']))
 			guiParagraph ($session, '+++ kein Suchtext angegeben');
 		else {
 			$row = dbFirstRecord ($session,
 					'select page,text,createdby,createdat from '
 					. dbTable ($session, T_Text)
 					. ' where replacedby is null and text like '
-					. dbSqlString ($session, "%$search_bodytext%")
-					. " limit $search_maxhits");
+					. dbSqlString ($session, '%' . $_POST ['search_bodytext'] . '%')
+					. ' limit ' . $_POST ['search_maxhits']);
 			if (! $row)
 				guiParagraph ($session, '+++ keine passende Seiten gefunden', false);
 			else {
@@ -899,7 +882,7 @@ function baseSearchResults (&$session){
 					outTableCell ($pagerecord [1]);
 					outTableCell ($row [2]);
 					outTableCell (htmlentities ($row [3]));
-					outTableCell (findTextInLine ($row [1], $search_bodytext, 3));
+					outTableCell (findTextInLine ($row [1], $_POST ['search_bodytext'], 3));
 					outTableRecordEnd ();
 					$row = dbNextRecord ($session);
 				}
@@ -909,7 +892,7 @@ function baseSearchResults (&$session){
 	}
 }
 function baseCallStandardPage (&$session) {
-	$session->trace (TC_Gui2, 'baseCallStandardPage');
+	$session->trace (TC_Gui2, 'baseCallStandardPage: ' . $session->fPageName);
 	$found = true;
 	switch ($session->fPageName) {
 	case P_Login:	baseLogin ($session, ''); break;
@@ -1007,8 +990,7 @@ function basePageInfo (&$session) {
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
 }
 function baseDiff (&$session) {
-	global $text_id, $text_id2;
-	baseCompare ($session, $session->fPageName, $text_id, $text_id2);
+	baseCompare ($session, $session->fPageName, $_GET ['text_id'], $_GET ['text_id2']);
 }
 function baseCompare (&$session, $pagename, $idnew, $idold){
 	$headline = 'Versionsvergleich';
@@ -1041,21 +1023,20 @@ function baseCompare (&$session, $pagename, $idnew, $idold){
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
 function baseLastChanges (&$session) {
-	global $last_days;
 	$headline = 'Übersicht über die letzten Änderungen';
 	guiStandardHeader ($session, $headline, Th_StandardHeader, Th_StandardBodyStart);
-	if (! isset ($last_days) || $last_days < 1)
-		$last_days = 7;
+	if (! isset ($_POST ['last_days']) || $_POST ['last_days'] < 1)
+		$_POST ['last_days'] = 7;
 	guiStartForm ($session);
 	outParagraph ();
 	echo 'Zeitraum: die letzten ';
-	guiTextField ('last_days', $last_days, 3, 4);
+	guiTextField ('last_days', $_POST ['last_days'], 3, 4);
 	echo ' Tage ';
 	guiButton ('last_refresh', 'Aktualisieren');
 	outParagraphEnd ();
 	outTable ();
 
-	for ($day = 0; $day <= $last_days; $day++) {
+	for ($day = 0; $day <= $_POST ['last_days']; $day++) {
 		$date = localtime (time () - $day * 86400);
 		$time_0 = strftime ('%Y.%m.%d', time () - $day * 86400) ;
 		$time_2 = mktime (0, 0, 0, $date [4] + 1, $date [3], $date [5]);
@@ -1122,7 +1103,7 @@ function baseInfo (&$session) {
 	outTableCell ('DB-Erweiterungen:');
 	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBExtensions)));
 	outTableRecordEnd ();
-	outTable ();
+	outTableEnd ();
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
 }
 // --------------------
@@ -1139,16 +1120,14 @@ function diffTest (&$session) {
 	$engine->compare (1, 1);
 }
 function baseTest (&$session) {
-	global $test_text, $test;
 	guiStandardHeader ($session, 'Test', Th_StandardHeader, Th_StandardBodyStart);
 	echo WikiToHtml ($session, "[code]\n\ra<b\n\rZeile2\n\r[/code]\n\r");
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 	# guiTestAll ($session);
 }
 function baseFormTest (&$session) {
-	global $test_text, $test;
-	if (! isset ($test_text))
-		$test_text = "Noch nix!";
+	if (! isset ($_POST ['test_text']))
+		$_POST ['test_text'] = 'Noch nix!';
 	guiStandardHeader ($session, 'Test', Th_StandardHeader, Th_StandardBodyStart);
 	$engine = new DiffEnginge ("a\nx\b", "a\nb");
 	$engine->compare (1, 1);
