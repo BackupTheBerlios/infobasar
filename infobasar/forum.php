@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: forum.php,v 1.2 2004/10/30 10:40:12 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -366,7 +366,7 @@ function basePosting (&$session, $message, $mode) {
 		guiHeadline ($session, 1, 'Beitrag: ' . $posting [1]);
 		guiParagraph ($session, 'Autor: ' . $posting [0], true);
 		wikiToHTML ($session, $posting [2]);
-		guiLine (2);
+		guiLine ($session, 2);
 		if ($mode == C_New) {
 			$pos = strpos ($posting [1], 'Re: ');
 			$posting_subject = (is_int ($pos) ? '' : 'Re: ') . $posting [1];
@@ -377,7 +377,7 @@ function basePosting (&$session, $message, $mode) {
 	if (isset ($posting_preview)) {
 		guiHeadline ($session, 1, 'Vorschau');
 		wikiToHtml ($session, $posting_text);
-		guiLine (2);
+		guiLine ($session, 2);
 	}
 	guiHeadline ($session, 1, $headline);
 	if (! empty ($message))
@@ -525,13 +525,13 @@ function baseThread (&$session) {
 		dbGetAuthorInfo ($session, $posting [0], $author_link,
 			$postings, $avatar, $ranking);
 		echo '<tr><td style="vertical-align:top">';
-		guiLine (1);
+		guiLine ($session, 1);
 		echo $thread[0] . '<br/>'
 			. ($postings + 0) . ' Beitr&auml;ge<br/>' . $ranking;
 		if (! empty ($avatar))
 			echo '<br/>' . $avatar;
 		echo '</td><td>';
-		guiLine (1);
+		guiLine ($session, 1);
 		if ($id == $thread_id)
 			guiHeadline ($session, 3, 'Thema: ' . $posting [1]);
 		else

@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.12 2004/10/29 23:24:26 hamatoma Exp $
+// $Id: util.php,v 1.13 2004/10/30 10:45:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -288,7 +288,7 @@ function writeHoricontalLine ($line, &$status) {
 	if ($count < 4)
 		writeLine ($line, $status);
 	else
-		guiLine ($count - 3);
+		guiLine ($status->fSession, $count - 3);
 }
 function wikiToHtml (&$session, $wiki_text) {
 	$lines = explode ("\n", $wiki_text);

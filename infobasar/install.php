@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.6 2004/10/27 22:45:59 hamatoma Exp $
+// $Id: install.php,v 1.7 2004/10/30 10:44:49 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -702,10 +702,10 @@ function guiUploadFile ($name){
 echo '<input name="' . $name . '" type="file">' . "\n";
 }
 
-function guiLine ($width) {
+function guiLine (&$session, $width) {
 	if (! isset ($width))
 		$width = 2;
-	echo '<hr style="width: 100%; height: ' . $width . "px;\">\n";
+	echo '<hr style="width: 100%; height: ' . (0+$width) . "px;\">\n";
 }
 function guiHeader (&$session, $title) {
 	$session->trace (TC_Gui1, 'guiHeader');
@@ -722,7 +722,7 @@ function guiHeadline (&$session, $level, $text) {
 }
 function guiFinishBody (&$session){
 	$session->trace (TC_Gui2, 'guiFinishBody');
-		guiLine (1);
+		guiLine ($session, 1);
 		// ($session, ')
 		echo "\n</body>\n</html>\n";
 }
