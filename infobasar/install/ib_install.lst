@@ -1,5 +1,5 @@
 # Dateien Infobasar
-# $Id: ib_install.lst,v 1.7 2005/01/13 03:31:29 hamatoma Exp $
+# $Id: ib_install.lst,v 1.8 2005/01/13 09:41:14 hamatoma Exp $
 ../overwrite/modules.php	../modules.php
 ../install/license
 ../install/mk_arch.pl
