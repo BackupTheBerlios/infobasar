@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.14 2005/01/12 00:59:52 hamatoma Exp $
+// $Id: admin.php,v 1.15 2005/01/13 03:34:17 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -85,7 +85,7 @@ if (successfullLogin ($session)){
 			admParamAnswerChange ($session, C_Change);
 		elseif (isset ($_POST ['macro_load']))
 			admMacroAnswerLoad ($session);
-		elseif (isset ($_POST ['opt_save']))
+		elseif (isset ($_POST ['opt_save']) || isset ($_POST ['opt_upload']))
 			admOptionsAnswer ($session);
 		elseif (isset ($_POST ['macro_insert']))
 			admMacroAnswerChange ($session, C_New);
@@ -102,7 +102,8 @@ if (successfullLogin ($session)){
 			admConvertWikiAnswer ($session);
 		elseif (isset ($_POST ['export_export']) || isset ($_POST ['export_preview']))
 			admExportPagesAnswer ($session);
-		elseif (isset ($_POST ['import_import']) || isset ($_POST ['import_file']))
+		elseif (isset ($_POST ['import_import']) 
+				|| admPostContainsNumberedVar ($session,'import_import'))
 			admImportPagesAnswer ($session);
 		else admHome ($session);
 	}
@@ -165,6 +166,7 @@ function admParam (&$session, $message){
 		$_POST ['param_theme'] = Theme_Standard;
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
+	outDivision ($session);
 	guiStartForm ($session, 'param', P_Param);
 	if (! isset ($_POST ['param_id']))
 		$_POST ['param_id'] = 0;
@@ -172,31 +174,31 @@ function admParam (&$session, $message){
 		$_POST ['param_pos'] = 10;
 	if (! isset ($_POST ['param_theme']))
 		$_POST ['param_theme'] = 1;
-	guiHiddenField ('param_id');
+	outHiddenField ($session, 'param_id');
 	outTableAndRecord ();
 	outTableCell ('Id:');
 	outTableCell ($_POST ['param_id']);
 	outTableRecordDelim ();
 	outTableCell ('Theme/Pos: ');
 	outTableDelim ();
-	guiTextField ('param_theme', null, 4, 4);
+	outTextField ($session, 'param_theme', null, 4, 4);
 	echo ' / ';
-	guiTextField ('param_pos', null, 4, 4);
+	outTextField ($session, 'param_pos', null, 4, 4);
 	echo ' ';
-	guiButton ('param_load', 'Datensatz laden');
+	outButton ($session, 'param_load', 'Datensatz laden');
 	outTableDelimEnd ();
 	outTableRecordDelim ();
-	outTableTextField ('Name:', 'param_name', null, 64, 64);
+	outTableTextField ($session, 'Name:', 'param_name', null, 64, 64);
 	outTableRecordDelim ();
-	outTableTextArea ('Text:', 'param_text', null, $width, $height);
+	outTableTextArea ($session, 'Text:', 'param_text', null, $width, $height);
 	outTableRecordDelim ();
 	outTableCell ('');
 	outTableDelim ();
-	guiButton2 ('param_insert', 'Eintragen', ' | ', 'param_change', 'Ändern');
+	outButton2 ($session, 'param_insert', 'Eintragen', ' | ', 'param_change', 'Ändern');
 	echo ' | Eingabefeld: Breite: ';
-	guiTextField (U_TextAreaWidth, null, 3, 3);
+	outTextField ($session, U_TextAreaWidth, null, 3, 3);
 	echo ' Höhe: ';
-	guiTextField (U_TextAreaHeight, null, 3, 3);
+	outTextField ($session, U_TextAreaHeight, null, 3, 3);
 	outTableDelimAndRecordEnd ();
 	outTableEnd ();
 	guiHeadline ($session, 2, 'Parameter von Theme ' . $_POST['param_theme']);
@@ -220,7 +222,8 @@ function admParam (&$session, $message){
 	}
 	outTableEnd ();
 	guiFinishForm ($session);
-	guiFinishBody ($session, null);
+	outDivisionEnd ($session);
+	guiFinishBody ($session, Th_StandardBodyEnd);
 }
 function admParamAnswerLoad (&$session){
 	$session->trace(TC_Gui1, 'admParamAnswerLoad');
@@ -280,28 +283,29 @@ function admMacro (&$session, $message){
 		$_POST ['macro_theme'] = Theme_All;
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
+	outDivision($session);
 	guiStartForm ($session, "macro", P_Macro);
 	outTableAndRecord ();
 	outTableCell ('Theme/Name: ');
 	outTableDelim ();
-	guiTextField ('macro_theme', null, 4, 4);
+	outTextField ($session, 'macro_theme', null, 4, 4);
 	echo ' / ';
-	guiTextField ('macro_name', null, 32, 64);
+	outTextField ($session, 'macro_name', null, 32, 64);
 	echo ' ';
-	guiButton ('macro_load', 'Datensatz laden');
+	outButton ($session, 'macro_load', 'Datensatz laden');
 	outTableDelimEnd ();
 	outTableRecordDelim ();
-	outTableTextField ('Beschreibung:', 'macro_description', null, 64, 255);
+	outTableTextField ($session, 'Beschreibung:', 'macro_description', null, 64, 255);
 	outTableRecordDelim ();
-	outTableTextArea ('Wert:', 'macro_text', null, $width, $height);
+	outTableTextArea ($session, 'Wert:', 'macro_text', null, $width, $height);
 	outTableRecordDelim ();
 	outTableCell ('');
 	outTableDelim ();
-	guiButton2 ('macro_insert', 'Eintragen', ' | ', 'macro_change', 'Ändern');
+	outButton2 ($session, 'macro_insert', 'Eintragen', ' | ', 'macro_change', 'Ändern');
 	echo ' | Eingabefeld: Breite: ';
-	guiTextField (U_TextAreaWidth, null, 3, 3);
+	outTextField ($session, U_TextAreaWidth, null, 3, 3);
 	echo ' Höhe: ';
-	guiTextField (U_TextAreaHeight, null, 3, 3);
+	outTextField ($session, U_TextAreaHeight, null, 3, 3);
 	outTableDelimAndRecordEnd ();
 	outTableEnd ();
 	guiHeadline ($session, 2, 'Makros von Theme ' . $_POST['macro_theme']);
@@ -332,6 +336,7 @@ function admMacro (&$session, $message){
 	}
 	outTableEnd ();
 	guiFinishForm ($session);
+	outDivisionEnd ($session);
 	guiFinishBody ($session, null);
 }
 function admMacroAnswerLoad (&$session){
@@ -396,7 +401,7 @@ function admForum (&$session, $message, $mode){
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiStartForm ($session, "forum", P_Forum);
-	guiHiddenField ('forum_id');
+	outHiddenField ($session, 'forum_id');
 	guiShowTable ($session, "<h2>Existierende Foren</h2>\n",
 		array ('Id', 'Name', 'Beschreibung'),
 		'select id,name,description from ' . dbTable ($session, T_Forum),
@@ -408,23 +413,23 @@ function admForum (&$session, $message, $mode){
 		outTableCell ($_POST['forum_id']);
 		outTableRecordDelim ();
 	}
-	outTableTextField ('Name:', 'forum_name', null, 64, 64);
+	outTableTextField ($session, 'Name:', 'forum_name', null, 64, 64);
 	outTableRecordDelim ();
-	outTableTextField ('Beschreibung:', 'forum_description', null, 64, 255);
+	outTableTextField ($session, 'Beschreibung:', 'forum_description', null, 64, 255);
 	outTableRecordDelim ();
 	outTableCell (' ');
 	if (! empty ($_POST['forum_id'])) {
-		guiButton ('forum_change', 'Ändern');
+		outButton ($session, 'forum_change', 'Ändern');
 		echo ' | ';
 	}
-	guiButton ('forum_insert', 'Eintragen');
+	outButton ($session, 'forum_insert', 'Eintragen');
 	outTableDelimEnd ();
 	outTableRecordDelim ();
 	outTableCell ('Id:'); 
 	outTableDelim ();
-	guiTextField ('forum_changeid', null, 4, 4);
+	outTextField ($session, 'forum_changeid', null, 4, 4);
 	echo  ' ';
-	guiButton ('forum_load', 'Datensatz laden');
+	outButton ($session, 'forum_load', 'Datensatz laden');
 	outTableDelimAndRecordEnd ();
 	outTableEnd ();
 	guiFinishForm ($session);
@@ -503,10 +508,10 @@ function admConvertWiki (&$session, $message) {
 		guiParagraph ($session, $message, false);
 	guiStartForm ($session, 'convert', P_ConvertWiki);
 	outTableandRecord();
-	outTableComboBox ('Konversionstyp:', 'conversion_type', array ('0.6 nach 0.7'), null, null);
+	outTableComboBox ($session, 'Konversionstyp:', 'conversion_type', array ('0.6 nach 0.7'), null, null);
 	outTableCell (' ');
 	outTableRecordDelim ();
-	outTableButton (' ', 'conversion_run', 'Konvertieren');
+	outTableButton ($session, ' ', 'conversion_run', 'Konvertieren');
 	outTableAndRecordEnd ();
 	guiFinishForm ($session);
 	guiFinishBody ($session, null);
@@ -589,19 +594,22 @@ function admExportPages (&$session, $message) {
 	if (isset ($_POST ['export_exists']))
 		guiParagraph ($session, 'Exportdatei: '
 			. guiInternLinkString ($session, $_POST ['export_exists'], null), false);
+	
+	outDivision ($session);
 	guiStartForm ($session, "export", P_ExportPages);
-	guiHiddenField ('export_exists');
+	outHiddenField ($session, 'export_exists');
 	outTableAndRecord();
-	outTableTextField ('Namensmuster', 'export_pattern', null, 64);
+	outTableTextField ($session, 'Namensmuster', 'export_pattern', null, 64);
 	outTableCell ('Joker: %: beliebig viele Zeichen _: ein Zeichen |: neues Teilmuster'
 		. TAG_NEWLINE . 'Bsp: Hilfe%|%Test%');
 	outTableRecordDelim ();
-	outTableComboBox ('Exportform:', 'export_type', array ('wiki'), null, null);
+	outTableComboBox ($session, 'Exportform:', 'export_type', array ('wiki'), null, null);
 	outTableCell (' ');
 	outTableRecordDelim ();
-	outTableButton2 (' ', 'export_preview', 'Vorschau', ' | ', 'export_export', 'Exportieren');
+	outTableButton2 ($session, ' ', 'export_preview', 'Vorschau', ' | ', 'export_export', 'Exportieren');
 	outTableAndRecordEnd ();
 	guiFinishForm ($session);
+	outDivisionEnd ($session);
 	guiFinishBody ($session, null);
 }
 function admExportPagesAnswer (&$session){
@@ -658,65 +666,37 @@ function admExportPagesAnswer (&$session){
 }
 function admImportPages (&$session,  $message) {
 	$session->trace(TC_Gui1, 'admImportPages');
-	if (false && $message == null && isset ($_POST ['import_import']))
-		admImportPagesAnswer ($session);
-	else {
-		guiStandardHeader ($session, 'Seitenimport', Th_StandardHeader,
-			Th_StandardBodyStart);
-		if (! empty ($message))
-			guiParagraph ($session, $message, false);
-	
-		guiUploadFile ($session, 'Importdatei:', $_POST ['last_page'], null, null, 
-			'Hochladen', 'import_upload', 'import_file', 500000);
-		$dir_name = $session->fullPath ("import");
-		$dir = opendir ($dir_name);
-		guiHeadline ($session, 3, "Importverzeichnis auf dem Server: " . $dir_name);
-		guiStartForm ($session, "import", P_ImportPages);
-		guiCheckBox ('import_replace', 'Historie löschen', null);
-		outNewline ();
-		outTableAndRecord (1);
-		outTableCellStrong ('Name');
-		outTableCellStrong ('Größe');
-		outTableCellStrong ('Geändert am');
-		outTableCellStrong ('Aktion');
-		outTableDelimAndRecordEnd ();
-		$path = $session->fullPath ("import", true); 
-		$no = 0;
-		while ($file = readdir ($dir)){
-			if ($file != '.' && $file != '..'){
-				$name = $path . $file;
-				outTableRecordAndDelim ();
-				echo htmlentities ($file);
-				outTableCellDelim ();
-				echo is_dir ($name) ? 'Verzeichnis' : filesize ($name);
-				outTableCellDelim ();
-				echo date ("Y.m.d H:i:s", filemtime ($name));
-				outTableCellDelim ();
-				guiHiddenField ('import_file', $name);
-				guiButton ('import_import', 'Importieren');
-				outTableDelimAndRecordEnd ();
-			}
-		}
-		outTableEnd ();
-		closedir ($dir);
-	
-		guiFinishForm ($session);
-		guiFinishBody ($session, null);
-	}
+
+	guiStandardHeader ($session, 'Seitenimport', Th_StandardHeader,
+		Th_StandardBodyStart);
+	if (! empty ($message))
+		guiParagraph ($session, $message, false);
+
+	guiUploadFile ($session, 'Importdatei:', 'import_upload', 1000000);
+	$dir_name = $session->fullPath ("import") . PATH_DELIM;
+	guiHeadline ($session, 3, "Importverzeichnis auf dem Server: " . $dir_name);
+	guiStartForm ($session, "import", P_ImportPages);
+	outParagraph ($session);
+	outCheckBox ($session, 'import_replace', 'Historie löschen', null, false);
+	outParagraphEnd($session);
+	admShowDir ($session, $dir_name, '','/[.]wiki$/', 'Importieren', 'import_import', 
+		'import_file', false);
+	guiFinishForm ($session);
+	guiFinishBody ($session, null);
 }
 function admImportPagesAnswer (&$session){
 	guiStandardHeader ($session, 'SeitenimportAntwort', Th_StandardHeader,
 		Th_StandardBodyStart);
 	$session->trace(TC_Gui1, 'admImportPagesAnswer');
 	$message = null;
-	if (isset ($import_upload)){
-		$message = guiUploadFileAnswer ($session,  "/import/",
-			null, 'import_upload', 'import_file'); 
-	} elseif (isset ($_POST ['import_import'])){
-		if (! file_exists ($_POST ['import_file']))
-			$message = "Datei nicht gefunden: " . $_POST ['import_file'];
+	if (isset ($_POST ['import_upload'])){
+		$message = guiUploadFileAnswer ($session,  'import_upload', '/import/');
+	} elseif ( ($no = admPostContainsNumberedVar ($session, 'import_import')) >= 0){
+		$file_name = $_POST ['import_file' . (0 + $no)];
+		if (! file_exists ($file_name))
+			$message = 'Datei nicht gefunden: ' . $file_name;
 		else {
-			$file = fopen ($_POST ['import_file'], "r");
+			$file = fopen ($file_name, "r");
 			$count_inserts = 0;
 			$count_updates = 0;
 			$count_lines = 0;
@@ -728,7 +708,7 @@ function admImportPagesAnswer (&$session){
 					$session->trace(TC_Gui1, 'admImportPagesAnswer-2: ' . $line);
 					if ( ($page = dbPageId ($session, $name)) > 0){
 						$count_updates++;
-						if ($_POST ['import_replace'] == C_CHECKBOX_TRUE)
+						if (guiChecked ($session, 'import_replace'))
 							dbDeleteByClause ($session, T_Text, 'page=' . $page);
 					} else {
 						$page = dbInsert ($session, T_Page, 'name,type', 
@@ -741,18 +721,18 @@ function admImportPagesAnswer (&$session){
 					$count_lines += $lines;
 					for ($ii = 0; $ii < $lines; $ii++)
 						$text .= fgets ($file);
-					if ($_POST ['import_replace'] == C_CHECKBOX_TRUE)
+					if (guiChecked ($session, 'import_replace'))
 						$old_id = dbSingleValue ($session, 'select max(id) from ' 
 							. dbTable ($session, T_Text) . ' where page=' . (0+$page));
 					$text_id = dbInsert ($session, T_Text, 'page,type,text', 
 						$page . ',' . dbSqlString ($session, $type)
 						. ',' . dbSqlString ($session, $text));
-					if ($_POST ['import_replace'] == C_CHECKBOX_TRUE && $old_id > 0)
+					if (guiChecked ($session, 'import_replace') && $old_id > 0)
 						dbUpdate ($session, T_Text, $old_id, 'replacedby=' . $text_id);
 				}
 			}
 			fclose ($file);
-			$message = 'Datei ' . $import_file . ' wurde eingelesen. Neu: ' . (0 + $count_inserts)
+			$message = 'Datei ' . $file_name . ' wurde eingelesen. Neu: ' . (0 + $count_inserts)
 				. ' Geändert: ' . (0 + $count_updates) . ' Zeilen: ' . (0 + $count_lines);
 		}
 	} else
@@ -806,17 +786,17 @@ function admBackup (&$session, $with_header, $message){
 	guiHeadLine ($session, 1, 'Backup');;
 	guiStartForm ($session, 'backup', P_Backup);
 	outTableAndRecord ();
-	outTableTextField ('Dateiname:', 'backup_file', null, 64, 64);
+	outTableTextField ($session, 'Dateiname:', 'backup_file', null, 64, 64);
 	outTableRecordDelim ();
 	outTableCell ('Tabelle:');
 	outTableDelim ();
-	guiTextField ('backup_table', null, 64, 64);
+	outTextField ($session, 'backup_table', null, 64, 64);
 	echo ' (leer: alle Tabellen)';
 	outTableDelimEnd ();
 	outTableRecordDelim ();
-	outTableCheckBox (' ', 'backup_compressed', 'komprimiert', null);
+	outTableCheckBox ($session, ' ', 'backup_compressed', 'komprimiert', null);
 	outTableRecordDelim ();
-	outTableButton (' ', 'backup_save', 'Sichern');
+	outTableButton ($session, ' ', 'backup_save', 'Sichern');
 	outTableAndRecordEnd ();
 	guiFinishForm ($session);
 	guiFinishBody ($session, null);
@@ -895,9 +875,6 @@ function admBackupAnswer (&$session){
 function admOptions (&$session, $message){
 	$session->trace (TC_Gui1, 'admOptions');
 	guiStandardHeader ($session, 'Allgemeine Einstellungen', Th_StandardHeader, Th_StandardBodyStart);
-	if (isset ($_POST ['upload_go']))
-		$message = guiUploadFileAnswer ($session, PATH_DELIM . 'pic' . PATH_DELIM, 
-			'logo.png');
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 
@@ -908,13 +885,16 @@ function admOptions (&$session, $message){
 		$_POST ['opt_css'] = dbGetText ($session, Th_CSSFile);
 	guiStartForm ($session, 'Form', P_Options);
 	outTableAndRecord ();
-	outTableTextField ('Basarname:', 'opt_basarname', null, 32, 128);
+	outTableTextField ($session, 'Basarname:', 'opt_basarname', null, 32, 128);
 	outTableRecordDelim ();
-	outTableButton (' ', 'opt_save', '&Auml;ndern');
+	outTableButton ($session, ' ', 'opt_save', '&Auml;ndern');
 	outTableAndRecordEnd ();
 	guiFinishForm ($session);
 	guiHeadline ($session, 2, 'Dateien:');
-	guiUploadFile ($session, 'Logo:', P_Options);
+	guiUploadFile ($session, 'Logo:', 'opt_upload', 50000);
+	$dir_name = $session->fullPath ('pic') . PATH_DELIM;
+	admShowDir ($session, $dir_name, null, '/logo/');
+	
 	guiFinishBody ($session, null);
 }
 function admOptionsAnswer(&$session){
@@ -926,7 +906,9 @@ function admOptionsAnswer(&$session){
 			. ' where theme=' . Theme_All . ' and pos=' .Param_BasarName);
 		dbUpdateRaw ($session, T_Param, $id, 'text=' 
 			. dbSqlString ($session, $_POST ['opt_basarname']));
-	}
+	} elseif (isset ($_POST ['opt_upload']))
+		$message = guiUploadFileAnswer ($session, 'opt_upload', 
+			PATH_DELIM . 'pic' . PATH_DELIM, 'logo.png');
 	admOptions ($session, $message);
 }
 function admRename (&$session, $message){
@@ -937,18 +919,18 @@ function admRename (&$session, $message){
 
 	guiStartForm ($session, 'Form', P_Rename);
 	outTableAndRecord ();
-	outTableTextField ('Bisheriger Name:', 'rename_oldname', null, 64, 64);
+	outTableTextField ($session, 'Bisheriger Name:', 'rename_oldname', null, 64, 64);
 	outTableRecordDelim ();
-	outTableTextField ('Neuer Name:', 'rename_newname', null, 64, 64);
+	outTableTextField ($session, 'Neuer Name:', 'rename_newname', null, 64, 64);
 	outTableRecordDelim ();
 	outTableCell (' ');
 	outTableDelim ();
-	guiButton ('rename_info', 'Info');
+	outButton ($session, 'rename_info', 'Info');
 	if (! empty ($_POST ['rename_oldname']) && ! empty ($_POST ['rename_newname'])){
 		echo ' | ';
-		guiButton ('rename_rename', 'Umbenennen');
+		outButton ($session, 'rename_rename', 'Umbenennen');
 		outNewline ();
-		guiCheckBox ('rename_backlinks', 'Alle Verweise umbenennen', null);
+		outCheckBox ($session, 'rename_backlinks', 'Alle Verweise umbenennen', null);
 	}
 	outTableDelimAndRecordEnd ();
 	outTableEnd ();
@@ -1122,5 +1104,58 @@ function admTest (&$session){
 	echo wikiToHtml ($session, $wiki);	
 	guiFinishBody ($session, null);
 	 
+}
+function admShowDir (&$session, $path, $headline = null, $pattern = null, 
+		$button_text = null, $button_prefix = null, $file_prefix = null, 
+		$with_form = true){
+	$session->trace (TC_Init, 'admShowDir');
+	$dir = opendir ($path);
+	if ($headline != '')
+		guiHeadline ($session, 2, 
+			$headline == null ? "Verzeichnis $path auf dem Server" : $headline);
+	if ($button_text != null && $with_form)
+		guiStartForm ($session, 'Form');
+	outTableAndRecord (1);
+	outTableCellStrong ('Name');
+	outTableCellStrong ('Größe');
+	outTableCellStrong ('Geändert am');
+	if ($button_text != null)
+		outTableCellStrong ('Aktion');
+	outTableRecordEnd ();
+	$no = 0;
+	while ($file = readdir ($dir)){
+		if ($file != '.' && $file != '..' 
+			&& ($pattern == null || preg_match ($pattern, $file))){
+			$name = $path . $file;
+			outTableRecord ();
+			outTableCell (htmlentities ($file));
+			outTableCell (is_dir ($name) ? 'Verzeichnis' : filesize ($name), AL_Right);
+			outTableCell (date ("Y.m.d H:i:s", filemtime ($name)));
+			if ($button_text != null){
+				$no++;
+				outTableDelim ();
+				outHiddenField ($session, $file_prefix . $no, $path . $file);
+				outButton ($session, $button_prefix . $no, $button_text);
+				outTableDelimEnd ();
+			}
+			outTableRecordEnd ();
+		}
+	}
+	outTableEnd ();
+	closedir ($dir);
+	if ($button_text != null && $with_form)
+		guiFinishForm ($session);
+}
+function admPostContainsNumberedVar (&$session, $name){
+	$session->trace (TC_Util2, 'admPostContainsNumberedVar');
+	$rc = -1;
+	$pattern = '/^' . $name . '(\d+)/';
+	foreach ($_POST as $name => $value){
+		if (preg_match ($pattern, $name, $match)){
+			$rc = $match [1];
+			break;
+		}
+	}
+	return $rc;
 }
 ?>

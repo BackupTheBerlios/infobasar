@@ -1,5 +1,5 @@
 <?php
-// $Id: base_module.php,v 1.6 2005/01/11 22:51:07 hamatoma Exp $
+// $Id: base_module.php,v 1.7 2005/01/13 03:34:37 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -204,27 +204,28 @@ function baseAccount (&$session, $message) {
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiStartForm ($session, 'account', P_Account);
-	guiHiddenField ('account_user', $account_user);
+	outDivision ($session);
+	outHiddenField ($session, 'account_user', $account_user);
 	outTable();
 	outTableRecordCells ('Benutzername', $account_user);
 	outTableRecord();
-	outTablePasswordField ('Passwort:', 'account_code', '', 64, 32);
+	outTablePasswordField ($session, 'Passwort:', 'account_code', '', 64, 32);
 	outTableRecordDelim ();
-	outTablePasswordField ('Wiederholung:', 'account_code2', '', 64, 32);
+	outTablePasswordField ($session, 'Wiederholung:', 'account_code2', '', 64, 32);
 	outTableRecordDelim ();
-	outTableTextField ('EMail:', 'account_email', null, 64, 64);
+	outTableTextField ($session, 'EMail:', 'account_email', null, 64, 64);
 	outTableRecordDelim ();
-	outTableCheckBox ('Gesperrt', 'account_locked', 'Gesperrt');
+	outTableCheckBox ($session, 'Gesperrt', 'account_locked', 'Gesperrt');
 	outTableRecordDelim ();
 	dbGetThemes ($session, $theme_names, $theme_numbers);
-	outTableComboBox ('Design:', 'account_theme', $theme_names, $theme_numbers, 
+	outTableComboBox ($session, 'Design:', 'account_theme', $theme_names, $theme_numbers, 
 		array_search ($_POST ['account_theme'], $theme_numbers));
 	outTableRecordDelim ();
-	outTableTextField ('Eingabefeldbreite:', 'account_width', null, 64, 3);
+	outTableTextField ($session, 'Eingabefeldbreite:', 'account_width', null, 64, 3);
 	outTableRecordDelim ();
-	outTableTextField ('Eingabefeldhöhe:', 'account_height', null, 64, 3);
+	outTableTextField ($session, 'Eingabefeldhöhe:', 'account_height', null, 64, 3);
 	outTableRecordDelim ();
-	outTableTextField ('Zahl Suchergebnisse:', 'account_maxhits', null, 64, 3);
+	outTableTextField ($session, 'Zahl Suchergebnisse:', 'account_maxhits', null, 64, 3);
 	outTableRecordDelim ();
 	$names = array ('WikiSeite:', 'Übersicht', 'Einstellungen',
 			'Wikisuche', 'Letze Änderungen', 'StartSeite', 'Hilfe');
@@ -236,15 +237,15 @@ function baseAccount (&$session, $message) {
 		$ix = 0;
 	outTableCell ('Startseite:');
 	outTableDelim ();
-	guiComboBox ('account_startpageoffer', $names, $values, $ix);
+	outComboBox ($session, 'account_startpageoffer', $names, $values, $ix);
 	echo ' ';
-	guiTextField ("account_startpage", null, 45, 128);
+	outTextField ($session, 'account_startpage', null, 45, 128);
 	outTableDelimAndRecordEnd ();
 	modUserTableData ($session, $id);
 	outTableEnd();
 	modUserOwnData ($session, $id);
 	outNewline();
-	guiButton ("account_change", "&Auml;ndern");
+	outButton ($session, "account_change", "&Auml;ndern");
 	outNewline();
 	outNewline();
 	
@@ -257,21 +258,21 @@ function baseAccount (&$session, $message) {
 	$change = $new;
 	if ($change || $new){
 		guiLine ($session, 2);
-		outTable ();
-		outTableRecord();
-		outTableRecordEnd();
-		outTableTextField ('Name:', "account_user2", null, 32, 32);
+		outTableAndRecord ();
+		outTableTextField ($session, 'Name:', "account_user2", null, 32, 32);
 		outTableRecordDelim();
 		outTableCell ('');
 		outTableDelim();
 		if ($change)
-			guiButton ("account_other", "Benutzer wechseln");
+			outButton ($session, "account_other", "Benutzer wechseln");
 		if ($new){
-			echo " "; guiButton ("account_new", "Neu");
+			echo " "; 
+			outButton ($session, "account_new", "Neu");
 		}
 	}
 	outTableDelimEnd();
 	outTableAndRecordEnd();
+	outDivisionEnd ($session);
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
@@ -431,53 +432,55 @@ function baseEditPage (&$session, $mode,
 	}
 	echo '<form enctype="multipart/form-data" action="' . $session->fScriptURL
 		. '" method="post">' . "\n";
-	
-	guiHiddenField ('edit_pageid', $pageid);
-	guiHiddenField ('edit_textid', $textid);
-	guiHiddenField ('edit_textidpred', $textidpred);
-	guiHiddenField ('edit_changedat', $changedat);
-	guiHiddenField ('edit_changedby', $changedby);
+	outDivision ($session);	
+	outHiddenField ($session, 'edit_pageid', $pageid);
+	outHiddenField ($session, 'edit_textid', $textid);
+	outHiddenField ($session, 'edit_textidpred', $textidpred);
+	outHiddenField ($session, 'edit_changedat', $changedat);
+	outHiddenField ($session, 'edit_changedby', $changedby);
+	outDivisionEnd ($session);	
 
 	if (! empty ($message)){
-		outParagraph();
+		outParagraph($session);
 		outStrong (htmlentities ($message));
-		outParagraphEnd();
+		outParagraphEnd($session);
 	}
 	if (! empty ($message2)){
-		outParagraph();
+		outParagraph($session);
 		outStrong (htmlentities ($message2));
-		outParagraphEnd();
+		outParagraphEnd($session);
 	}
+	outDivision ($session);	
+	if ($mode != C_New)
+		outHiddenField ($session, 'edit_pagename', $pagename);
 	outTable ();
 	outTableRecordAndDelim();
 	outTable ();
 	if ($mode == C_New){
 		outTableRecord();
-		outTableTextField('Name:', 'edit_pagename', $pagename, 43, 64);
+		outTableTextField($session, 'Name:', 'edit_pagename', $pagename, 43, 64);
 		outTableRecordEnd();
-	} else {
-		guiHiddenField ('edit_pagename', $pagename);
 	}
 	outTableRecord();
 	if ($mode == C_New && $type == M_Undef)
-		outTableComboBox ('Typ', 'edit_mimetype', array (M_Wiki, M_HTML), null, 0);
+		outTableComboBox ($session, 'Typ', 'edit_mimetype', array (M_Wiki, M_HTML), null, 0);
 	else {
-		outTableRecord ();
-		outTableCell ('Typ:');
-		outTableCell ($mimetype);
-		guiHiddenField ('edit_mimetype', $mimetype);
-		outTableRecordEnd ();
+		outTableDelim ();
+		echo 'Typ:';
+		echo htmlentities ($mimetype);
+		outHiddenField ($session, 'edit_mimetype', $mimetype);
+		outTableDelimEnd ();
 	}
 	if ($mode == C_New){
 		$templates = dbColumnList ($session, T_Page, 'name', 
 			'name like ' . dbSqlString ($session, 'Vorlage%'));
 		if (count ($templates) > 0){
-			outTableRecord ();
+			outTableAndRecord ();
 			outTableCell ('Seitenvorlage:');
 			outTableDelim ();
-			guiComboBox('edit_template', $templates, null);
+			outComboBox($session, 'edit_template', $templates, null);
 			echo (' ');
-			guiButton ('edit_appendtemplate', 'Vorlage einkopieren');
+			outButton ($session, 'edit_appendtemplate', 'Vorlage einkopieren');
 			outTableDelimAndRecordEnd();
 		}
 	}
@@ -485,41 +488,42 @@ function baseEditPage (&$session, $mode,
 	outTableDelimAndRecordEnd();
 	outTableRecordAndDelim();
 	getTextareaSize ($session, $width, $height);
-	guiTextArea ('edit_content', $content, $width, $height);
+	outTextArea ($session, 'edit_content', $content, $width, $height);
 	outTableDelimAndRecordEnd();
 	outTableRecordAndDelim();
 	outTable (0, '100%');
 	outTableRecord();
-	outTableButton (null, 'edit_save', 'Speichern (fertig)');
+	outTableButton ($session, null, 'edit_save', 'Speichern (fertig)');
 	outTableDelim(AL_Justify);
-	guiButton ('edit_previewandsave', 'Zwischenspeichern');
+	outButton ($session, 'edit_previewandsave', 'Zwischenspeichern');
 	echo ' '; 
-	guiButton ('edit_preview', ' Vorschau');
+	outButton ($session, 'edit_preview', ' Vorschau');
 	outTableCellDelim();
-	guiButton ('edit_cancel', ' Verwerfen'); 
+	outButton ($session, 'edit_cancel', ' Verwerfen'); 
 	if (! $session->testFeature (FEATURE_UPLOAD_ALLOWED)){
 		echo ' Breite: '; 
-		guiTextField (U_TextAreaWidth, null, 3, 3);
+		outTextField ($session, U_TextAreaWidth, null, 3, 3);
 		echo ' H&ouml;he: ';
 	} else {	
 		outTableDelimEnd();
-		outTableTextField ('Breite:', 'textarea_width',null, 3, 3);
+		outTableTextField ($session, 'Breite:', 'textarea_width',null, 3, 3);
 		outTableRecordEnd();
 		outTableRecord();
 		outTableCell ('Bild einf&uuml;gen:');
-		guiHiddenField ('MAX_FILE_SIZE', 500000);
+		outHiddenField ($session, 'MAX_FILE_SIZE', MAX_UPLOAD_FILESIZE);
 		outTableDelim(AL_Justify);
-		guiFileField ('edit_upload_file');
+		outFileField ($session, TEXTFIELD_UPLOAD);
 		outTableDelimEnd();
-		outTableButton (null, 'edit_upload', 'Hochladen');
+		outTableButton ($session, null, 'edit_upload', 'Hochladen');
 		outTableCell ('H&ouml;he:');
 		outTableDelim();
 	} 
-	guiTextField (U_TextAreaHeight, null, 3, 3);
+	outTextField ($session, U_TextAreaHeight, null, 3, 3);
 	outTableAndRecordEnd();
 	outTableDelimEnd();
 	outTableAndRecordEnd();
 	
+	outDivisionEnd ($session);	
 	guiFinishForm ($session, $session);
 	outNewline();
 	guiStandardBodyEnd ($session,
@@ -544,11 +548,11 @@ function baseEditPageAnswerNoSave (&$session){
 					. dbTable ($session, T_Text) . ' where id=' . (0+$id)); 
 			}
 		} elseif (isset ($_POST ['edit_upload'])){
-			$name = $_POST ['edit_upload'];
 			$session->trace (TC_Gui1, 'guiEditPageSaveAnswer:');
-			$message = guiUploadFileAnswerUnique ($session, "/pic/",
-				null, 'edit_upload_file', $name);
-			$_POST ['edit_content'] .= "\n\nhttp:pic/$name\n\n";
+			$message = guiUploadFileAnswerUnique ($session, 'edit_upload', 
+				'/pic/', $name);
+			if ($message == null || getPos ($message, '+++') != 0)
+				$_POST ['edit_content'] .= "\n\nhttp:pic/$name\n\n";
 		}
 		baseEditPage ($session, C_LastMode, $message, null, $_POST ['edit_mimetype']);
 	}
@@ -651,19 +655,19 @@ function baseSearch (&$session, $message){
 	outTableAndRecord();
 	outTableCell ('Titel:');
 	outTableDelim();
-	guiTextField ('search_titletext', null, 32, 64);
-	echo " "; guiButton ('search_title', "Suchen");
+	outTextField ($session, 'search_titletext', null, 32, 64);
+	echo " "; outButton ($session, 'search_title', "Suchen");
 	outTableDelimAndRecordEnd();
 	outTableRecord();
 	outTableCell ('Beitrag:');
 	outTableDelim();
-	guiTextField ('search_bodytext', null, 32, 64);
-	echo " "; guiButton ('search_body', 'Suchen');
+	outTextField ($session, 'search_bodytext', null, 32, 64);
+	echo " "; outButton ($session, 'search_body', 'Suchen');
 	outTableDelimAndRecordEnd();
-	outTableTextField('Maximale Trefferzahl:', 'search_maxhits', null, 10, 10);
+	outTableTextField($session, 'Maximale Trefferzahl:', 'search_maxhits', null, 10, 10);
 	outTableAndRecordEnd();
 	guiFinishForm ($session, $session);
-	outParagraph ();
+	outParagraph ($session);
 	outStrong ('Hinweis:');
 	outNewline();
 	echo 'Vorl&auml;ufig nur ein Suchbegriff m&ouml;glich.';
@@ -693,7 +697,7 @@ function baseSearch (&$session, $message){
 	echo ' f&uuml;r ein Datei';
 	outStrong ('format');
 	echo '".',
-	outParagraphEnd();
+	outParagraphEnd($session);
 	guiStandardBodyEnd ($session, Th_SearchBodyEnd);
 }
 function baseSearchResults (&$session){
@@ -899,12 +903,12 @@ function baseLastChanges (&$session) {
 	if (! isset ($_POST ['last_days']) || $_POST ['last_days'] < 1)
 		$_POST ['last_days'] = 7;
 	guiStartForm ($session);
-	outParagraph ();
+	outParagraph ($session);
 	echo 'Zeitraum: die letzten ';
-	guiTextField ('last_days', $_POST ['last_days'], 3, 4);
+	outTextField ($session, 'last_days', $_POST ['last_days'], 3, 4);
 	echo ' Tage ';
-	guiButton ('last_refresh', 'Aktualisieren');
-	outParagraphEnd ();
+	outButton ($session, 'last_refresh', 'Aktualisieren');
+	outParagraphEnd ($session);
 	outTable ();
 
 	for ($day = 0; $day <= $_POST ['last_days']; $day++) {
@@ -962,8 +966,11 @@ function baseInfo (&$session) {
 	outTableCellStrong ('Gegenstand');
 	outTableCellStrong ('Version');
 	outTableRecordDelim ();
-	outTableCell ('PHP-Klasse:');
-	outTableCell ('PHP_ClassVersion');
+	outTableCell ('Basismodul:');
+	outTableCell (PHP_ModuleVersion);
+	outTableRecordDelim ();
+	outTableCell ('PHP-Klassen:');
+	outTableCell (PHP_ClassVersion);
 	outTableRecordDelim ();
 	outTableCell ('DB-Schema:');
 	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBScheme)));

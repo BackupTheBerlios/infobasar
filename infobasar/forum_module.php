@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum_module.php,v 1.4 2005/01/11 22:51:37 hamatoma Exp $
+// $Id: forum_module.php,v 1.5 2005/01/13 03:36:38 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -127,13 +127,13 @@ function baseForumSearch (&$session, $message){
 	guiParagraph ($session, 'Hinweis: vorl&auml;ufig nur ein Suchbegriff m&ouml;glich', false);
 	guiStartForm ($session, 'search', P_ForumSearch);
 	outTableAndRecord ();
-	outTableTextFieldButton ('Im Titel:', 'forum_titletext', null, 32, 64, 
+	outTableTextFieldButton ($session, 'Im Titel:', 'forum_titletext', null, 32, 64, 
 		' ', 'forum_title', 'Suchen');
 	outTableRecordDelim ();
-	outTableTextFieldButton ('Im Beitrag:', 'forum_bodytext', null, 32, 64,
+	outTableTextFieldButton ($session, 'Im Beitrag:', 'forum_bodytext', null, 32, 64,
 		' ', 'forum_body', 'Suchen');
 	outTableRecordDelim ();
-	outTableTextField ('Maximale Trefferzahl:', U_MaxHits, $maxhits, 10, 10);
+	outTableTextField ($session, 'Maximale Trefferzahl:', U_MaxHits, $maxhits, 10, 10);
 	outTableAndRecordEnd ();
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_SearchBodyEnd);
@@ -354,28 +354,28 @@ function basePosting (&$session, $message, $mode) {
 	getUserParam ($session, U_TextAreaWidth, $textarea_width);
 	getUserParam ($session, U_TextAreaHeight, $textarea_height);
 	guiStartForm ($session, 'thread');
-	guiHiddenField ('std_answer', 'j');
-	guiHiddenField ('last_pagename', null);
-	guiHiddenField ('forum_id',null);
-	guiHiddenField ('thread_id',null);
-	guiHiddenField ('posting_id', null);
-	guiHiddenField ('reference_id', null);
+	outHiddenField ($session, 'std_answer', 'j');
+	outHiddenField ($session, 'last_pagename', null);
+	outHiddenField ($session, 'forum_id',null);
+	outHiddenField ($session, 'thread_id',null);
+	outHiddenField ($session, 'posting_id', null);
+	outHiddenField ($session, 'reference_id', null);
 	echo "<table border=\"0\">\n<tr><td>Thema:</td><td>";
-	guiTextField ('posting_subject', null, $textarea_width, 64);
+	outTextField ($session, 'posting_subject', null, $textarea_width, 64);
 	echo "</td></tr>\n<tr><td>Text</td><td>";
-	guiTextArea ('posting_text', null, $textarea_width,
+	outButton ($session, 'posting_text', null, $textarea_width,
 		$textarea_height);
 	echo '</td></tr><tr><td></td><td style="text-align: right;">Eingabefeld: Breite: ';
-	guiTextField (U_TextAreaWidth, $textarea_width, 3, 3);
+	outTextField ($session, U_TextAreaWidth, $textarea_width, 3, 3);
 	echo " H&ouml;he: ";
-	guiTextField (U_TextAreaHeight, $textarea_height, 3, 3);
+	outTextField ($session, U_TextAreaHeight, $textarea_height, 3, 3);
 	echo "</td></tr>\n<tr><td></td><td>";
-	guiButton ('posting_preview', 'Vorschau');
+	outButton ($session, 'posting_preview', 'Vorschau');
 	echo ' | ';
 	if ($mode == C_New)
-		guiButton ('posting_insert', 'Eintragen');
+		outButton ($session, 'posting_insert', 'Eintragen');
 	else
-		guiButton ('posting_change', '&Auml;ndern');
+		outButton ($session, 'posting_change', '&Auml;ndern');
 	echo "</td></tr>\n</table>\n";
 
 	guiFinishForm ($session, $session);

@@ -1,5 +1,5 @@
 <?php
-// $Id: address_module.php,v 1.2 2005/01/10 19:33:48 hamatoma Exp $
+// $Id: address_module.php,v 1.3 2005/01/13 03:33:55 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -100,18 +100,18 @@ function addressEditBook (&$session, $message = null){
 	if ($message <> null)
 		guiParagraph($session, $message, false);
 	guiStartForm ($session, 'search', P_EditBook);
-	guiHiddenField ('book_id', $book_id);
+	outHiddenField ($session, 'book_id', $book_id);
 	echo "<table border=\"0\">\n<tr><td>Name:</td><td>";
-	guiTextField ('book_name', $name, 32, 64);
+	outTextField ($session, 'book_name', $name, 32, 64);
 	echo "</td></tr>\n<tr><td>Beschreibung:</td><td>";
-	guiTextField ('book_description', $description, 32, 64);
+	outTextField ($session, 'book_description', $description, 32, 64);
 	echo "</td></tr>\n<tr><td></td><td>";
-	guiButton ('book_change', 'Ändern');
+	outButton ($session, 'book_change', 'Ändern');
 	echo ' ';
-	guiButton ('book_new', 'Neu');
+	outButton ($session, 'book_new', 'Neu');
 	echo "</td></tr>\n<tr><td>Nächster DS:</td><td>";
 	$book_list = dbColumnList ($session, Tab_Book, 'name', '1');
-	guiComboBox ('book_next', $book_list, null);
+	outComboBox ($session, 'book_next', $book_list, null);
 	
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session, $session);
@@ -208,62 +208,62 @@ function addressEditCard (&$session, $message = null, $card_id = null){
 	if ($message <> null)
 		guiParagraph($session, $message, false);
 	guiStartForm ($session, 'search', P_EditCard);
-	guiHiddenField ('card_id', $card_id);
+	outHiddenField ($session, 'card_id', $card_id);
 	outTable (0);
 	outTableRecordCells ('Id:', $card_id);
 	outTableRecord();
-	outTableTextField ('Adressbücher:', 'card_books', $books, 34, 0);
+	outTableTextField ($session, 'Adressbücher:', 'card_books', $books, 34, 0);
 	outTableRecordDelim();
-	outTableTextField2 ('Vor-, Nachname:', 'card_firstname', $firstname,  16, 64,
+	outTableTextField2 ($session, 'Vor-, Nachname:', 'card_firstname', $firstname,  16, 64,
 		' ', 'card_lastname', $lastname, 16, 64);
 	outTableRecordEnd();
-	outTableTextField ('Spitzname:', 'card_nickname', $nickname,  16, 64);
+	outTableTextField ($session, 'Spitzname:', 'card_nickname', $nickname,  16, 64);
 	outTableRecordEnd();
 	outTableRecordCells ('Privat', ' ');
 	outTableRecord ();
-	outTableTextField2 ('EMail EMail2:',
+	outTableTextField2 ($session, 'EMail EMail2:',
 		'card_emailprivate', $emailprivate, 34, 128, ' ',
 		'card_emailprivate2', $emailprivate2, 34, 128);
 	outTableRecordDelim();
-	outTableTextField2 ('Telefon Telefon2:', 'card_phoneprivate', $phoneprivate, 34, 128,
+	outTableTextField2 ($session, 'Telefon Telefon2:', 'card_phoneprivate', $phoneprivate, 34, 128,
 		' ', 'card_phoneprivate2', $phoneprivate2, 34, 128);
 	outTableRecordDelim();
-	outTableTextField2 ('Mobil Fax:', 'card_mobileprivate', $mobileprivate, 34, 128,
+	outTableTextField2 ($session, 'Mobil Fax:', 'card_mobileprivate', $mobileprivate, 34, 128,
 		' ', 'card_faxprivate', $faxprivate, 34, 128);
 	outTableRecordDelim ();
 	outTableCell ('Land PLZ Ort Straße:');
 	outTableDelim();
-	guiTextField ('card_country', $country, 3, 64);
+	outTextField ($session, 'card_country', $country, 3, 64);
 	echo ' ';
-	guiTextField ('card_zip', $zip, 5, 12);
+	outTextField ($session, 'card_zip', $zip, 5, 12);
 	echo ' ';
-	guiTextField ('card_city', $city, 22, 64);
+	outTextField ($session, 'card_city', $city, 22, 64);
 	echo ' ';
-	guiTextField ('card_street', $street, 34, 128);
+	outTextField ($session, 'card_street', $street, 34, 128);
 	outTableDelimAndRecordEnd();
 	
 	outTableRecordCells ('Geschäftlich:', ' ');
 	outTableRecord ();
-	outTableTextField2 ('EMail: EMail2:',
+	outTableTextField2 ($session, 'EMail: EMail2:',
 		'card_emailoffice', $emailoffice, 34, 128, ' ',
 		'card_emailoffice2', $emailoffice2, 34, 128);
 	outTableRecordDelim();
-	outTableTextField2 ('Telefon Telefon2:', 'card_phoneoffice', $phoneoffice, 34, 128,
+	outTableTextField2 ($session, 'Telefon Telefon2:', 'card_phoneoffice', $phoneoffice, 34, 128,
 		' ', 'card_phoneoffice2', $phoneoffice2, 34, 128);
 	outTableRecordDelim();
-	outTableTextField2 ('Mobil Fax:', 'card_mobileoffice', $mobileoffice, 34, 128,
+	outTableTextField2 ($session, 'Mobil Fax:', 'card_mobileoffice', $mobileoffice, 34, 128,
 		' ', 'card_faxoffice', $faxoffice, 34, 128);
 	outTableRecordDelim();
-	outTableTextField ('Funktionen', 'card_functions', $functions, 34, 128);
+	outTableTextField ($session, 'Funktionen', 'card_functions', $functions, 34, 128);
 	outTableRecordDelim();
-	outTableTextArea ('Bemerkungen:', 'card_notes', $notes, 31, 4);
+	outTableTextArea ($session, 'Bemerkungen:', 'card_notes', $notes, 31, 4);
 	outTableRecordDelim ();
-	outTableButton2 (' ', 'card_change', 'Ändern', ' ', 'card_new', 'Neu');
+	outTableButton2 ($session, ' ', 'card_change', 'Ändern', ' ', 'card_new', 'Neu');
 	outTableRecordDelim();
-	outTableTextField ('Nächster DS (Id):', 'card_next', '', 8, 8);
+	outTableTextField ($session, 'Nächster DS (Id):', 'card_next', '', 8, 8);
 	outTableRecordEnd ();
 	outTableEnd ();
-	guiFinishForm ($session, $session);
+	guiFinishForm ($session);
 	guiStandardBodyEnd ($session, Th_AddressBodyEnd);
 }
 function addressCheckBooks (&$session, $books, &$id_list){
@@ -392,27 +392,27 @@ function addressShowCards (&$session, $message = null){
 	echo ' Auswahlkriterium: '; 
 	guiComboBox ('show_choice', $fields, null, null);
 	echo ' Suchmuster: ';
-	guiTextField ('show_pattern', null, 16);
+	outTextField ($session, 'show_pattern', null, 16);
 	echo ' ';
-	guiButton ('show_search', 'Suchen');
+	outButton ($session, 'show_search', 'Suchen');
 	guiHeadline ($session, 2, 'Ausgabefelder:');
-	guiCheckBox ('show_withname', 'Name');
+	outCheckBox ($session, 'show_withname', 'Name');
 	echo ' ';
-	guiCheckBox ('show_withprivate', 'Privat');
+	outCheckBox ($session, 'show_withprivate', 'Privat');
 	echo ' ';
-	guiCheckBox ('show_withoffice', 'Geschäftlich');
+	outCheckBox ($session, 'show_withoffice', 'Geschäftlich');
 	echo ' ';
-	guiCheckBox ('show_withphone', 'Telefon');
+	outCheckBox ($session, 'show_withphone', 'Telefon');
 	echo ' ';
-	guiCheckBox ('show_withemail', 'EMail');
+	outCheckBox ($session, 'show_withemail', 'EMail');
 	echo ' ';
-	guiCheckBox ('show_withaddress', 'Postadresse');
+	outCheckBox ($session, 'show_withaddress', 'Postadresse');
 	echo ' ';
-	guiCheckBox ('show_withfunction', 'Funktion');
+	outCheckBox ($session, 'show_withfunction', 'Funktion');
 	echo ' ';
-	guiCheckBox ('show_withnote', 'Notiz');
+	outCheckBox ($session, 'show_withnote', 'Notiz');
 	echo ' ';
-	guiCheckBox ('show_withdate', 'Datum');
+	outCheckBox ($session, 'show_withdate', 'Datum');
 	guiFinishForm ($session, $session);
 	if (isset ($_POST ['show_pattern'])){
 		$pattern = $_POST ['show_pattern'];

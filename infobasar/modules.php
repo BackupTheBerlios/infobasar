@@ -6,17 +6,16 @@ class ModuleForum {
 
 	function userTableData (&$session, $id){
 		$session->trace (TC_Gui3, 'forum.UserTableData');
-		$name = "forum";
+		$name = 'forum';
 		outTableRecord();
-		outNewline();
-		outTableCellStrong ('Modul ' . $name);
+		outTableCellStrong (TAG_NEWLINE . 'Modul ' . $name);
 		$rec = dbGetRecordById ($session, T_User, $id,
 			'postingsperpage,threadsperpage,postings');
 		outTableRecordDelim();
-		outTableTextField ('Beiträge je Seite:', 'forum_postingsperpage',
+		outTableTextField ($session, 'Beiträge je Seite:', 'forum_postingsperpage',
 			 $rec [0], 3, 3);
 		outTableRecordDelim();
-		outTableTextField ('Forumsinhalt: Themen je Seite:', 'forum_threadsperpage' , $rec [1], 3, 3);
+		outTableTextField ($session, 'Forumsinhalt: Themen je Seite:', 'forum_threadsperpage' , $rec [1], 3, 3);
 		outTableRecordEnd();
 		outTableRecordCells ('Bisher erstellte Forumsbeiträge:', $rec [2]);		
 	}

@@ -6,19 +6,18 @@ class ModuleForum {
 
 	function userTableData (&$session, $id){
 		$session->trace (TC_Gui3, 'forum.UserTableData');
-		$name = "forum";
-		echo '<tr><td><br><strong>Modul ';
-		echo $name;
-		echo ":</strong></td><td> </td</tr>\n"; 
-		echo '<tr><td>Beitr&auml;ge je Seite:</td><td>';
+		$name = 'forum';
+		outTableRecord();
+		outTableCellStrong (TAG_NEWLINE . 'Modul ' . $name);
 		$rec = dbGetRecordById ($session, T_User, $id,
 			'postingsperpage,threadsperpage,postings');
-		guiTextField ('forum_postingsperpage' , $rec [0], 3, 3);
-		echo "</td></tr><tr><td>Forumsinhalt: Themen je Seite:</td><td>\n";
-		guiTextField ('forum_threadsperpage' , $rec [1], 3, 3);
-		echo "</td></tr>\n<tr><td>Bisher erstellte Forumsbeiträge:</td><td>";
-		echo $rec [2];
-		echo "</td></tr>\n";
+		outTableRecordDelim();
+		outTableTextField ($session, 'Beiträge je Seite:', 'forum_postingsperpage',
+			 $rec [0], 3, 3);
+		outTableRecordDelim();
+		outTableTextField ($session, 'Forumsinhalt: Themen je Seite:', 'forum_threadsperpage' , $rec [1], 3, 3);
+		outTableRecordEnd();
+		outTableRecordCells ('Bisher erstellte Forumsbeiträge:', $rec [2]);		
 	}
 	function userOwnData (&$session, $id) {
 		$session->trace (TC_Gui3, 'forum.UserOwnData');
