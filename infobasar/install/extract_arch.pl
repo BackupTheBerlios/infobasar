@@ -1,8 +1,8 @@
 #!/usr/bin/perl
-# $Id: extract_arch.pl,v 1.2 2005/01/11 18:04:34 hamatoma Exp $
+# $Id: extract_arch.pl,v 1.3 2005/01/11 18:12:41 hamatoma Exp $
 # Entpacken eines Archivs
 #
-# Aufruf: extract_arch.pl <opts> archive
+# siehe help()
 #
 # Archivformat:
 # Kopf:
@@ -20,6 +20,7 @@ sub help {
 Aufruf: extract_arch.pl [<opts>] archive
 <opt>:
  -t             Nur Inhaltsverzeichnis ausgeben.
+ -o             Dateien ueberschreiben.
  -v             Meldungen ausgeben
  -vv            Techn. Details ausgeben.
 <filelist>      Listendatei mit einem Dateinamen pro Zeile, Kommentare mit #
@@ -33,6 +34,7 @@ my $s_magic = 'HaMaToMa';
 my $s_toc_only = 0;
 my $path_delim = $ENV{'PATH'} =~ m!/! ? "/" : "\\";
 #              12345678
+my $s_overwrite = 0;
 
 my $s_verbose = 0;
 
@@ -41,6 +43,8 @@ while ($ARGV[0] =~ /^-(.)(.*)/) {
 		$s_toc_only = 1;
 	} elsif ($1 eq "v") {
 		$s_verbose = 1 + length ($2);
+	} elsif ($1 eq "o") {
+		$s_overwrite = 1;
 	} else {
 		&help ("unbekannte Option: $1");
 	}
@@ -101,13 +105,17 @@ sub OneFile {
 	if ($file_type eq "d"){
 		&MkDir ($name) if $match;
 	} else {
-		if ($match){
+		my $write = $match && ! $s_toc_only;
+		if ($write){
 			my $dir = $name;
 			$dir =~ s!/[^/]+$!!;
 			&MkDir ($dir) unless -d $dir;
 		}
 		$name =~ s!/!\\!g if $path_delim ne "/";
-		my $write = $match && ! $s_toc_only;
+		if ($write && ! $s_overwrite && -f $name){
+			print "+++ $name existiert schon. Nicht extrahiert.\n";
+			$write = 0;
+		}
 		if ($write &&  ! open (OUT, ">$name")){
 			print "+++ $name: $!\n";
 			$write = 0;
