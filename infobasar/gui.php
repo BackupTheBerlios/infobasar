@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.6 2004/10/14 02:47:52 hamatoma Exp $
+// $Id: gui.php,v 1.7 2004/10/27 22:45:06 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -81,17 +81,24 @@ function guiUploadFile (&$session, $prefix, $lastpage = null,
 	guiFinishForm ($session);
 }
 function guiUploadFileAnswer (&$session, $destination = PATH_DELIM,
-		$filename = null, $button = 'upload_go', $file = 'upload_file'){
+		$new_target_name = null, $button = 'upload_go', $file = 'upload_file'){
+	global $_FILE;
+	$session->trace (TC_X, "guiUploadFileAnswer: dest: $destination new_name: $new_target_name name");
 	$message = null;
+	print_r ($_FILE);
+	$temp_name =  $_FILES[$file]['tmp_name'];
 	$name =  $_FILES[$file]['name'];
-	if (move_uploaded_file($_FILES[$file]['tmp_name'],
-		$session->fFileSystemBase . $destination . ($filename ? $filename : $name))) {
+	$target = $session->fFileSystemBase . $destination 
+			. ($new_target_name != null ? $new_target_name : $name);
+	$session->trace (TC_X, "guiUploadFileAnswer: name: $name target: $target");
+	if (move_uploaded_file($temp_name, $target)) {
 		$message = 'Datei erfolgreich hochgeladen: ' . $name;
-		if ($filename)
-			$message .= ' als ' . $filename;
+		if ($new_target_name != null)
+			$message .= ' als ' . $new_target_name;
 	} else {
-		$message = '+++ Problem beim Hochladen von ' . $name . ': ' 
-			. $_FILES['archive_uploadfile']['error'];
+		$message = "+++ Problem beim Hochladen von $name ($temp_name) -> $target: " 
+			. $_FILES[$file]['error'];
+		print_r ($_FILES);
 	}
 	return $message;
 }
