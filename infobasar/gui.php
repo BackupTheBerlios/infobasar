@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.8 2004/10/28 09:44:00 hamatoma Exp $
+// $Id: gui.php,v 1.9 2004/10/29 23:23:57 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -53,9 +53,11 @@ function guiCheckBox ($name, $text, $checked){
 		isset ($checked) && $checked ? "checked" : "");
 	echo htmlentities ($text) . " ";
 }
-function guiComboBox ($name, $options, $values, $ix_selected = 0) {
-	echo '<select name="' . $name . '" size="1' // . count ($options)
-		. "\">\n";
+function guiComboBox ($name, $options, $values = null, $ix_selected = 0) {
+	echo '<select name="';
+	echo $name;
+	echo '" size="1';
+	echo "\">\n";
 	foreach ($options as $ix => $text)
 		echo '<option' . ($ix == $ix_selected ? ' selected' : '')
 			. ($values ? ' value="' . $values[$ix] . '"' : '')
@@ -335,6 +337,11 @@ function guiFormatPage (&$session, $mime, $content) {
 	case M_Wiki: wikiToHtml ($session, $content); break;
 	case TT_HTML:
 	case M_HTML: echo $content; break;
+	case TT_Text:
+	case M_Text:
+		echo "<pre>\n";
+		textToHtml ($session, $content);
+		echo "\n</pre>";
 	default:
 		wikiToHtml ($session, $content); break;
 	}
