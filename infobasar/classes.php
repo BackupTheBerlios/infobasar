@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.13 2004/10/30 10:39:31 hamatoma Exp $
+// $Id: classes.php,v 1.14 2004/11/05 17:45:54 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -304,17 +304,18 @@ class Session {
 		#$this->fTraceFile = null;
 		$this->fTraceFlags
 			= 0 * (1 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
-			+ 1 * (1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3)
-			+ 1 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
+			+ 1 * (1 * TC_Gui1 + 2 * TC_Gui2 + 0 * TC_Gui3)
+			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
 			+ 0 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
 			+ 0 * TC_Layout1
-			+ 0 * (1 * TC_Update + 1 * TC_Insert + 1 * TC_Query)
+			+ 1 * (1 * TC_Update + 1 * TC_Insert + 0 * TC_Query)
 			+ 1 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 		$this->fTraceInFile = false;
+		$this->fTraceInFile = true;
 		$this->fTraceFile = "/tmp/trace.log";
 		$this->trace (TC_Init, "Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
 			. $this->fPageURL . "' ($pos) <== '" . $uri . "'");
