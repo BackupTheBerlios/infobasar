@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.2 2004/05/27 22:47:00 hamatoma Exp $
+// $Id: install.php,v 1.3 2004/05/31 23:20:46 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -144,7 +144,7 @@ $session->fTraceFlags = TC_Error + TC_Warning + TC_X;
 $session->setScriptBase();
 
 if (! isset ($inst_step))
-	$inst_step = 1;
+	$inst_step = 0;
 if (isset ($inst_next))
 	$inst_step++;
 elseif (isset ($inst_last))
@@ -164,16 +164,114 @@ case 3:
 case 4:
 	instExit ($session);
 	break;
-default:
+case 1:
 	if (isset ($config_save) || isset ($config_access) || isset ($config_createdb))
 		instConfigFileAnswer ($session);
 	else
 		instConfigFile ($session, null);
 	break;
+default:
+case 0:
+	if (isset ($archive_name))
+		instArchiveAnswer ($session);
+	else
+		instArchive ($session, null);
+	break;
 }
 exit (0);
 
 // -----------------------------------
+function instArchive (&$session, $message =  null) {
+	global $archive_dir;
+	$session->trace (TC_Init, 'instArchive');
+	guiHeader ($session, 'Schritt 0');
+	guiHeadline ($session, 2, 'Archiv');
+		
+	if (! empty ($message))
+		guiParagraph ($session, $message, false);
+	
+	instGetConfig ($session);
+	
+	if (empty ($archive_name))
+		$archive_name = $session->fFileSystemBase . PATH_DELIM . 'infobasar.hma';
+	$archive_exists = file_exists ($archive_name);
+	
+	guiStartForm ($session, 'Form');
+	guiHiddenField ('inst_step', 0);
+	guiHiddenField ('archive_name', $archive_name);
+	$path = $session->fFileSystemBase . PATH_DELIM;
+	if ($archive_dir == CHECKBOX_TRUE){
+		$dir = opendir ($path);
+		guiHeadline ($session, 3, "Verzeichnis auf dem Server");
+		echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
+		echo '<td><b>Gr&ouml;&szlig;e</b></td><td><b>Ge&auml;ndert am</b></td></tr>' . "\n";
+		while ($file = readdir ($dir)){
+			if ($file != '.' && $file != '..'){
+				$name = $path . $file;
+				echo '<tr><td>';
+				echo htmlentities ($file);
+				echo '</td><td>';
+				echo is_dir ($name) ? 'Verzeichnis' : filesize ($name);
+				echo '</td><td>';
+				echo date ("Y.m.d H:i:s", filemtime ($name));
+				echo '</td></tr>' . "\n";
+			}
+		}
+		echo '</table>' . "\n";
+		closedir ($dir);
+	}
+	$dir = opendir ($path);
+	guiHeadline ($session, 3, "Archive");
+	echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
+	echo '<td><b>Gr&ouml;&szlig;e</b></td><td><b>Ge&auml;ndert am</b></td>';
+	echo '<td><b>Aktion</b></td></tr>' . "\n";
+	$no = 0;
+	while ($file = readdir ($dir)){
+		if (preg_match ('/[\.]hma([.]gz)?$/', $file)){
+			$no++;
+			$name = $path . $file;
+			echo '<tr><td>';
+			echo htmlentities ($file);
+			echo '</td><td>';
+			echo filesize ($name);
+			echo '</td><td>';
+			echo date ("Y.m.d H:i:s", filemtime ($name));
+			echo '</td><td>';
+			guiHiddenField ('archive_file' . $no, $file);
+			guiButton ('archive_extract' . $no, 'Entpacken');
+			echo '</td><tr>' . "\n";
+		}
+	}
+	echo '</table>' . "\n";
+	
+	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen', $archive_dir);
+	echo ' ';
+	guiButton ('archive_show', 'Aktualisieren');
+	guiLine ($session, 2);
+	guiButton ('inst_next', 'weiter');
+	guiFinishForm ($session);
+	guiFinishBody ($session);
+}
+function instArchiveAnswer (&$session){
+	global $archive_dir, $archive_name, $HTTP_POST_VARS;
+	$session->trace (TC_Init, "instArchiveAnswer");
+	$message = null;
+	for ($no = 1; $no < 100; $no++){
+		$ref = 'archive_extract' . $no;
+		global $$ref;
+		if (isset ($$ref)){
+			$ref = 'archive_file' . $no;
+			$archive_name = $HTTP_POST_VARS[$ref];
+			if (! ($message = extractFromArchive ($session, $archive_name, false, "*")))
+				$message = "Archiv $archive_name wurde entpackt";
+			break;
+		}
+	}
+	
+	if (isset ($archive_extract)){
+	}
+	instArchive ($session, $message);
+}
 function instGetSqlFile (&$session){
 	return $session->fFileSystemBase . PATH_DELIM . 'infobasar_start.sql';
 }
@@ -181,6 +279,7 @@ function instConfigFile (&$session, $message =  null) {
 	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 	$session->trace (TC_Init, 'instConfigFile');
 	guiHeader ($session, 'Schritt 1');
+	
 	guiHeadline ($session, 2, 'Konfiguration der Datenbank');
 	
 	if (! empty ($message))
@@ -224,7 +323,8 @@ function instConfigFile (&$session, $message =  null) {
 		guiButton ('config_createdb', 'Datenbank ' . $db_name . ' erzeugen');
 	guiLine ($session, 2);
 	guiParagraph ($session, "DB-Definitiondatei $file " . ($sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
-
+	guiButton ('inst_last', 'zurück');
+	echo ' | ';
 	if ($sql_exists && $status == DB_EXISTS){
 		guiButton ('inst_next', 'weiter');
 	}
@@ -603,5 +703,95 @@ function instGetConfig (&$session){
 		}
 	}
 	fclose ($file);
+}
+function getArchiveHexValue (&$file, $width){
+	$hexvalue = fread ($file, $width);
+	if (! preg_match ('/[0-9a-fA-F]{' . $width . '}/', $hexvalue))
+		$rc = 0;
+	else
+		list ($rc) = sscanf ($hexvalue, "%x");
+	return $rc;
+}
+function getArchiveString (&$file, $width){
+	if ($width = getArchiveHexValue ($file, $width))
+		$rc = fread ($file, $width);
+	else
+		$rc = null;
+	return $rc;
+}
+function extractFromArchive (&$session, $archive, $compressed, $what){
+	$session->trace (TC_Util1, "extractFromArchive: $archive, $what");
+	$file = fopen ($compressed ? "compress.zlib://$archive" : $archive, "rb");
+	$rc = null;
+	if (! $file)
+		$rc = "extractFromArchive: Öffnen missglückt: $archive";
+	else {
+		if (! ($header = getArchiveString ($file, 2)) && ! $compressed){
+			fclose ($file);
+			$rc = extractFromArchive ($session, $archive, true, $what);
+		} else {
+			if ($header != "HamatomaArchive\t0100")
+				$rc = "Formatfehler in $archive: '$header'";
+			else {
+# <hex4_name_size> <filename_with_path> Pfadnamen mit '/' als Trenner!
+# <hex8_sec_since_1970)> <char_file_type> <char3_res_1>
+# <hex2_info_size> <hex8_rights>
+# <hex8_data_size> <file_data>
+# <hex8_magic> <hex16_checksum>
+				while (true){
+					$name = getArchiveString ($file, 4);
+					if ($name == '')
+						break;
+					$time = getArchiveHexValue ($file, 8);
+					$type = fread ($file, 4);
+					$rights = getArchiveString ($file, 2);
+					$size = getArchiveHexValue ($file, 8);
+					$node = strrchr ($name, '/');
+					if (! $node){
+						$path = $session->fFileSystemBase;
+						$node = PATH_DELIM . $name;
+					} else {
+						$path = $session->fFileSystemBase . PATH_DELIM 
+							. substr ($name, 0, strlen ($node));
+						if (! isdir ($path))
+							if (!mkdir ($path)){
+								$rc = "mkdir $path missglückt";
+								break;
+							}
+					}
+					$path .= $node;
+					if (! ($out = fopen ($path, "wb")))
+						$rc = "öffnen missglückt: $path";
+					else {
+						$bytes = 0;
+						$blocksize = $size < 1024 ? $size : 1024;
+						while ($bytes <= $size) {
+							$data = fread ($file, $blocksize);
+							fwrite ($out, $data);
+							$bytes += $blocksize;
+							if ($size == $bytes)
+								break;
+							else if ($size - $bytes < $blocksize)
+								$blocksize = $size - $bytes;
+						}
+						fclose ($out);
+						$session->trace (TC_X, "bytes: $bytes");
+						$magic = fread ($file, 8);
+						if ($magic != "HaMaToMa"){
+							$rc = "Magic nicht gefunden: $magic statt HaMaToMa";
+							break;
+						}
+						$checksum = fread ($file, 16);
+						if ($checksum != '0000000000000000'){
+							$rc = "Prüfsumme: $checksum";
+							break;
+						}
+					}
+				}
+			}
+			fclose ($file);
+		}
+	}
+	return $rc;
 }
 ?>
