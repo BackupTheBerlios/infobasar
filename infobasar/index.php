@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.20 2004/12/26 12:48:30 hamatoma Exp $
+// $Id: index.php,v 1.21 2004/12/31 01:34:06 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -1126,7 +1126,7 @@ function baseInfo (&$session) {
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
 }
 // --------------------
-function diffTest ($session) {
+function diffTest (&$session) {
 	$x2 = "a\nx\ny\nz\nb";
 	$x1 = "a\nb";
 	$x2 = "x\ny\nb";

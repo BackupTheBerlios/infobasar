@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.12 2004/12/05 18:42:24 hamatoma Exp $
+// $Id: db_mysql.php,v 1.13 2004/12/31 01:32:01 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -409,7 +409,7 @@ function dbIdListOfThreadPage (&$session, $thread_id, $page) {
 	}
 	return $rc;
 }
-function dbPageOfPosting ($session, $thread_id, $posting_id) {
+function dbPageOfPosting (&$session, $thread_id, $posting_id) {
 	$session->trace (TC_Db2 + TC_Query, "dbPageOfPosting: $thread_id, $posting_id");
 	$count = dbSingleValue ($session, 'select count(id) from '
 		. dbTable ($session, T_Posting)
@@ -417,7 +417,7 @@ function dbPageOfPosting ($session, $thread_id, $posting_id) {
 	$rc = 1 + floor ($count / $session->fUserPostingsPerPage);
 	return $rc;
 }
-function dbThreadPageNumber ($session, $thread_id) {
+function dbThreadPageNumber (&$session, $thread_id) {
 	$session->trace (TC_Db3 + TC_Query, "dbThreadPageNumber: $thread_id");
 	$count = 1 + dbSingleValue ($session, 'select count(id) from '
 		. dbTable ($session, T_Posting) . " where top=$thread_id");

@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.3 2004/12/22 18:58:25 hamatoma Exp $
+// $Id: forum.php,v 1.4 2004/12/31 01:32:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -237,7 +237,7 @@ function baseForumSearchAnswer (&$session){
 	}
 	guiForumSearch ($session, $message);
 }
-function baseForumHome ($session) {
+function baseForumHome (&$session) {
 	$session->trace (TC_Gui1, 'baseForumHome');
 	guiStandardHeader ($session, 'Forenübersicht', Th_StandardHeader,
 		Th_StandardBodyStart);

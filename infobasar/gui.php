@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.17 2004/12/26 12:47:12 hamatoma Exp $
+// $Id: gui.php,v 1.18 2004/12/31 01:33:35 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -249,7 +249,7 @@ function outTableComboBox ($prefix, $name, $names, $values, $index_selected,
 	guiComboBox ($name, $names, $values, $index_selected);
 	echo TAG_TABLE_DELIM_END; 
 }
-function outTableInternLink ($session, $prefix, $link, $text = null, $module = null, 
+function outTableInternLink (&$session, $prefix, $link, $text = null, $module = null, 
 		$halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
@@ -257,7 +257,7 @@ function outTableInternLink ($session, $prefix, $link, $text = null, $module = n
 	guiInternLink ($session, $link, $text, $module);
 	echo TAG_TABLE_DELIM_END; 
 }
-function outTableRecordInternLink ($session, $suffix, $link, $text = null, $module = null, 
+function outTableRecordInternLink (&$session, $suffix, $link, $text = null, $module = null, 
 		$halignment = AL_None){
 	outTableDelim ($halignment);
 	guiInternLink ($session, $link, $text, $module);
@@ -266,7 +266,7 @@ function outTableRecordInternLink ($session, $suffix, $link, $text = null, $modu
 		outTableCell ($suffix);
 	echo TAG_TABLE_RECORD_END;
 }
-function outTableAuthorLink ($session, $author){
+function outTableAuthorLink (&$session, $author){
 	echo TAG_TABLE_DELIM;
 	guiAuthorLink ($session, $author);
 	echo TAG_TABLE_DELIM_END;
@@ -356,7 +356,7 @@ function guiCheckBox ($name, $text, $checked = false){
 		isset ($checked) && $checked ? TAGAV_CHECKED : "");
 	echo htmlentities ($text) . " ";
 }
-function guiChecked($session, $name){
+function guiChecked(&$session, $name){
 	return isset ($_POST [$name]) && $_POST [$name] == C_CHECKBOX_TRUE;
 }
 function guiComboBox ($name, $options, $values = null, $ix_selected = 0) {
@@ -461,8 +461,6 @@ function guiLine (&$session, $width = 2) {
 }
 function guiFinishBody (&$session, $param_no){
 	$session->trace (TC_Gui2, 'guiFinishBody');
-	if ($session->fPreformated)
-		$session->trace (TC_Warning, PREFIX_Warning . '[/code] fehlt');
 	if (! empty ($param_no)
 		&& ($text = guiParam ($session, $param_no, null)) != null
 		&& ! empty ($text))
@@ -648,7 +646,7 @@ function guiStandardBodyEnd (&$session, $pos) {
 	echo TAG_BODY_HTML_END;
 }
 // --------------------------------
-function guiBacklinks ($session, $page_name) {
+function guiBacklinks (&$session, $page_name) {
 	$session->trace (TC_Gui1, 'pluginBacklinks');
 	$name = $page_name;
 	$condition = '(text like ' . dbSqlString ($session, '%' . $name . '%');
@@ -732,7 +730,7 @@ function guiThreadPageLink (&$session, $thread_id, $page_no, $text) {
 	guiInternLink ($session, P_Thread . '?action=' . A_ShowThread
 		. '&thread_id=' . $thread_id . '&page_no=' . $page_no, $text);
 }
-function guiPageLinks ($session, $prefix, $page_no, $pages){
+function guiPageLinks (&$session, $prefix, $page_no, $pages){
 	$session->trace (TC_Gui2, 'guiPageLinks');
 	if ($pages != 1) {
 		if ($page_no == 1)
