@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.7 2004/10/07 14:27:58 hamatoma Exp $
+// $Id: util.php,v 1.8 2004/10/11 11:36:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -146,7 +146,7 @@ define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		// Klammer 4: Protokollname
 		. '|(https?|ftp):\/\/\S+'
 		// (Nicht-)Wiki-Name
-		. '|!?' . CC_WikiName_Uppercase . CC_WikiName_Lowercase . '+[' . CC_WikiName_Uppercase
+		. '|!?' . CC_WikiName_Uppercase . '+' . CC_WikiName_Lowercase . '+[' . CC_WikiName_Uppercase
 			. CC_WikiName . '*'
 		// Genau ein Zeichen:
 		. '|\[.\]'
@@ -154,7 +154,7 @@ define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		. '|\[Newline\]'	// TM_Newline
 		// Wiki-Verweis
 		// Klammer 5: Wikiname Klammer 6: Text
-		# '|\[([A-Za-zÄÖÜääöü][-äöüßa-zA-Z_0-9]+)\s*([^]]*)?\]'
+		# '|\[([A-Za-zÄÖÜääöü]+[-äöüßa-zA-Z_0-9]+)\s*([^]]*)?\]'
 		. '|\[(' . CC_WikiName . '+)\s*([^]]*)?\]'
 		// Plugin
 		// Klammer 7: Plugin-Name Klammer 8: Parameter
