@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.19 2005/01/11 00:19:22 hamatoma Exp $
+// $Id: db_mysql.php,v 1.20 2005/01/14 03:09:58 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -268,7 +268,6 @@ function dbCheckUser (&$session, $user, $code) {
 		$session->setUserData ($fields [0], $user, $fields [3], $fields [4], $fields [5], 
 			$fields [6], $fields [7], $fields [8],
 			$fields [9]);
-		$session->setMacros ();
 		break;
 	}
 	$session->trace (TC_Db1, 'dbCheckUser: rc="' . $rc . '"');
@@ -311,7 +310,6 @@ function dbCheckSession (&$session) {
 					$fields[7], $fields [8]);
 				if (! empty ($_SERVER ['PATH_INFO']))
 					$session->setPageName (substr ($_SERVER ['PATH_INFO'], 1));
-				$session->setMacros ();
 				$rc = null;
 			}
 		}
@@ -493,15 +491,6 @@ function dbForumName (&$session, $id, $with_link) {
 		$rc = guiInternLinkString ($session, P_Forum . '?forum_id=' . $id, $rc);
 	return $rc;
 }
-function dbReadMacros (&$session, $theme, $prefix, &$key, &$values) {
-	$session->trace (TC_Db1 + TC_Query, "dbReadMacros: $theme");
-	if ($row =dbFirstRecord ($session, 'select name, value from ' . dbTable ($session, T_Macro)
-		. ' where theme=' . (0+$theme)))
-		do {
-			array_push ($key,   "/\\" . $prefix . '_' . $row [0] . "\\" . Macro_Suffix . '/');
-			array_push ($values, addcslashes ($row [1], '$\\'));
-		} while ($row = dbNextRecord ($session));
-}
 function dbGetThemes (&$session, &$names, &$numbers){
 	$names = array ();
 	$numbers = array ();
@@ -511,5 +500,28 @@ function dbGetThemes (&$session, &$names, &$numbers){
 			array_push ($names, $row [1]);
 			array_push ($numbers, $row [0]);
 		} while ($row = dbNextRecord ($session));
+}
+function dbGetAndStoreMacroPattern (&$session){
+	$session->trace (TC_Db2, 'dbGetAndStoreMacroPattern:');
+	$theme = $session->fUserTheme;
+	$pattern = dbGetParam ($session, $theme, Th_MacroPattern);
+	if (empty ($pattern)){
+		$row = dbFirstRecord ($session,
+				'select name from ' . dbTable ($session, T_Macro)
+				. ' where theme=' . Theme_All . ' or theme=' . ($theme+0));
+		while ($row) {
+			$new = '|' . $row [0];
+			if (getPos ($pattern, $new . '|') < 0)
+				$pattern .= $new;
+			$row = dbNextRecord ($session);
+		}
+		$id = dbSingleValue ($session, 'select id from ' . dbTable ($session, T_Param)
+			. ' where theme=' . (0+$theme) . ' and pos=' . Th_MacroPattern);
+		if ($id > 0){
+			dbUpdateRaw ($session, T_Param, $id, 'text=' . dbSqlString ($session, $pattern));
+			$session->trace (TC_Db1, "dbGetAndStoreMacroPattern: Id: $id Th: $theme P: $pattern");
+		}
+	}
+	return $pattern;
 }
 ?>
