@@ -1,21 +1,7 @@
-# phpMyAdmin SQL Dump
-# version 2.5.5-rc1
-# http://www.phpmyadmin.net
-#
-# Host: localhost
-# Erstellungszeit: 27. April 2004 um 12:42
-# Server Version: 4.0.17
-# PHP-Version: 4.3.3
-# 
-# Datenbank: `infobasar`
-# 
-
-# --------------------------------------------------------
-
-#
-# Tabellenstruktur für Tabelle `infobasar_param`
-#
-
+# param_std.sql
+# $Id: param_std.sql,v 1.2 2004/05/26 22:24:38 hamatoma Exp $
+# Inhalt der Tabellen infobasar_macro und infobasar_param
+# Diese Werte legen die mandantenspezifischen Daten fest, z.B. die Designs.
 
 delete from infobasar_macro where 1;
 
@@ -116,15 +102,13 @@ INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Suche Body-Start',
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Standard Body-Abschnitt-Ende', 11, 153, '[M_T_BodyEndWikiText]');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten-Head-Abschnitt', 11, 161, '<title>[PageName] (Wiki)</title></head>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten Body-Abschnitt-Anfang', 11, 162, '<body><table border="0" width="100%"><tr><td>[M_S_ButtonEdit]\r\n[M_S_ButtonInfo]\r\n[M_S_ButtonSearch]r\n[M_S_ButtonLastChanges]</td>[M_T_TopRightButtons]\r\n<h1>[PageName]</h1>\r\n<div class="wikitext">');
-INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten Body-Abschnitt-Ende', 11, 163, '</div>\r\n[M_S_PageLastChange]<br>\r\n<hr style="width: 100%; height: 2px;">\r\n<table width="100%" border="0"><tr><td>[M_S_ButtonEdit]\r\n[M_S_ButtonEdit]\r\n[M_S_ButtonNewWiki]\r\n</td><td style="text-align: right;">\r\n[M_S_ButtonOverview]</a>\r\n[M_S_ButtonSearch]\r\n[M_S_ButtonLastChanges]\r\n[M_S_ButtonUserStart]\r\n</td><tr></table>');
+INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Seiten Body-Abschnitt-Ende', 11, 163, '</div>\r\n[M_S_PageLastChange]<br>\r\n<hr style="width: 100%; height: 2px;">\r\n<table width="100%" border="0"><tr><td>[M_S_ButtonEdit]\r\n[M_S_ButtonPageInfo]\r\n[M_S_ButtonNewWiki]\r\n</td><td style="text-align: right;">\r\n[M_S_ButtonOverview]</a>\r\n[M_S_ButtonSearch]\r\n[M_S_ButtonLastChanges]\r\n[M_S_ButtonUserStart]\r\n</td><tr></table>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Änderung Head-Abschnitt', 11, 164, '<title>[PageTitle]</title></head>');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Änderung Body-Abschnitt-Anfang', 11, 165, '<body><table border="0" width="100%"><tr><td><a class="wikiaction" href="[PageName]?action=show">Verwerfen</a>\r\n[M_S_ButtonPageInfo]\r\n[M_S_ButtonSearch]</td><[M_T_TopRightButtons]\r\n<h1>[PageTitle]</h1>\r\n<div class="wikiedit">');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Änderung Body-Abschnitt-Ende', 11, 166, '</div>[M_S_HintFormating]');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Vorschau-Anfang', 11, 167, '</div><h1>Vorschau auf [PageName]</h1><br><div class="wikipreview">');
 INSERT INTO infobasar_param (name, theme, pos, text) VALUES ('Wiki-Vorschau-Ende', 11, 168, '</div><br/><h1>[PageTitle]</h1><br><div class="wikiedit">');
-
-/* Lokal */
-# Lokaler Infobasar
+# Kids Infobasar
 /*
 DB-Schema
 DB-Basisinhalt-Version
@@ -138,27 +122,18 @@ ScriptBase
 update infobasar_param set text='1.0 (2004.04.15)' where theme=1 and pos=10;
 update infobasar_param set text='1.0 (2004.04.15)' where theme=1 and pos=11;
 update infobasar_param set text='Design-PHPWiki 1.0 (2004.04.15)' where theme=1 and pos=12;
-update infobasar_param set text='Matobas lokaler InfoBasar' where theme=1 and pos=13;
+update infobasar_param set text='tdh Arbeitsgruppe M&uuml;nchen' where theme=1 and pos=13;
 update infobasar_param set text='10:Neuling;25:Interessent;50:strebsam;75:fleißig;100:Spezialist;150:Profi;200:Meister;500:Guru' where theme=1 and pos=14;
-update infobasar_param set text='/infobasar/index.php/' where theme=1 and pos=15;
+update infobasar_param set text='/index.php/' where theme=1 and pos=15;
 /*
 Login-Head-Bodystart
 Login-Body-End
 */
-update infobasar_param set text='<title>Anmeldung fu&uml;r den InfoBasar</title>\r\n<body>\r\n<h1>Willkommen beim lokalen Infobasar</h1>' where theme=10 and pos=131;
-update infobasar_param set text='<p><small>Passwort vergessen? EMail an matoba AT gmx DOT de</small></p>' where pos=132;
+update infobasar_param set text='<title>Anmeldung fu&uml;r den InfoBasar</title>\r\n<body>\r\n<h1>Willkommen beim Infobasar von terre des hommes Arbeitsgruppe M&uuml;nchen</h1>' where theme=10 and pos=131;
+update infobasar_param set text='<p><small>Passwort vergessen? EMail an den "Informationsminister"</small></p>' where pos=132;
 /*
 CSS-Datei
 */
-update infobasar_param set text='/infobasar/css/phpwiki.css' where theme=11 and pos=102;
+update infobasar_param set text='/css/phpwiki.css' where theme=11 and pos=102;
 
 #insert into `infobasar_param` (theme,pos,text) values (1,15,'/index.php')
-
-CREATE TABLE `infobasar_macro` (
-  `id` INT NOT NULL AUTO_INCREMENT, 
-  `theme` INT NOT NULL, 
-  `name` VARCHAR(64) NOT NULL, 
-  `value` TEXT,
-  `description` VARCHAR (255),
-  PRIMARY KEY (`id`)
-);
