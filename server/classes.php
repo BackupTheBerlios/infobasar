@@ -1,8 +1,8 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.1 2004/05/23 22:10:22 hamatoma Exp $
+// $Id: classes.php,v 1.2 2004/05/26 22:14:24 hamatoma Exp $
 
-define ('PHP_Version', '0.4 (2004.05.15)');
+define ('PHP_Version', '0.5.1 (2004.05.27)');
 
 define ('PATH_DELIM', '/');
 
