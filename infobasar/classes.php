@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.26 2005/01/07 21:12:30 hamatoma Exp $
+// $Id: classes.php,v 1.27 2005/01/08 13:08:13 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -90,18 +90,25 @@ define ('Param_ForumModule', 16);
 
 define ('Theme_Standard', 10);
 
-// Modulunabhängig je Design: 100-119
-define ('C_MinIdForThemes', 100);
-define ('Th_ThemeName', 100);
-define ('Th_Header', 101);
-define ('Th_CSSFile', 102);
+// Parameter zur Oberflaechengestaltung:
+define ('C_ParamGUIBase', 100);
+
+// Modul- und Design-unabhängig: 100-149
+define ('C_MinAllModulesAllDesigns', 100);
+define ('C_MaxAllModulesAllDesigns', 150);
+
+define ('Th_StandardHeader', 101);
+define ('Th_StandardBodyStart', 102);
+define ('Th_StandardBodyEnd', 103);
+define ('Th_LoginHeader', 105);
+define ('Th_LoginBodyEnd', 106);
 
 
-define ('Th_StandardHeader', 111); // aus 141
-define ('Th_StandardBodyStart', 112);
-define ('Th_StandardBodyEnd', 113);
-define ('Th_LoginHeader', 114);
-define ('Th_LoginBodyEnd', 115);
+// Modulunabhängig je Design: 150-199
+define ('C_MinIdForThemes', 150); // von 100
+define ('Th_ThemeName', 150);
+define ('Th_Header', 151);
+define ('Th_CSSFile', 152);
 
 
 // Macros:
