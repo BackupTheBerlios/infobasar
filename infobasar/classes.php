@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.15 2004/11/08 13:28:16 hamatoma Exp $
+// $Id: classes.php,v 1.16 2004/12/05 18:41:57 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -45,6 +45,9 @@ define ('RExpr_Not_A_WikiName', '/[^' . CL_WikiName . ']/');
 // Module
 define ('Module_Base', 'index.php');
 define ('Module_Forum', 'forum.php');
+
+// DB-Typen:
+define ('DB_MySQL', 'MySQL');
 
 // Table names:
 define ('T_Page', 'page');
@@ -297,7 +300,7 @@ class Session {
 		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $this->fScriptFile);
 	
 		// MySQL
-		if ($db_type == 'MySQL') {
+		if ($db_type == DB_Mysql) {
 			// MySQL server host:
 			$this->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 		} // mysql
