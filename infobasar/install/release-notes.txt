@@ -1,12 +1,19 @@
 Release Notes (Hamatomas Infobasar)
-$Id: release-notes.txt,v 1.4 2005/01/11 23:33:21 hamatoma Exp $
+$Id: release-notes.txt,v 1.5 2005/01/13 03:58:28 hamatoma Exp $
 
 Installation: siehe installation.txt
 Dokumentation der Änderungen: siehe changelog.txt
 
-Version 0.7.1 vom 2005.01.10
+Version 0.7.2 vom 2005.01.13
+Update: keine DB-Änderungen: Ueberschreiben der *.php genuegt.
+Ab jetzt db/design_start.sql für Initialisierung der Design-Daten vorhanden.
+Wikiseiten validiertes HTML.
+Forum noch Baustelle
+
+Version 0.7.1 vom 2005.01.11
 Fehlerbereinigung.
 extract_arch.pl gestattet jetzt, Archive ohne PHP zu entpacken.
+
 Version 0.7.0 vom 2005.01.10
 Bei Updates: 
 Einspielen von db/sql_update-0.6_0.7.sql und std_pages.wiki (mit install.php)

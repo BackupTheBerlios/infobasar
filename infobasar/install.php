@@ -1,5 +1,5 @@
 <?php
-// $Id: install.php,v 1.23 2005/01/13 03:38:05 hamatoma Exp $
+// $Id: install.php,v 1.24 2005/01/13 03:58:28 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -13,7 +13,7 @@ $start_time = microtime ();
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
-define ('Install_Version', '0.7.1 (2005.01.11)');
+define ('Install_Version', '0.7.2 (2005.01.13)');
 define ('PATH_DELIM', '/');
 define ('REXPR_PATH_DELIM', '\/');
 define ('C_ScriptName', 'install.php');
