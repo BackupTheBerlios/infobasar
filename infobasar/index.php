@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.16 2004/11/06 00:01:07 hamatoma Exp $
+// $Id: index.php,v 1.17 2004/11/08 13:34:53 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -545,18 +545,21 @@ function baseEditPage (&$session, $mode,
 		$mimetype = $_POST ['edit_mimetype'];
 		$textidpred = $_POST ['edit_textidpred'];
 	}
-	$session->setPageData ($pagename, $changedat, $changedby);
+	$session->setPageData (empty ($pagename) ? 'Neue Seite' : $pagename,
+		 $changedat, $changedby);
 	getUserParam ($session, U_TextAreaWidth, $textarea_width);
 	getUserParam ($session, U_TextAreaHeight, $textarea_height);
+	if ($pageid <= 0)
+		$mode = C_New;
 	if ($mode == C_New)
-		$header =  "Neue Seite";
+		$header =  empty ($pagename) ? 'Neue Seite' : $pagename . ' (Neu)';
 	else 
 		$header = $pagename . ' (in Bearbeitung)';
 	if ($mimetype == M_Wiki)
 		guiStandardHeader ($session, $header, Th_EditHeaderWiki, Th_EditStartWiki);
 	else
 		guiStandardHeader ($session, $header, Th_EditHeaderHTML, Th_EditStartHTML);
-	if (isset ($_POST ['edit_preview'])) {
+	if (isset ($_POST ['edit_preview']) || isset ($_POST ['edit_previewandsave'])) {
 		echo guiParam ($session, Th_PreviewStart, '<h1>Vorschau von '
 			. $session->fPageName
 			. '</h1><p>Warnung: Der Text ist noch nicht gesichert!</p>');
@@ -566,7 +569,6 @@ function baseEditPage (&$session, $mode,
 	echo '<form enctype="multipart/form-data" action="' . $session->fScriptURL
 		. '" method="post">' . "\n";
 	
-	guiHiddenField ('edit_pagename', $pagename);
 	guiHiddenField ('edit_pageid', $pageid);
 	guiHiddenField ('edit_textid', $textid);
 	guiHiddenField ('edit_textidpred', $textidpred);
@@ -588,17 +590,14 @@ function baseEditPage (&$session, $mode,
 	outTable ();
 	if ($mode == C_New){
 		outTableRecord();
-		outTableTextField('Name:', 'edit_name', $name, 43, 64);
+		outTableTextField('Name:', 'edit_pagename', $pagename, 43, 64);
 		outTableRecordEnd();
 	} else {
-		if (! isset ($_POST ['edit_name'])){
-			guiHiddenField ('edit_name', $changedby);
-		}
-		
+		guiHiddenField ('edit_pagename', $pagename);
 	}
 	outTableRecord();
 	if ($mode == C_New && $type == M_Undef)
-		outTableComboBox ('Typ', 'edit_mimetype', array (M_Wiki, M_HTML), null);
+		outTableComboBox ('Typ', 'edit_mimetype', array (M_Wiki, M_HTML), null, 0);
 	else {
 		outTableRecord ();
 		outTableCell ('Typ:');
@@ -680,6 +679,7 @@ function baseEditPageAnswerNoSave (&$session){
 					. dbTable ($session, T_Text) . ' where id=' . (0+$id)); 
 			}
 		} elseif (isset ($_POST ['edit_upload'])){
+			$name = $_POST ['edit_upload'];
 			$session->trace (TC_Gui1, 'guiEditPageSaveAnswer:');
 			$message = guiUploadFileAnswerUnique ($session, "/pic/",
 				null, 'edit_upload_file', $name);
@@ -699,8 +699,10 @@ function baseEditPageAnswerSave (&$session)
 	$content = $_POST ['edit_content'];
 	$len = strlen ($content);
 	$content = textAreaToWiki ($session, $content);
+	$session->trace (TC_Gui1, 'baseEditPageAnswerSave: ' . $content);
 	if (! isset ($_POST ['edit_pageid']) || $_POST ['edit_pageid'] <= 0) {
-		$_POST ['edit_name'] = normalizeWikiName ($session, $_POST ['edit_name']);
+		$session->trace (TC_Gui1, 'baseEditPageAnswerSave-2: ' . $_POST ['edit_pagename']);
+		$_POST ['edit_pagename'] = normalizeWikiName ($session, $_POST ['edit_pagename']);
 		$content = extractHtmlBody ($content);
 		if (empty ($_POST ['edit_pagename']))
 			$message = '+++ kein Seitenname angegeben';
@@ -724,11 +726,12 @@ function baseEditPageAnswerSave (&$session)
 				'page,type,text,createdby,createdat,changedat',
 				$page+0
 				. "," . dbSqlString ($session, mimeToTextType ($_POST ['edit_mimetype']))
-				. ',' . dbSqlString ($session, $_POST ['edit_content'])
+				. ',' . dbSqlString ($session, $content)
 				. ',' . dbSqlString ($session, $session->fUserName)
 				. ',now(),now()');
+			$session->trace (TC_Gui1, 'baseEditPageAnswerSave-3: ' . $page . '/' . $_POST ['edit_textid']);
 		}
-		$message2 = $len == strlen ($_POST ['edit_content'])
+		$message2 = $len == strlen ($content)
 			? '' : 'Es wurde der Rumpf (body) extrahiert.';
 	} else {
 		$pageid =  $_POST ['edit_pageid'];
@@ -748,15 +751,15 @@ function baseEditPageAnswerSave (&$session)
 						mimeToTextType ($_POST ['edit_mimetype']))
 					. ",$date,$date," 
 					. dbSqlString ($session, $session->fUserName)
-					. ',' . dbSqlString ($session, $_POST ['edit_content']));
+					. ',' . dbSqlString ($session, $content));
 			dbUpdate ($session, T_Text, $new_textid, 'replacedby=' 
 				. $_POST ['edit_textid'] . ',');
 		} else {
 			dbUpdate ($session, T_Text, $_POST ['edit_textid'],
-				"text=" . dbSqlString ($session, $_POST ['edit_content']) . ",");
+				"text=" . dbSqlString ($session, $content) . ",");
 		}
 	}
-	if (isset ($_POST ['edit_save']))
+	if (isset ($_POST ['edit_save']) && $message == null)
 		guiShowPageById ($session, $_POST ['edit_pageid'], 0);
 	else
 		baseEditPage ($session, C_Auto, $message, $message2);
@@ -861,7 +864,7 @@ function baseSearchResults (&$session){
 			outTableRecordEnd();
 			while ($row) {
 				outTableRecord();
-				outTableInternLink($session, null, $session, 
+				outTableInternLink($session, null, 
 						encodeWikiName ($session, $row[0]), $row[0]);
 				outTableCell (textTypeToMime($row[1]));
 				outTableRecordEnd();
@@ -915,9 +918,9 @@ function baseCallStandardPage (&$session) {
 	case P_Logout:	baseLogout ($session); break;
 	case P_Account: baseAccount ($session, ''); break;
 	case P_Home: 	baseHome ($session); break;
-	case P_NewPage:	baseAlterPage ($session, C_New, '', ''); break;
-	case P_NewWiki:	baseAlterPage ($session, C_New, '', '', M_Wiki); break;
-	case P_ModifyPage: baseAlterPage ($session, C_Change, '', ''); break;
+	case P_NewPage:	baseEditPage ($session, C_New); break;
+	case P_NewWiki:	baseEditPage ($session, C_New, null, null, M_Wiki); break;
+	case P_ModifyPage: EditPage ($session, C_Change); break;
 	case '!test': baseTest ($session); break;
 	case '!form': baseFormTest ($session); break;
 	case P_Search:	baseSearch ($session, ''); break;
