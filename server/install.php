@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.5 2004/06/10 19:45:32 hamatoma Exp $
+// $Id: install.php,v 1.6 2004/06/13 10:56:21 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -10,6 +10,7 @@ Näheres siehe Datei LICENCE.
 InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
+$start_time = microtime ();
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -75,9 +76,11 @@ class Session {
 
 	var $fTraceFlags;
 
-	function Config (){
+	function Session ($start_time){
 		$this->fDbServer = 'localhost';
 		$this->fOutputState = 'Init';
+		$this->fTraceFlags = 0;
+		$this->fStartTime = getMicroTime ($this, $start_time);
 	}
 	function trace($class, $msg){
 		if (($class & $this->fTraceFlags) != 0){
@@ -127,8 +130,7 @@ class Session {
 		$this->fPageChangedBy = $by;
 	}
 };
-$session = new Session ();
-$session->Config();
+$session = new Session ($start_time);
 
 $session->fTraceFlags
 	= 0 * TC_Util1 + 1 * TC_Util2 + 0 * TC_Util1
