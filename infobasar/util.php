@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.8 2004/10/11 11:36:30 hamatoma Exp $
+// $Id: util.php,v 1.9 2004/10/13 22:23:01 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -423,6 +423,16 @@ function setRelativeURL (&$session, $url){
 	header("Location: http://" . $_SERVER['HTTP_HOST']
 	. dirname($_SERVER['PHP_SELF'])                    
 	. "/" . $relative_url);
+}
+function putHeaderBase(&$session){
+	global $_SERVER;
+	$uri = $session->fScriptBase . "index.php/!login"; 
+	if ($uri != $_SERVER['REQUEST_URI'])
+		header ('Location: http://' . $_SERVER['HTTP_HOST'] . $uri);
+	echo '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">';
+	echo "\n<html>\n<body>";
+	echo "\nBitte erst anmelden: <a href=\"" . $uri . "\">\n";
+	echo "</body>\n</html>\n";
 }
 
 ?>
