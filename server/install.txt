@@ -1,0 +1,6 @@
+Installation von Infobasar
+$Id: install.txt,v 1.1 2004/05/24 00:13:03 hamatoma Exp $
+
+1) Kopieren der Dateien *.php und *.sql und der Verzeichnisse css und pic auf den Webserver, z.B. mittels FTP
+2) Starten des Scriptes install.php mit einem Browser
+3) Der Rest der Installation läuft interaktiv ab: Konfiguration der DB, Einspielen der Initialdaten und Löschen der Installationsdateien.
