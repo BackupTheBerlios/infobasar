@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.23 2005/01/06 17:02:33 hamatoma Exp $
+// $Id: util.php,v 1.24 2005/01/07 21:15:57 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -110,11 +110,11 @@ function normWikiName (&$session, &$name){
 		return true;
 	}
 }
-function writeExternLink ($link, $text, &$status) {
+function writeExternLink ($link, $text, $link_only, &$status) {
 	$status->fSession->trace (TC_Util2, "writeExternLink: link: $link");
 	if ($text == '')
 		$text = $link;
-	if (preg_match ('/\.(jpg|png|gif|bmp)$/i', $link)) {
+	if (! $link_only && preg_match ('/\.(jpe?g|png|gif|bmp)$/i', $link)) {
 		if (preg_match ('(http:[^/])i', $link)){
 			$link = "http:" . $status->fSession->fScriptBase . "/" . substr ($link, 5);
 			$status->fSession->trace (TC_Util2, "writeExternLink: link: $link");
@@ -163,11 +163,11 @@ function showArray (&$array, $start){
 }
 		// Klammer 1: Vorspann Klammer 2: Muster, das evt. ersetzt wird
 		// unterstrichen, (kursiv, fett, kursiv-fett),
-define ('IB_REG_EXPR', '/^(.*?)(__|\'{2,4}'
+define ('IB_REG_EXPR', '/^(.*?)(__|\'{2,4}|%%%'
 		//  Extern-Link Klammer 3: Text
 		. '|\[\[[a-z]+:[^]|]+(\|[^\]]*)?\]\]'
 		// http-Link, ftp-Link, mailto: // Klammer 4: Potokoll
-		. '|(https?:\/\/|ftp:\/\/|mailto:\w+@)\S+'
+		. '|(https?:|ftp:|mailto:\w+@)\S+'
 		// (Nicht-)Wiki-Name: Klammer 5: Wiki-Name
 		. '|!?(' . CC_WikiName_Uppercase . '+' . CC_WikiName_Lowercase . '+' . CC_WikiName_Uppercase
 			. CC_WikiName . '*)'
@@ -177,7 +177,7 @@ define ('IB_REG_EXPR', '/^(.*?)(__|\'{2,4}'
 		. '|\[(newline|\/?big|\/?small|\/?su[pb]erscript|\/?teletype|\/?tt|\/?su[bp])\]'	// TM_Newline
 		// Wiki-Verweis
 		// Klammer 7: Wikiname Klammer 8: |Text
-		. '|\["(' . CC_WikiName . '+)"(\|[^]]*)?\]'
+		. '|\["(' . CC_WikiName . '+)"(\|[^\]]*)?\]'
 		// Plugin
 		// Klammer 9: Plugin-Name Klammer 10: Parameter
 		. '|<\?plugin\s+(\w+)(.*)\?>'
@@ -206,21 +206,27 @@ function writeText ($body, &$status) {
 				if (strpos ($match [2], "hex(") == 1){
 					for ($ii = 5; $ii < strlen ($match [2]) - 1; $ii++)
 						printf ("%02x ", ord (substr ($match [2], $ii, 1)));
-				} elseif (strlen ($match [2]) == 5 && getPos ($match [2], '[[') == 0)
-					echo substr ($match [2], 2, 1);
-				else
+				} elseif (getPos ($match [2], '[[') == 0){
+					if (strlen ($match [2]) == 5)
+						echo substr ($match [2], 2, 1);
+					else
+						writeExternLink (substr ($match [2], 2, strlen ($match [2]) - 4), 
+							null, true, $status);
+				} else
 					echo htmlentities ($match [2]);
 			}
 		} else {
-			if ($args == 9 &&  $match [7] != '')
+			if ($args == 9)
 				writeWikiName ($match [7], substr ($match [8], 1), $status);
+			elseif ($args == 8)
+				writeWikiName ($match [7], null, $status);
 			elseif ($args == 5) // Direkter Verweis (ohne [[]]:
-				writeExternLink ($match [2], null, $status);
+				writeExternLink ($match [2], null, false, $status);
 			elseif ($args == 4){ // [[Verweis]]: 
 				$len = strpos ($match [2], '|') - 2;
 				writeExternLink (substr ($match [2], 2, $len > 0 ? $len : strlen ($match [2])),
-					substr ($match [3], 1), $status);
-			} elseif ($args == 6 && $match [5] != '')
+					substr ($match [3], 1), true, $status);
+			} elseif ($args == 6) // (Nicht-)Wikiname
 				writeWikiName ($match [2], null, $status);
 			elseif ($args == 7){
 				switch ($match [6]){
