@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.7 2004/06/06 23:56:51 hamatoma Exp $
+// $Id: gui.php,v 1.8 2004/06/08 11:28:08 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -255,14 +255,14 @@ function guiStandardHeader (&$session, $title, $pos_header, $pos_body){
 		echo '<head><title>' . htmlentities ($title) . '</title></head>' . "\n";
 	else
 		echo $session->replaceMacrosNoHTML ($header);
-	if ($pos_body) {
+	if ($pos_body > 0) {
 		$header = dbGetText ($session, $pos_body);
 		if (empty ($header))
 			$pos_body = null;
 		else
 			echo $session->replaceMacrosNoHTML ($header);
 	}
-	if (! $pos_body)
+	if (! $pos_body && $pos_body != 0)
 		echo '<body><h1>' . $title . '</h1>' . "\n";
 }
 function guiStandardBodyEnd (&$session, $pos) {
@@ -782,7 +782,6 @@ function guiAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 		$textarea_height, $alterpage_content, $alterpage_mime,
 		$alterpage_lastmode, $alterpage_preview;
 	$session->trace (TC_Gui1, 'guiAlterPage');
-	$session->trace (TC_X, 'guiAlterPage:' . $alterpage_mime);
 	if ($type != M_Undef)
 		$alterpage_mime = $type;
 	if ($alterpage_mime == M_Wiki)
@@ -885,11 +884,12 @@ function guiAlterPageAnswer (&$session, $mode){
 			'name,type,createdat,changedat,readgroup,writegroup',
 			dbSqlString ($session, $alterpage_name) .',' . dbSqlString ($session, $alterpage_mime)
 			. ',now(),now(),' . $read_group . ',' . $write_group);
-		dbInsert ($session, T_Text, 'page,type,text,createdby',
+		dbInsert ($session, T_Text, 'page,type,text,createdby,createdat,changedat',
 			$page
 			. "," . dbSqlString ($session, $alterpage_mime)
 			. ',' . dbSqlString ($session, $alterpage_content)
-			. ',' . dbSqlString ($session, $session->fUserName));
+			. ',' . dbSqlString ($session, $session->fUserName)
+			. ',now(),now()');
 	}
 	$message2 = $len == strlen ($alterpage_content)
 		? '' : 'Es wurde der Rumpf (body) extrahiert.';
@@ -1465,7 +1465,7 @@ function guiCustomStart (&$session) {
 function guiPageInfo (&$session) {
 	$pagename = $session->fPageName;
 	$headline = 'Info über ' . $pagename;
-	guiStandardHeader ($session, $headline, Th_InfoHeader, null);
+	guiStandardHeader ($session, $headline, Th_InfoHeader, 0);
 	$page = dbGetRecordByClause ($session, T_Page,
 		'id,createdat,type,readgroup,writegroup', 'name='
 		. dbSqlString ($session, $pagename));
@@ -1541,8 +1541,14 @@ function guiLastChanges (&$session) {
 	global $last_days;
 	$headline = 'Übersicht über die letzten Änderungen';
 	guiStandardHeader ($session, $headline, Th_StandardHeader, Th_StandardBodyStart);
-	if (! isset ($last_days))
+	if (! isset ($last_days) || $last_days < 1)
 		$last_days = 7;
+	guiStartForm ($session);
+	echo '<p>Zeitraum: die letzten ';
+	guiTextField ('last_days', $last_days, 3, 4);
+	echo ' Tage ';
+	guiButton ('last_refresh', 'Aktualisieren');
+	echo '</p>' . "\n";
 	echo '<table border="0">' . "\n";
 
 	for ($day = 0; $day <= $last_days; $day++) {
