@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.14 2004/11/08 13:30:13 hamatoma Exp $
+// $Id: gui.php,v 1.15 2004/11/10 00:44:31 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -91,18 +91,18 @@ function outTableRecord(){
 	echo '<tr>';
 }
 function tagTableAndRecord($border = 0){
-	return tagTable ($border) . tagTableRecord();
+	return tagTable ($border) . '<tr>';
 }
 function outTableAndRecord($border = 0){
 	outTable ($border);
-	outTableRecord();
+	echo '<tr>';
 }
 function tagTableAndRecordEnd(){
-	return tagTableRecordEnd() . tagTableEnd();
+	return tagTableRecordEnd() . '</table>';
 }
 function outTableAndRecordEnd(){
 	outTableRecordEnd();
-	outTableEnd();
+	echo "</table>\n";
 }
 function tagTableRecordEnd(){
 	return '</tr>';
@@ -126,10 +126,10 @@ function outTableDelim($halignment = AL_None){
 	}
 }
 function tagTableRecordAndDelim($halignment = AL_None){
-	return tagTableRecord . tagTableDelim ($halignment);
+	return '<tr>' . tagTableDelim ($halignment);
 }
 function outTableRecordAndDelim($halignment = AL_None){
-	outTableRecord ();
+	echo '<tr>';
 	outTableDelim ($halignment);
 }
 function tagTableDelimEnd(){
@@ -162,10 +162,10 @@ function tagTableCell($text, $halignment = AL_None){
 function outTableCell($text, $halignment = AL_None){
 	outTableDelim ($halignment);
 	echo $text;
-	outTableDelimEnd();
+	echo '</td>';
 }
 function outTableRecordCells ($text1, $text2, $text3 = null){
-	outTableRecord ();
+	echo '<tr>';
 	outTableCell ($text1);
 	outTableCell ($text2);
 	if ($text3 != null)
@@ -177,7 +177,7 @@ function outTableCellStrong($text, $halignment = AL_None){
 	echo '<strong>';
 	echo $text;
 	echo '</strong>';
-	outTableDelimEnd();
+	echo '</td>';
 }
 function tagTableCellConvert($text, $halignment = AL_None){
 	return tagTableDelim ($halignment) . htmlentities ($text) . tagTableDelimEnd();
@@ -185,7 +185,7 @@ function tagTableCellConvert($text, $halignment = AL_None){
 function outTableCellConvert($text, $halignment = AL_None){
 	outTableDelim ($halignment);
 	echo htmlentities ($text);
-	outTableDelimEnd();
+	echo '</td>';
 }
 function outTableTextField ($prefix, $name, $value, $size, 
 		$maxsize=0, $halignment = AL_None){
@@ -193,32 +193,34 @@ function outTableTextField ($prefix, $name, $value, $size,
 		outTableCell ($prefix);
 	outTableDelim($halignment);
 	guiTextField ($name, $value, $size, $maxsize);
-	outTableDelimEnd();
+	echo '</td>';
 }
 function outTableTextField2 ($prefix, $name1, $value1, $size1, 
 		$maxsize1, $delim, $name2, $value2, $size2, $maxsize2 = 0){
 	if ($prefix != null)
 		outTableCell ($prefix);
-	outTableDelim();
+	echo '<td>';
 	guiTextField ($name1, $value1, $size1, $maxsize1);
 	echo $delim;
 	guiTextField ($name2, $value2, $size2, $maxsize2);
-	outTableDelimEnd();
+	echo '</td>';
 }
 function outTablePasswordfield ($prefix, $name, $value, $size, 
 		$maxsize=0, $halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
 	outTableDelim($halignment);
+	if ($value == null)
+		$value = isset ($_POST [$name]) ? $_POST [$name] : '' ;
 	guiPasswordField ($name, $value, $size, $maxsize);
-	outTableDelimEnd();
+	echo '</td>';
 }
 function outTableButton ($prefix, $name, $text, $halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiButton ($name, $text);
-	outTableDelimEnd(); 
+	echo '</td>'; 
 }
 function outTableButton2 ($prefix, $name1, $text1, $delim, $name2, $text2, 
 		$halignment = AL_None){
@@ -228,21 +230,22 @@ function outTableButton2 ($prefix, $name1, $text1, $delim, $name2, $text2,
 	guiButton ($name1, $text1);
 	echo $delim;
 	guiButton ($name2, $text2);
-	outTableDelimEnd(); 
+	echo '</td>'; 
 }
-function outTableCheckBox ($prefix, $name, $text, $selected, $halignment = AL_None){
+function outTableCheckBox ($prefix, $name, $text, $selected = null, $halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiCheckBox ($name, $text, $selected);
-	outTableDelimEnd(); 
+	echo '</td>'; 
 }
-function outTableComboBox ($prefix, $name, $names, $values, $index, $halignment = AL_None){
+function outTableComboBox ($prefix, $name, $names, $values, $index_selected,
+		$halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
-	guiComboBox ($name, $names, $values, $index);
-	outTableDelimEnd(); 
+	guiComboBox ($name, $names, $values, $index_selected);
+	echo '</td>'; 
 }
 function outTableInternLink ($session, $prefix, $link, $text = null, $module = null, 
 		$halignment = AL_None){
@@ -250,19 +253,19 @@ function outTableInternLink ($session, $prefix, $link, $text = null, $module = n
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiInternLink ($session, $link, $text, $module);
-	outTableDelimEnd(); 
+	echo '</td>'; 
 }
 function outTableAuthorLink ($session, $author){
-	outTableDelim();
+	echo '<td>';
 	guiAuthorLink ($session, $author);
-	outTableDelimEnd();
+	echo '</td>';
 }
 function outTableTextArea ($prefix, $name, $content, $width, $height){
 	if ($prefix != null)
 		outTableCell ($prefix);
-	outTableDelim();
+	echo '<td>';
 	guiTextArea ($name, $content, $width, $height);
-	outTableDelimEnd();
+	echo '</td>';
 }
 
 // --- Allgemeine Funktionen --------------
@@ -287,6 +290,8 @@ function guiHiddenField ($name, $text) {
 	guiField ($name, "hidden", $text, 0, 0, null);
 }
 function guiTextField ($name, $text, $size, $maxlength){
+	if ($text == null)
+		$text = isset ($_POST [$name]) ? $_POST [$name] : "";
 	guiField ($name, "text", $text, $size, $maxlength, null);
 }
 function guiPasswordField ($name, $text, $size, $maxlength){
@@ -308,7 +313,9 @@ function guiRadioButton ($name, $text, $checked){
 	guiField ($name, "radio", $text, 0, 0,
 		isset ($checked) && $checked ? "checked" : "");
 }
-function guiCheckBox ($name, $text, $checked){
+function guiCheckBox ($name, $text, $checked = false){
+	if ($checked == null)
+		$checked = isset ($_POST [$name]) && $_POST [$name] == C_CHECKBOX_TRUE;
 	guiField ($name, "checkbox", C_CHECKBOX_TRUE, 0, 0,
 		isset ($checked) && $checked ? "checked" : "");
 	echo htmlentities ($text) . " ";
@@ -318,6 +325,9 @@ function guiComboBox ($name, $options, $values = null, $ix_selected = 0) {
 	echo $name;
 	echo '" size="1';
 	echo "\">\n";
+	if ($ix_selected == null)
+		$ix_selected = ! isset ($_POST [$name]) 
+			? -1 : indexOf ($options, $_POST [$name]); 
 	foreach ($options as $ix => $text)
 		echo '<option' . ($ix == $ix_selected ? ' selected' : '')
 			. ($values ? ' value="' . $values[$ix] . '"' : '')
