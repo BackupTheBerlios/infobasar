@@ -43,7 +43,7 @@ class ModuleForum {
 	}
 	function overview(&$session){
 		$session->trace (TC_Gui3, 'forum.overview');
-		echo "<tr><td><br><strong>Modul forum:</strong></td>\n<td> </td></tr><tr><td>";
+		echo "<tr><td><br><strong>Modul Foren:</strong></td>\n<td> </td></tr><tr><td>";
 		guiInternLink ($session, 'forumhome', 'Forenübersicht', 'forum');
 		echo "</td><td>Auflistung der existierenden Foren</td></tr>\n";
 		echo '<tr><td>';
@@ -51,73 +51,84 @@ class ModuleForum {
 		echo "</td><td>Suche in den Foren</td></tr>\n";
 	}
 } // class module_forum
+class ModuleAddress {
 
-// ModuleFunction: InitModules
+	function userTableData (&$session, $id){
+		$session->trace (TC_Gui3, 'address.UserTableData');
+	}
+	function userOwnData (&$session, $id) {
+		$session->trace (TC_Gui3, 'address.UserOwnData');
+	}
+	function userCheckData (&$session){
+		$session->trace (TC_Gui3, 'address.UserCheckData');
+		return null;
+	}
+	function userStoreData (&$session, $isnew, $id){
+		$session->trace (TC_Gui3, 'address.UserStoreData');
+	}
+	function userGetData (&$session){
+		$session->trace (TC_Gui3, 'address.UserGetData');
+	}
+	function overview(&$session){
+		$session->trace (TC_Gui3, 'address.overview');
+		echo "<tr><td><br><strong>Modul Adressen:</strong></td>\n<td> </td></tr><tr><td>";
+		guiInternLink ($session, 'editbook', 'Adressbücher', 'address');
+		echo "</td><td>Adressbuch erstellen oder ändern</td></tr>\n";
+		echo '<tr><td>';
+		guiInternLink ($session, 'editcard', 'Adresskarte', 'address');
+		echo "</td><td>Adresse erstellen/ändern</td></tr>\n";
+	}
+} // class module_forum
+// EndOfClasses
+
 function InitModules(&$session){
 	if ($session->fModules == null){
 		$session->fModules = array ();
-		// ModuleLoop:
-		// $session->fModules ["[Module]"] = new [Module]Forum ();
+		# ModuleLoop:
+		# $session->fModules ["[Module]"] = new Module[Module] ();
 		$session->fModules ["forum"] = new ModuleForum ();
+		$session->fModules ["address"] = new ModuleAddress ();
 		// EndLoop
 	}
 }
-// EndOfClasses
 
-// ModuleFunction: modUserTableData
 function modUserTableData(&$session, $uid){
 	InitModules($session);
-	// ModuleLoop:
-	// $session->fModules ["[Module]"]->userTableData ($session);
-	$session->fModules ["forum"]->userTableData ($session, $uid);
-	// EndLoop
+	foreach ($session->fModules as $name => $module)
+		$module->userTableData ($session, $uid);
 }
-// ModuleFunction: modUserOwnData
 function modUserOwnData(&$session, $uid){
 	InitModules($session);
-	// ModuleLoop:
-	// $session->fModules ["[Module]"]->userOwnData ($session, $uid);
-	$session->fModules ["forum"]->userOwnData ($session, $uid);
-	// EndLoop
+	foreach ($session->fModules as $name => $module)
+		$module->userOwnData ($session, $uid);
 }
-// ModuleFunction: modUserCheckData
 function modUserCheckData (&$session, $isnew, $id){
 	$rc = "";
 	InitModules($session);
-	// ModuleLoop:
-	// $msg = $session->fModules ["[Module]"]->userCheckData ($session, $isnew, $id);
-	// if ($msg != null)
-	// 	$rc .= textToHtml ($msg) . "<br>\n";
-	$msg = $session->fModules ["forum"]->userCheckData ($session, $isnew, $id);
-	if ($msg != null)
-		$rc .= textToHtml ($msg) . "<br>\n";
-	// EndLoop
+	foreach ($session->fModules as $name => $module){
+		$msg = $module->userCheckData ($session, $isnew, $id);
+		if ($msg != null)
+			$rc .= textToHtml ($msg) . "<br>\n";
+	}
 	return empty ($rc) ? null : $rc;
 }
-// ModuleFunction: modUserStoreData
 function modUserStoreData (&$session, $isnew, $uid){
 	$rc = "";
 	InitModules($session);
-	// ModuleLoop:
-	// $session->fModules ["[Module]"]->userStoreData ($session, $isnew, $id);
-	$msg = $session->fModules ["forum"]->userStoreData ($session, $isnew, $uid);
-	// EndLoop
+	foreach ($session->fModules as $name => $module)
+		$msg = $module->userStoreData ($session, $isnew, $uid);
 	return $rc;
 }
-// ModuleFunction: modUserGetData
 function modUserGetData(&$session){
 	InitModules($session);
-	// ModuleLoop:
-	// $session->fModules ["[Module]"]->userGetData ($session);
-	$session->fModules ["forum"]->userGetData ($session);
-	// EndLoop
+	foreach ($session->fModules as $name => $module)
+		$module->userGetData ($session);
 }
-// ModuleFunction: modOverview
 function modOverview(&$session){
 	InitModules($session);
-	// ModuleLoop:
-	// $session->fModules ["[Module]"]->overview ($session);
-	$session->fModules ["forum"]->overview ($session);
-	// EndLoop
+	foreach ($session->fModules as $name => $module){
+		$session->trace (TC_X, 'modOverview: ' . $name);
+		$module->overview ($session);
+	}
 }
 ?>
