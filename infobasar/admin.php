@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.7 2004/10/28 09:41:41 hamatoma Exp $
+// $Id: admin.php,v 1.8 2004/10/28 21:13:56 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.5 (2004.09.21)');
+define ('PHP_ModuleVersion', '0.6.5.3 (2004.10.28)');
 
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
@@ -42,6 +42,7 @@ define ('P_ImportPages', 'importpages');
 define ('P_Options', 'options');
 define ('P_PHPInfo', 'info');
 define ('P_Rename', 'rename');
+define ('P_ShowUsers', 'showusers');
 // Dateinamen
 define ('FN_PageExport', 'exp_pages.wiki');
 
@@ -78,6 +79,7 @@ if (! empty ($rc)) {
 		break;
 	case P_Options: admOptions ($session, null); break;
 	case P_Rename: admRename ($session, null); break;
+	case P_ShowUsers: admShowUsers ($session, null); break;
 	case P_PHPInfo: admInfo ($session); break;
 	default:
 		if (substr ($session->fPageName, 0, 1) == ".")
@@ -123,6 +125,7 @@ function admStandardLinkString(&$session, $page){
 	case P_Backup: $header = 'Datensicherung'; break;
 	case P_Options: $header = 'Einstellungen'; break;
 	case P_Rename: $header = 'Umbenennen'; break;
+	case P_ShowUsers: $header = 'Benutzerübersicht'; break;
 	case P_PHPInfo: $header = 'PHP-Info'; break;
 	default: $header = null; break;
 	}
@@ -210,6 +213,7 @@ function admHome (&$session){
 	guiParagraph ($session, admStandardLinkString ($session, P_ExportPages), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_ImportPages), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Rename), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_ShowUsers), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Backup), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Options), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Login), false);
@@ -1022,6 +1026,19 @@ function admAnswerRename (&$session){
 	}
 	admRename ($session, $message);
 }
+function admShowUsers (&$session, $message){
+	$session->trace (TC_Gui1, 'admShowUsers');
+	guiStandardHeader ($session, 'Alle Benutzer', Th_StandardHeader, Th_StandardBodyStart);
+	if (! empty ($message))
+		guiParagraph ($session, $message, false);
+
+	guiStartForm ($session, 'Form', P_ShowUsers);
+	dbPrintTable ($session, 'Select id,name,email,theme,startpage from ' . dbTable ($session, T_User)
+		. ' where 1', array ("Id", "Name", "EMail", "Design", "Startseite"), 0);
+	guiFinishForm ($session);
+	guiFinishBody ($session, null);
+}
+
 function addSystemMessage (&$session, $message){
 	echo "nicht implementiert: addSystemMessage()<br>\n";
 }
