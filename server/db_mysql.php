@@ -1,6 +1,15 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.3 2004/05/26 22:17:43 hamatoma Exp $
+// $Id: db_mysql.php,v 1.4 2004/05/27 22:43:20 hamatoma Exp $
+/*
+Diese Datei ist Teil von InfoBasar.
+Copyright 2004 hamatoma@gmx.de München
+InfoBasar ist freie Software. Du kannst es weitergeben oder verändern
+unter den Bedingungen der GNU General Public Licence.
+Näheres siehe Datei LICENCE.
+InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
+der Funktionalität.
+*/
 
 function dbOpen (&$session) {
 	$session->trace (TC_Db1, 'dbOpen');
@@ -194,7 +203,7 @@ function dbStringToBool (&$session, $value) {
 }
 
 function dbCheckUser (&$session, $user, $code) {
-	global $session_user, $login_user;
+	global $session_user;
 	$session->trace (TC_Db1, 'dbCheckUser');
 	$uid = dbUserId ($session, $user);
 	if (! $uid)
@@ -214,7 +223,7 @@ function dbCheckUser (&$session, $user, $code) {
 		}
 	} // $count != 0
 	switch ($rc) {
-	case 1: $rc = "Nicht definiert: $login_user"; break;
+	case 1: $rc = "Nicht definiert: $user"; break;
 	case 2: $rc = "Passwort nicht korrekt!"; break;
 	case 3: $rc = "Benutzer gesperrt!"; break;
 	default:
