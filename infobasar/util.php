@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.14 2004/10/30 23:55:10 hamatoma Exp $
+// $Id: util.php,v 1.15 2004/11/10 00:46:24 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -75,6 +75,12 @@ function findTextInLine ($body, $tofind, $count) {
 		}
 	}
 	return $rc;
+}
+function indexOf ($array, $value){
+	$ix = -1;
+	for ($ii = 0; $ix < 0 && $ii < count ($array); $ii++)
+		if ($array [$ii] == $value)
+			$ix = $ii;
 }
 function encodeWikiName (&$session, $name){
 	$session->trace (TC_Util2, 'encodeWikiName');
