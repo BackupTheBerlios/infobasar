@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.21 2005/01/05 05:28:25 hamatoma Exp $
+// $Id: util.php,v 1.22 2005/01/06 12:05:02 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -13,7 +13,6 @@ der Funktionalität.
 
 function panicExit (&$session, $errormsg) {
 	static $exitwiki = 0;
-	global $dbi;
 
 	if($exitwiki)		// just in case CloseDataBase calls us
 		exit();
@@ -190,7 +189,6 @@ define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		. '|%hex\((.*?)\)'
 		. ')/');
 function writeText ($body, &$status) {
-	global $ib_reg_expr;
 	$status->trace (TC_Util2, "writeText: $body");
 	$count = 0;
 	while (strlen ($body) > 0
@@ -387,28 +385,33 @@ function wikiToHtml (&$session, $wiki_text) {
 }
 function getUserParam (&$session, $name, &$param) {
 	$session->trace (TC_Util2, "getUserParam: $name");
-	if (! isset ($param) || empty ($param))
-		switch ($name){
-		case U_TextAreaWidth: $param = $_POST ['textarea_width'] = $session->fUserTextareaWidth; break;
-		case U_TextAreaHeight: $param = $session->fUserTextareaHeight; break;
-		case U_MaxHits: $param = $session->fUserMaxHits; break;
-		case U_PostingsPerPage: $param = $session->fUserPostingsPerPage; break;
-		case U_Theme: $param = $session->fUserTheme;
-		default: $session->trace (TC_Error, "getUserParam: unbek. Param: $name"); break;
+	if (! isset ($param) || empty ($param)){
+		if (isset ($_POST [$name]) && ! empty ($_POST [$name]))
+			$param = $_POST [$name];
+		else {
+			switch ($name){
+			case U_TextAreaWidth: $param = $session->fUserTextareaWidth; break;
+			case U_TextAreaHeight: $param = $session->fUserTextareaHeight; break;
+			case U_MaxHits: $param = $session->fUserMaxHits; break;
+			case U_PostingsPerPage: $param = $session->fUserPostingsPerPage; break;
+			case U_Theme: $param = $session->fUserTheme;
+			default: $session->trace (TC_Error, "getUserParam: unbek. Param: $name"); break;
+			}
 		}
+	}
 	return $param;
 }
 function getTextareaSize (&$session, &$width, &$height){
-	if (! isset ($_POST['textarea_width']) || empty ($_POST['textarea_width']))
-		$_POST['textarea_width'] = getUserParam ($session, U_TextAreaWidth, $width);
-	$width = $_POST['textarea_width'];
+	if (! isset ($_POST[U_TextAreaWidth]) || empty ($_POST[U_TextAreaWidth]))
+		$_POST[U_TextAreaWidth] = getUserParam ($session, U_TextAreaWidth, $width);
+	$width = $_POST[U_TextAreaWidth];
 	if ($width <= 0)
-		$width = $_POST['textarea_width'] = 70;
-	if (! isset ($_POST['textarea_height']) || empty ($_POST['textarea_height']))
-		$_POST['textarea_height'] = getUserParam ($session, U_TextAreaHeight, $height);
-	$height = $_POST['textarea_height'];
+		$width = $_POST[U_TextAreaWidth] = 70;
+	if (! isset ($_POST[U_TextAreaHeight]) || empty ($_POST[U_TextAreaHeight]))
+		$_POST[U_TextAreaHeight] = getUserParam ($session, U_TextAreaHeight, $height);
+	$height = $_POST[U_TextAreaHeight];
 	if ($height <= 0)
-		$height = $_POST['textarea_height'] = 10;
+		$height = $_POST[U_TextAreaHeight] = 10;
 }
 function isInt ($val) {
 	return preg_match ('/^\d+\s*$/', $val);
@@ -457,9 +460,8 @@ function decrypt (&$session, $value, $salt){
 	return strrev (substr ($value, 6, strlen ($value) - 10));
 }
 function setLoginCookie (&$session, $user, $code) {
-	global $session_no;
 	$session->trace (TC_Init, 'setLoginCookie');
-	if (isset ($session_no) && $session_no > 0){
+	if ($session->fSessionNo != null && $session->fSessionNo > 0){
 		$session->trace (TC_Init, 'setLoginCookie-2');
 		$value = encrypt ($session, $user . " " . $code, COOKIE_NAME);
 		$session->trace (TC_Init, 'setLoginCookie: ' . COOKIE_NAME . ": ". $user . "/" . $value);
@@ -467,11 +469,10 @@ function setLoginCookie (&$session, $user, $code) {
 	}
 }
 function getLoginCookie (&$session, &$user, &$code){
-	global $session_no;
 	$session->trace (TC_Init, 'getLoginCookie');
 	$user = null;
 	$code = null;
-	if (! isset ($session_no) || $session_no < 0)
+	if ($session->fSessionNo == null || $session->fSessionNo < 0)
 		$rc = false;
 	elseif ($rc = ! empty ($_COOKIE[COOKIE_NAME])){
 		$session->trace (TC_Init, 'getLoginCookie-2: ' . $_COOKIE[COOKIE_NAME]);
@@ -480,7 +481,8 @@ function getLoginCookie (&$session, &$user, &$code){
 		if ( ($pos = strpos ($value, " ")) > 0){
 			$user = substr ($value, 0, $pos);
 			$code = substr ($value, $pos + 1);
-			$session->trace (TC_Init, 'getLoginCookie-4: ' . COOKIE_NAME . ": ". $user . "/" . $code);
+			$session->trace (TC_Init, 'getLoginCookie-4: ' . COOKIE_NAME 
+				. ": ". $user . "/" . $code);
 		}
 	}
 	$session->trace (TC_Init, 'getLoginCookie-4: ' . $user);
@@ -503,7 +505,6 @@ function setRelativeURL (&$session, $url){
 	. "/" . $relative_url);
 }
 function putHeaderBase(&$session){
-	global $_SERVER;
 	$uri = $session->fScriptBase . "/index.php/!login"; 
 	if ($uri != $_SERVER['REQUEST_URI'])
 		header ('Location: http://' . $_SERVER['HTTP_HOST'] . $uri);
@@ -530,5 +531,8 @@ function textTypeToMime ($type){
 	case TT_Text: return M_Text;
 	default: return M_Undef;
 	}
+}
+function getPostVar ($name){
+	return isset ($_POST [$name]) ? $_POST [$name] : '';
 }
 ?>
