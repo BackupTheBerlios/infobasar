@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.5 2004/10/07 19:53:31 hamatoma Exp $
+// $Id: install.php,v 1.6 2004/10/27 22:45:59 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -575,6 +575,7 @@ function checkTableStatus (&$session, &$exists) {
 }
 function populate ($session, $fn_sql) {
 	global $db_prefix;
+	$sesssion->trace (TC_Init1, "populate:");
 	$message = '';
 	if (checkDB ($session, $message) == DB_EXISTS) {
 		if (! ($file = fopen ($fn_sql, "r"))) {
