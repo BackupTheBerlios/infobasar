@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.8 2004/11/10 00:42:15 hamatoma Exp $
+// $Id: address.php,v 1.9 2004/12/05 18:41:07 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.5.0 (2004.11.07)');
+define ('PHP_ModuleVersion', '0.6.5.4 (2004.12.5)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -77,7 +77,7 @@ if ($rc != null) {
 		$session->trace (TC_Init, "action.php: action: $action");
 		switch ($action){
 		case A_EditBook: addressEditBook ($session); break;
-		case A_EditCard: addressEditCard ($session); break;
+		case A_EditCard: addressEditCard ($session, null, $_GET ['card_id']); break;
 		case A_ShowBooks: addressShowBooks ($session); break;
 		case A_ShowCards: addressShowCards ($session); break;
 		case '': break;
@@ -136,6 +136,7 @@ function addressEditBook (&$session, $message = null){
 	echo "</td></tr>\n<tr><td>Nächster DS:</td><td>";
 	$book_list = dbColumnList ($session, Tab_Book, 'name', '1');
 	guiComboBox ('book_next', $book_list, null);
+	
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_AddressBodyEnd);
@@ -174,11 +175,12 @@ function addressEditBookAnswer (&$session){
 	}
 	addressEditBook ($session, $message);
 }
-function addressEditCard (&$session, $message = null){
+function addressEditCard (&$session, $message = null, $card_id = null){
 	$session->trace (TC_Gui1, 'addressEditCard');
 	if (! isset ($_POST ['card_id']) || empty ($_POST ['card_id'])){
 		$session->trace (TC_X, 'addressEditCard-2');
-		$card_id = dbGetValueByClause ($session, Tab_Card, 'min(id)', '1');
+		if ($card_id == null)
+			$card_id = dbGetValueByClause ($session, Tab_Card, 'min(id)', '1');
 		list ($books, $firstname, $lastname, $nickname,
 			$emailprivate, $emailprivate2, $phoneprivate, $phoneprivate2, $faxprivate, $mobileprivate,
 			$emailoffice, $emailoffice2, $phoneoffice, $phoneoffice2, $faxoffice, $mobileoffice,
@@ -328,9 +330,14 @@ function addressEditCardAnswer (&$session){
 			$message = $msg2;
 		else if (! empty ($email)
 			&& dbSingleValue ($session, 'select count(id) from ' . dbTable ($session, Tab_Card) 
-			. ' where emailprivate=' . dbSqlString ($session, $email) . ' and id<>' . (0+$id)) > 0)
-			$message = "Adresskarte mit EMai-Adresse $email existiert schon!";
-		else {
+			. ' where emailprivate=' . dbSqlString ($session, $email) . ' and id<>' . (0+$id)) > 0){
+			$rec = dbGetRecordByClause($session, Tab_Card, 'id,firstname,lastname,city',
+				' emailprivate=' . dbSqlString ($session, $email) 
+				. ' and id<>' . (0+$id));
+			$message = "Adresskarte mit EMai-Adresse $email existiert schon: '"
+					. $rec [1] . ' ' . $rec [2] . ' ' . $rec [3] . ' (' 
+					. $rec [0] . ')';
+		} else {
 			dbUpdate ($session, Tab_Card, $id, 
 				'firstname=' . dbSqlString ($session, $_POST ['card_firstname'])
 				. ',lastname=' . dbSqlString ($session, $_POST ['card_lastname'])
@@ -398,31 +405,38 @@ function addressShowCards (&$session, $message = null){
 	if ($message <> null)
 		guiParagraph($session, $message, false);
 	guiStartForm ($session, 'search', P_ShowCards);
-	outTable (0);
-	outTableRecordCells ('Suchkriterien:', '');
-	outTableRecord();
+	guiHeadline ($session, 2, 'Suchkriterien:');
 	$books = dbColumnList($session, Tab_Book, 'name', '1');
 	if (! isset ($_POST ['show_book']))
 		$_POST ['show_book'] =  $books [0];
-	outTableComboBox ('Adressbuch:', 'show_book', $books, null, null);
+	echo 'Adressbuch: ';
+	guiComboBox ('show_book', $books, null, null);
 	$fields = array ('Name', 'Vorname', 'Spitzname', 'EMail', 'PLZ', 'Ort', 
 		'Funktion', 'Notiz');
-	outTableComboBox ('Auswahlkriterium:', 'show_choice', $fields, null, null);
-	outTableTextField ('Suchmuster:', 'show_pattern', null, 16);
-	outTableButton (null, 'show_search', 'Suchen');
-	outTableRecordCells ('Ausgabefelder', '');
-	outTableCheckBox (null, 'show_withlastname', 'Name');
-	outTableCheckBox (null, 'show_withfirstname', 'Vorname');
-	outTableCheckBox (null, 'show_withprivate', 'Privat');
-	outTableCheckBox (null, 'show_withoffice', 'Geschäftlich');
-	outTableCheckBox (null, 'show_withaddress', 'Postadresse');
-	outTableCheckBox (null, 'show_withphone', 'Telefon');
-	outTableCheckBox (null, 'show_withfax', 'Fax');
-	outTableCheckBox (null, 'show_withmobil', 'Mobil');
-	outTableCheckBox (null, 'show_withfunction', 'Funktion');
-	outTableCheckBox (null, 'show_withnote', 'Notiz');
-	outTableRecordEnd();
-	outTableEnd ();
+	echo ' Auswahlkriterium: '; 
+	guiComboBox ('show_choice', $fields, null, null);
+	echo ' Suchmuster: ';
+	guiTextField ('show_pattern', null, 16);
+	echo ' ';
+	guiButton ('show_search', 'Suchen');
+	guiHeadline ($session, 2, 'Ausgabefelder:');
+	guiCheckBox ('show_withname', 'Name');
+	echo ' ';
+	guiCheckBox ('show_withprivate', 'Privat');
+	echo ' ';
+	guiCheckBox ('show_withoffice', 'Geschäftlich');
+	echo ' ';
+	guiCheckBox ('show_withphone', 'Telefon');
+	echo ' ';
+	guiCheckBox ('show_withemail', 'EMail');
+	echo ' ';
+	guiCheckBox ('show_withaddress', 'Postadresse');
+	echo ' ';
+	guiCheckBox ('show_withfunction', 'Funktion');
+	echo ' ';
+	guiCheckBox ('show_withnote', 'Notiz');
+	echo ' ';
+	guiCheckBox ('show_withdate', 'Datum');
 	guiFinishForm ($session, $session);
 	if (isset ($_POST ['show_pattern'])){
 		$pattern = $_POST ['show_pattern'];
@@ -462,14 +476,151 @@ function addressShowCards (&$session, $message = null){
 				$condition = '1';
 				break;
 			}
-			$what = 'lastname,firstname,emailprivate,phoneprivate,country,zip,city,street';
-			dbPrintTable ($session, "select $what from " 
+			$what = 'lastname,firstname,country,zip,city,street,'
+				// 6.............7.............8.............9............10...........11
+				. 'emailprivate,emailprivate2,phoneprivate,phoneprivate2,mobileprivate,faxprivate,'
+				// 12...........13...........14...........15.........16...........17
+				. 'emailoffice,emailoffice2,phoneoffice,phoneoffice2,mobileoffice,faxoffice,'
+				// 18........19.....20......21.22........23
+				. 'functions,notes,nickname,id,changedat,createdat';
+			
+			addressPrintTable ($session, "select $what from " 
 				. dbTable ($session, Tab_Card) . " where $condition",
-				array ('Name', 'Vorname', 'EMail', 'Tel', 'Land', 'PLZ', 'Stadt', 'Strasse'),
 				30);
 		}
 	}
 	guiStandardBodyEnd ($session, Th_AddressBodyEnd);
 	
+}
+function addressPrintTableHeader (&$session){
+	outTableRecord ();
+	outTableCellStrong ('Id');
+	if (guiChecked ($session, 'show_withname'))
+		outTableCellStrong ('Name' . tagNewline() . 'Vorname' . tagNewline() . 'Spitzname');
+	if (guiChecked ($session, 'show_withprivate')){
+		if (guiChecked ($session, 'show_withemail'))
+			outTableCellStrong ('Privat-EMail');
+		if (guiChecked ($session, 'show_withphone'))
+			outTableCellStrong ('Privat-Telefon');
+	}	
+	if (guiChecked ($session, 'show_withoffice')){
+		if (guiChecked ($session, 'show_withemail'))
+			outTableCellStrong ('Geschäft-EMail');
+		if (guiChecked ($session, 'show_withphone'))
+			outTableCellStrong ('Geschäft-Telefon');
+	}
+	if (guiChecked ($session, 'show_withaddress'))
+		outTableCellStrong ('Strasse' . tagNewline() . 'Land-PLZ-Ort');
+	if (guiChecked ($session, 'show_withfunction'))
+		outTableCellStrong ('Funktion');
+	if (guiChecked ($session, 'show_withnote'))
+		outTableCellStrong ('Notizen');
+	if (guiChecked ($session, 'show_withdate'))
+		outTableCellStrong ('erzeugt am' . tagNewline() . 'geändert am');
+	outTableRecordEnd ();
+}
+function addressAddLine ($string, $value, $prefix = ''){
+	if (empty ($value))
+		return $string;
+	else 
+		return $string . (empty ($string) ? "" : tagNewline ()) . $prefix . $value;
+}
+function addressPrintRow (&$session, $row){
+	$what = 'lastname,firstname,country,zip,city,street,'
+	// 6.............7.............8.............9............10...........11
+	. 'emailprivate,emailprivate2,phoneprivate,phoneprivate2,mobileprivate,faxprivate,'
+	// 12...........13...........14...........15.........16...........17
+	. 'emailoffice,emailoffice2,phoneoffice,phoneoffice2,mobileoffice,faxoffice,'
+	// 18........19.....20......21.22........23
+	. 'functions,notes,nickname,id,changedat,createdat';
+	outTableRecord ();
+	outTableInternLink ($session, null, 
+		'?action=' . A_EditCard . '&card_id=' . $row [21],
+		$row [21]);
+	if (guiChecked ($session, 'show_withname')){
+		$name = addressAddLine ("", $row [0]);
+		$name = addressAddLine ($name, $row [1]);
+		$name = addressAddLine ($name, $row [20]);
+		outTableCell ($name);
+	}
+	if (guiChecked ($session, 'show_withprivate')){
+		if (guiChecked ($session, 'show_withemail')){
+			$value = addressAddLine ("", $row [6]);
+			$value = addressAddLine ($value, $row [7]);
+			outTableCell ($value);
+		}
+		if (guiChecked ($session, 'show_withphone')){
+			$value = addressAddLine ("", $row [8], 'T: ');
+			$value = addressAddLine ($value, $row [9], 'T: ');
+			$value = addressAddLine ($value, $row [10], 'H: ');
+			$value = addressAddLine ($value, $row [11], 'F: ');
+			outTableCell ($value);
+		}
+	}	
+	if (guiChecked ($session, 'show_withoffice')){
+		if (guiChecked ($session, 'show_withemail')){
+			$value = addressAddLine ("", $row [12]);
+			$value = addressAddLine ($value, $row [13]);
+			outTableCell ($value);
+		}
+		if (guiChecked ($session, 'show_withphone')){
+			$value = addressAddLine ("", $row [14], 'T: ');
+			$value = addressAddLine ($value, $row [15], 'T: ');
+			$value = addressAddLine ($value, $row [16], 'H: ');
+			$value = addressAddLine ($value, $row [17], 'F: ');
+			outTableCell ($value);
+		}
+	}
+	if (guiChecked ($session, 'show_withaddress')){
+		$value = addressAddLine ("", $row [5]);
+		$str = empty ($row [2]) ? ($row [2] . '-') : '';
+		$str .= empty ($row [3]) ? ($row [3] . '-') : '';
+		$str .= empty ($row [4]) ? '' : (' ' . $row [4]);
+		$value = addressAddLine ($value, $str);
+		outTableCell ($value);
+	}
+	if (guiChecked ($session, 'show_withfunction'))
+		outTableCell ($row [18]);
+	if (guiChecked ($session, 'show_withnote'))
+		outTableCell ($row [19]);
+	if (guiChecked ($session, 'show_withdate')){
+		$value = addressAddLine ("", $row [23]);
+		$value = addressAddLine ($value, $row [22]);
+		outTableCell ($value);
+	}
+	outTableRecordEnd ();
+}
+function addressPrintTable (&$session, $query, $max_lines){
+	$result = mysql_query ($query, $session->fDbInfo);
+	if (! $result)
+		protoc (mysql_error ());
+	else {
+		guiHeadline ($session, 2, 'Suchergebnis:');
+		$first = true;
+		$no = 0;
+		if ($max_lines <= 0)
+			$max_lines = 1000;
+		outTable(1);
+		while ($row = mysql_fetch_row ($result)) {
+			if ($first){
+				addressPrintTableHeader ($session);
+				$first = false;
+			}
+			if (++$no > $max_lines)
+				break;
+			outTableRecord ();
+			addressPrintRow ($session, $row);
+			outTableRecordEnd ();
+		}
+		if ($first){
+			echo "Die Anfrage ergab keine Ergebnisse";
+			outNewline();
+		} else {
+			outTableEnd();
+			if ($no > $max_lines)
+				guiParagraph ($session, "Es gibt noch weitere Ergebnisse!", false);
+		}
+		mysql_free_result ($result);
+	}
 }
 ?>
