@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.7 2004/09/02 21:25:20 hamatoma Exp $
+// $Id: admin.php,v 1.8 2004/09/08 06:06:32 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -27,6 +27,9 @@ $session_id = session_id();
 
 define ('ADMIN', true);
 define ('C_ScriptName', 'admin.php');
+// Modulnamen:
+define ('M_Base', 'index.php');
+
 // Seitennamen: (Admin-Modus)
 define ('P_Home', 'home');
 define ('P_Param', 'param');
@@ -35,6 +38,7 @@ define ('P_Backup', 'backup');
 define ('P_ExportPages', 'exportpages');
 define ('P_Options', 'options');
 define ('P_PHPInfo', 'info');
+define ('P_Rename', 'rename');
 // Dateinamen
 define ('FN_PageExport', 'exp_pages.sql');
 
@@ -62,6 +66,7 @@ if (! empty ($rc)) {
 	case P_Backup: admBackup ($session, true, null); break;
 	case P_ExportPages: admExportPages ($session, null); break;
 	case P_Options: admOptions ($session, null); break;
+	case P_Rename: admRename ($session, null); break;
 	case P_PHPInfo: admInfo ($session); break;
 	default:
 		if (substr ($session->fPageName, 0, 1) == ".")
@@ -77,6 +82,8 @@ if (! empty ($rc)) {
 		elseif (isset ($forum_change) || isset ($forum_load)
 			|| isset ($forum_insert))
 			admForumAnswer ($session);
+		elseif (isset ($rename_rename) || isset ($rename_info))
+			admAnswerRename ($session);
 		elseif (isset ($export_export) || isset ($export_preview))
 			admExportPagesAnswer ($session);
 		else admHome ($session);
@@ -93,6 +100,7 @@ function admStandardLinkString(&$session, $page){
 	case P_ExportPages: $header = 'Seitenexport'; break;
 	case P_Backup: $header = 'Datensicherung'; break;
 	case P_Options: $header = 'Einstellungen'; break;
+	case P_Rename: $header = 'Umbenennen'; break;
 	case P_PHPInfo: $header = 'PHP-Info'; break;
 	default: $header = null; break;
 	}
@@ -111,6 +119,7 @@ function admHome (&$session){
 	guiParagraph ($session, admStandardLinkString ($session, P_Param), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Forum), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_ExportPages), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_Rename), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Backup), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Options), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_PHPInfo), false);
@@ -564,7 +573,7 @@ function admBackupAnswer (&$session){
 }
 function admOptions (&$session, $message){
 	global $opt_basarname, $opt_save, $upload_go, $upload_file;
-	$session->trace (TC_Init, 'admOptions');
+	$session->trace (TC_Gui1, 'admOptions');
 	guiHeader ($session, 'Einstellungen');
 	guiHeadline ($session, 1, 'Allgemeine Einstellungen');
 	if (isset ($upload_go))
@@ -590,6 +599,144 @@ function admOptions (&$session, $message){
 	guiHeadline ($session, 2, 'Dateien:');
 	guiUploadFile ($session, 'Logo:', P_Options);
 	guiFinishBody ($session, null);
+}
+function admRename (&$session, $message){
+	global $rename_oldname, $rename_newname, $rename_backlinks;
+	$session->trace (TC_Gui1, 'admRename');
+	guiHeader ($session, 'Umbenennen einer Seite');
+	guiHeadline ($session, 1, 'Umbenennen einer Seite');
+	if (! empty ($message))
+		guiParagraph ($session, $message, false);
+
+	guiStartForm ($session, 'Form', P_Rename);
+	echo '<table border="0">';
+	echo '<tr><td>Bisheriger Name:</td><td>';
+	guiTextField ('rename_oldname', $rename_oldname, 64, 64);
+	echo '<tr><td>Neuer Name:</td><td>';
+	guiTextField ('rename_newname', $rename_newname, 64, 64);
+	echo '</td></tr>' . "\n";
+	echo '<tr><td></td><td>';
+	guiButton ('rename_info', 'Info');
+	if (! empty ($rename_oldname) && ! empty ($rename_newname))
+		echo ' | ';
+		guiButton ('rename_rename', 'Umbenennen');
+		echo '<br>';
+		guiCheckBox ('rename_backlinks', 'Alle Verweise umbenennen', 
+			! isset ($rename_backlinks) || $rename_backlinks == C_CHECKBOX_TRUE);
+	echo '</td></tr></table>' . "\n";
+	guiFinishForm ($session);
+	
+	if (! empty ($rename_oldname) && dbPageId ($session, $rename_oldname) > 0){
+		$row = dbFirstRecord ($session,
+				'select page,text,createdby,createdat from '
+				. dbTable ($session, T_Text)
+				. ' where replacedby is null and text like '
+				. dbSqlString ($session, "%$rename_oldname%"));
+		if (! $row)
+			guiParagraph ($session, '+++ keine Verweise gefunden', false);
+		else {
+			echo '<table border="1"><tr><td>Seite:</td><td>Typ:</td>'
+			. '<td>von</td><td>Letzte &Auml;nderung</td><td>Fundstelle</td></tr>';
+			while ($row) {
+				$pagerecord = dbGetRecordById ($session, T_Page, $row[0],
+					'name,type');
+				$text = findTextInLine ($row [1], $rename_oldname, 10, true);
+				if (! empty ($text)){
+					echo "\n<tr><td>";
+					guiInternLink ($session, 
+							encodeWikiName ($session, $pagerecord[0]),
+							$pagerecord[0], M_Base);
+					echo '</td><td>';
+					echo $pagerecord [1];
+					echo '</td><td>';
+					echo $row [2];
+					echo '</td><td>';
+					echo htmlentities ($row [3]);
+					echo '</td><td>';
+					echo $text;
+					echo "</td><tr>\n";
+				}
+				$row = dbNextRecord ($session);
+			}
+			echo "\n</table>\n";
+		}
+	}
+	guiFinishBody ($session, null);
+}
+function admAnswerRename (&$session){
+	global $rename_oldname, $rename_newname, $rename_rename, $rename_backlinks;
+	$session->trace (TC_Gui1, 'admAnswerRename');
+	
+	$message = null;
+	$origin = isset ($rename_newname) ? $rename_newname : null;
+
+	if (!isset ($rename_oldname))
+		$message = '+++ kein bisheriger Name angegeben!';
+	elseif ( ($page_id = dbPageId ($session, $rename_oldname)) <= 0)
+		$message = '+++ Seite ' . $rename_oldname . ' existiert nicht';
+	elseif (isset ($rename_rename) && !isset ($rename_newname))
+		$message = '+++ kein neuer Name angegeben!';
+	elseif (isset ($rename_rename) 
+		&& ($rename_newname = normalizeWikiName ($session, $rename_newname))
+			!= $origin)
+		$message = '+++ Unzulässiger neuer Name (' . $origin
+				. ') wurde korrigiert';
+	elseif (isset ($rename_rename) && dbPageId ($session, $rename_newname) > 0)
+		$message = '+++ Seite ' . $rename_newname . ' existiert schon!';
+	elseif (isset ($rename_rename)){
+		dbUpdate ($session, T_Page, $page_id, 
+			'name=' . dbSQLString ($session, $rename_newname) . ',');
+		$message = 'Seite ' . $rename_oldname . ' wurde in ' . $rename_newname 
+			. ' umbenannt.';
+		$pages = 0;
+		$hits = 0;
+		if ($rename_backlinks == C_CHECKBOX_TRUE){
+			$row = dbFirstRecord ($session,
+					'select id,text from '
+					. dbTable ($session, T_Text)
+					. ' where replacedby is null and text like '
+					. dbSqlString ($session, "%$rename_oldname%"));
+			$pattern1 = '/([^' . CL_WikiName . '])' 
+				. $rename_oldname . '([^' . CL_WikiName . '])/';
+			$pattern2 = '/^' . $rename_oldname . '([^' . CL_WikiName . '])/';
+			$pattern3 = '/([^' . CL_WikiName . '])' .  $rename_oldname . '$/';
+			$replacement1 = '\1' . $rename_newname . '\2';
+			$replacement2 = $rename_newname . '\1';
+			$replacement3 = '\1' . $rename_newname;
+			while ($row){
+				$text = $row [1];
+				$count1 = preg_match_all ($pattern1, $row [1], $dummy);
+				if ($count1 > 0)
+					$text = preg_replace ($pattern1, $replacement1, $text);
+				$count2 = preg_match ($pattern2, $row [1]);
+				if ($count2 > 0)
+					$text = preg_replace ($pattern2, $replacement2, $text);
+				$count3 = preg_match ($pattern3, $text);
+				if ($count3 > 0)
+					$text = preg_replace ($pattern3, $replacement3, $text);
+				
+				if ($count1  + $count2 + $count3  > 0){
+					dbUpdate ($session, T_Text, $row [0], 
+							'text=' . dbSQLString ($session, $text) . ',');
+					$pages++;
+					$hits += $count1 + $count2 + $count3;
+				}
+				$row = dbNextRecord ($session);
+			}
+			if ($pages > 0)
+				$message .= '<br>Es wurde' 
+					. ($hits == 1 ? ' ' : 'n ')
+					. $hits . ($hits == 1 ? ' Verweis auf ' : ' Verweise auf ' )
+					. $pages 
+					. ($pages == 1 ? ' Seite umbenannt.' 
+						: ' Seiten umbenannt.');
+		}
+		addSystemMessage ($session, $rename_oldname 
+					. ' >> ' . $rename_newname . ': ' . (0+$hits));
+		$rename_oldname = '';
+		$rename_newname = '';
+	}
+	admRename ($session, $message);
 }
 
 function admInfo (&$session) {
