@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: db_mysql.php,v 1.2 2004/09/20 22:59:21 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -219,7 +219,8 @@ function dbCheckUser (&$session, $user, $code) {
 			$rc = 0;
 		else {
 			$code = encryptPassword ($session, $user, $code);
-			$rc = true || strcmp ($code, $fields [1]) == 0 ? 0 : 2;
+			$session->trace (TC_Db1, 'dbCheckUser-2:' . $code . " / " . $fields [1]);
+			$rc = strcmp ($code, $fields [1]) == 0 ? 0 : 2;
 		}
 	} // $count != 0
 	switch ($rc) {

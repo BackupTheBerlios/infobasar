@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: classes.php,v 1.2 2004/09/20 22:58:59 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -170,6 +170,7 @@ define ('R_User', 'user');
 define ('R_Rights', 'right');
 
 class Session {
+	// var, wenn protected nicht geht
 	var $fDbType; // MySQL
 	var $fDbServer;
 	var $fDbUser;
@@ -271,7 +272,7 @@ class Session {
 			+ 0 * TC_Convert + 0 * TC_Init + 0 * TC_Diff2
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
-		#$this->fTraceFlags = TC_All;
+		$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 	}
 	function trace($class, $msg){
@@ -396,7 +397,7 @@ class Session {
 			$this->fPageName = empty ($last_pagename)
 				? P_Undef : $last_pagename;
 			if (! empty ($last_pagename))
-				$this->setLocation ($last_pagename);
+				$this->setLocation (encodeWikiName ($this, $last_pagename));
 		}
 		$this->fPageTitle = $this->fPageName;
 		$this->trace (TC_Init, 'setPageName: PageName: ' . $this->fPageName . '<br>');
