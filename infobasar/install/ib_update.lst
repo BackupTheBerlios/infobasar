@@ -1,5 +1,6 @@
 # Dateien Infobasar
-# $Id: ib_update.lst,v 1.1 2004/09/21 19:50:28 hamatoma Exp $
+# $Id: ib_update.lst,v 1.2 2004/12/05 18:50:56 hamatoma Exp $
+../overwrite/modules.php	../modules.php
 ../install/license
 ../install/changelog.txt
 ../install/readme.txt
@@ -16,4 +17,3 @@
 ../forum.php
 ../classes.php
 ../admin.php
-../modules.php

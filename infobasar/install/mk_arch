@@ -10,5 +10,5 @@ name=infobasar-$Version.hma
 perl mk_arch.pl -v -a$name ib_install.lst
 gzip -9 $name
 name=infobasar-$Version-update.hma
-perl mk_arch.pl -v -a$name ib_update.lst
+perl $OPT mk_arch.pl -v -a$name ib_update.lst
 gzip -9 $name

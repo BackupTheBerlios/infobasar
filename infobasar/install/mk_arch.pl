@@ -66,14 +66,21 @@ sub OneFile {
 # <hex8_magic_3141592653>
 # <hex128_checksum>
 	my $name = shift;
+	my $name_archive = shift;
 	my $date = shift;
 	my $size = shift;
 	my $rights = shift;
-	print $name, "\n" if $s_verbose;
+	
+	if ($name_archive eq "") {
+		$name_archive = $name;
+		print $name, "\n" if $s_verbose;
+	} else {
+		print $name, " -> ", $name_archive, "\n" if $s_verbose;
+	}
 	if (! open (FILE, $name)){
 		print "+++ nicht zu öffnen: $name: $!";
 	} else {
-		my $name2 = $name;
+		my $name2 = $name_archive;
 		$name2 =~ s!\\!/!g;
 		print ARCHIVE sprintf ("%04x", length ($name2)), $name2;
 		print ARCHIVE sprintf ("%08x", $date);
@@ -102,12 +109,18 @@ sub FileList {
 	while (<LIST>){
 		chomp;
 		if (/\S/ && ! /^[#;]/) {
+			my $name_archive = '';
+			my @names = split (/\t+/);
+			if ($#names > 0 && $names [1]){
+				$_ = $names [0];
+				$name_archive = $names [1];
+			}
 			my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-       		$atime,$mtime,$ctime,$blksize,$blocks) = stat;
+				$atime,$mtime,$ctime,$blksize,$blocks) = stat;
 			if (! $mtime) {
 				print "+++ $_: $!\n";
 			} else {
-				OneFile ($_, $mtime, $size, $mode);
+				OneFile ($_, $name_archive, $mtime, $size, $mode);
 			}
 		}
 	}
