@@ -1,5 +1,5 @@
 <?php
-// $Id: install.php,v 1.22 2005/01/11 22:51:59 hamatoma Exp $
+// $Id: install.php,v 1.23 2005/01/13 03:38:05 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -243,7 +243,7 @@ function instShowDir (&$session, $path, $headline = null, $pattern = null,
 	$session->trace (TC_Init, 'instShowDir');
 	$dir = opendir ($path);
 	if ($headline == null)
-		"Verzeichnis $path auf dem Server";
+		$headline = "Verzeichnis $path auf dem Server";
 	guiHeadline ($session, 2, $headline);
 	if ($button_text != null && $with_form){
 		guiStartForm ($session, 'Form');
@@ -371,6 +371,10 @@ function instArchiveAnswer (&$session){
 function instGetSqlFile (&$session){
 	return $session->fFileSystemBase . PATH_DELIM . '../db/infobasar_start.sql';
 }
+function instGetDesignSqlFile (&$session){
+	return $session->fFileSystemBase . PATH_DELIM . '../db/design_start.sql';
+}
+
 function instGetStandardPageFile (&$session){
 	return $session->fFileSystemBase . PATH_DELIM . '../db/std_pages.wiki';
 }
@@ -400,7 +404,9 @@ function instConfigFile (&$session, $message =  null) {
 	
 	guiStartForm ($session, 'Form');
 	$file = instGetSqlFile ($session);
+	$file_design = instGetDesignSqlFile ($session);
 	$sql_exists = file_exists ($file);
+	$design_sql_exists = file_exists ($file_design);
 
 	if (empty ($_POST ['db_server']))
 		$_POST ['db_server'] = $session->fDbServer;
@@ -434,6 +440,7 @@ function instConfigFile (&$session, $message =  null) {
 		guiButton ('config_createdb', 'Datenbank ' . $_POST ['db_name'] . ' erzeugen');
 	guiLine ($session, 2);
 	guiParagraph ($session, "DB-Definitionsdatei $file " . ($sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
+	guiParagraph ($session, "Design-Definitionsdatei $file_design " . ($design_sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
 	guiLine ($session, 2);
 	instDocu ($session, '<li>Felder ausfüllen</li><li>Konfiguration speichern</li>'
 		. '<li>Solange korrigieren, bis "Zugang zur Datenbank test ist möglich" erscheint</li>',
@@ -541,7 +548,8 @@ function instDBAnswer (&$session){
 	$session->trace (TC_Init, 'instDBAnswer');
 	$message = null;
 	if (isset ($_POST ['inst_populate'])) {
-		$message = populate ($session, instGetSqlFile ($session));
+		$message = populate ($session, instGetSqlFile ($session), 
+			instGetDesignSqlFile ($session));
 	} else {
 		foreach ($_POST as $name => $value){
 			# $session->trace (TC_X, 'instDBAnswer-2: ' . $name);
@@ -786,16 +794,18 @@ function instUpdateMacro (&$session, $macro, $value, &$message){
 			$message .= " $count mal!";
 	}
 }
-function populate (&$session, $fn_sql) {
+function populate (&$session, $fn_sql, $fn_sql_design) {
 	$session->trace (TC_Init, "populate:");
 	$db_prefix = $session->fDbTablePrefix;
 	$message = '';
 	if (checkDB ($session, $message) == DB_EXISTS) {
 		$message = executeSqlFile ($session, $fn_sql, $line_count, $comments);
+		if (empty ($message))
+			$message = executeSqlFile ($session, $fn_sql_design, $line_count2, $comments2);
 		if (empty ($message)){
 			$message = 'Die Infobasar-Tabellen wurden initialisiert: '
-				 . (0+$line_count) . ' Zeilen gelesen, davon '
-				. (0+$comments) . ' Kommentare';
+				 . ($line_count + $line_count2) . ' Zeilen gelesen, davon '
+				. ($comments + $comments2) . ' Kommentare';
 			$path = getParentDir ($session, $session->fScriptBase);
 			if (empty ($path))
 				$path = PATH_DELIM;
