@@ -1,6 +1,15 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.2 2004/05/26 22:22:21 hamatoma Exp $
+// $Id: util.php,v 1.3 2004/05/27 22:50:02 hamatoma Exp $
+/*
+Diese Datei ist Teil von InfoBasar.
+Copyright 2004 hamatoma@gmx.de München
+InfoBasar ist freie Software. Du kannst es weitergeben oder verändern
+unter den Bedingungen der GNU General Public Licence.
+Näheres siehe Datei LICENCE.
+InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
+der Funktionalität.
+*/
 function panicExit (&$session, $errormsg) {
 	static $exitwiki = 0;
 	global $dbi;
@@ -340,5 +349,21 @@ function sendPassword (&$session, $id, $user, $email){
 function encryptPassword (&$session, $user, $code){
 	$session->trace (TC_Util2, "encryptPassword");
 	return strrev (crypt ($user, $code));
+}
+function setLoginCookie (&$session, $user, $code) {
+	$session->trace (TC_Util2, 'setLoginCookie');
+	setCookie (COOKIE_NAME, crypt ($user . "\t" . $code, COOKIE_NAME),
+		time() + 60*60*24*365);
+}
+function getLoginCookie (&$session, &$user, &$code){
+	$session->trace (TC_Util2, 'getLoginCookie');
+	if ($rc = ! empty ($_COOKIE[COOKIE_NAME]))
+		list ($user, $code) = split ('/\t/', crypt ($_COOKIE[COOKIE_NAME]), COOKIE_NAME);
+	$session->trace (TC_Util2, 'getLoginCookie: ' . $user);
+	return $rc;
+}
+function clearLoginCookie (&$session){
+	$session->trace (TC_Util2, 'clearLoginCookie');
+	setCookie (COOKIE_NAME, null);
 }
 ?>
