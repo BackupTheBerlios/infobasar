@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum_module.php,v 1.1 2005/01/10 16:36:41 hamatoma Exp $
+// $Id: forum_module.php,v 1.2 2005/01/10 20:02:24 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -505,48 +505,48 @@ function baseThread (&$session) {
 		}
 		echo '<br/>';
 		wikiToHTML ($session, $posting [2]);
-		echo '<p>';
-		guiInternLink ($session, P_Thread
-			. '?action=' . A_Answer . '&thread_id=' . $_POST ['thread_id'] . "&reference_id=$id",
-			'Antworten');
-		if (strcmp ($posting [0], $session->fUserName) == 0) {
-			echo ' ';
-		guiInternLink ($session, P_Thread
-			. '?action=' . A_ChangeThread . '&thread_id=' . $_POST ['thread_id'] 
-			. "&posting_id=$id",
-			'Ändern');
-		echo "</p>\n";
-		}
-		echo "</td><tr>\n";
-	}
-	echo "</table>\n";
-	guiStandardBodyEnd ($session, Th_ThreadBodyEnd);
+  echo '<p>';
+  guiInternLink ($session, P_Thread
+   . '?action=' . A_Answer . '&thread_id=' . $_POST ['thread_id'] . "&reference_id=$id",
+   'Antworten');
+  if (strcmp ($posting [0], $session->fUserName) == 0) {
+   echo ' ';
+  guiInternLink ($session, P_Thread
+   . '?action=' . A_ChangeThread . '&thread_id=' . $_POST ['thread_id'] 
+   . "&posting_id=$id",
+   'Ändern');
+  echo "</p>\n";
+  }
+  echo "</td><tr>\n";
+ }
+ echo "</table>\n";
+ guiStandardBodyEnd ($session, Th_ThreadBodyEnd);
 }
 function baseCallStandardPage (&$session) {
-	$session->trace (TC_Gui2, 'baseCallStandardPage');
-	$found = true;
-	switch ($session->fPageName) {
-	case P_Login: guiLogin ($session, null); break;
-	case P_Logout: guiLogout ($session); null;
-	case P_ForumHome: baseForumHome ($session); break;
-	case P_Forum: baseForum ($session); break;
-	case P_Thread: baseThread ($session); break;
-	case P_ForumSearch: baseForumSearch ($session, null); break;
-	case '!test': baseTest ($session); break;
-	case '!form': baseFormTest ($session); break;
-	default:
-		$session->trace (TC_Gui2, 'baseCallStandardPage-kein Std');
-		$found = false;
-		break;
-	}
-	return $found;
+ $session->trace (TC_Gui2, 'baseCallStandardPage');
+ $found = true;
+ switch ($session->fPageName) {
+ case P_Login: guiLogin ($session, null); break;
+ case P_Logout: guiLogout ($session); null;
+ case P_ForumHome: baseForumHome ($session); break;
+ case P_Forum: baseForum ($session); break;
+ case P_Thread: baseThread ($session); break;
+ case P_ForumSearch: baseForumSearch ($session, null); break;
+ case '!test': baseTest ($session); break;
+ case '!form': baseFormTest ($session); break;
+ default:
+  $session->trace (TC_Gui2, 'baseCallStandardPage-kein Std');
+  $found = false;
+  break;
+ }
+ return $found;
 }
 function modStandardLinks (&$session){
-	guiInternLink ($session, P_Home, "Überblick", "index");
-	echo ' | ';
-	baseStandardLink ($session, P_ForumHome);
-	echo ' | ';
-	baseStandardLink ($session, P_ForumSearch);
+ guiInternLink ($session, P_Home, "Überblick", "index");
+ echo ' | ';
+ baseStandardLink ($session, P_ForumHome);
+ echo ' | ';
+ baseStandardLink ($session, P_ForumSearch);
 }
 
 ?>
