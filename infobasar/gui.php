@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.9 2004/10/29 23:23:57 hamatoma Exp $
+// $Id: gui.php,v 1.10 2004/10/30 10:42:04 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -10,6 +10,179 @@ Näheres siehe Datei LICENCE.
 InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
+// --- HTML-Strings:
+function tagStrong($text = null){
+	if ($text == null)
+		return '<strong>';
+	else
+		return '<strong>' . $text . '</strong>';
+}
+function outStrong($text = null){
+	if ($text == null)
+		echo '<strong>';
+	else {
+		echo '<strong>';
+		echo $text;
+		echo '</strong>';
+	}
+}
+function tagStrongEnd(){
+	return '</strong>';
+}
+function outStrongEnd(){
+	echo '</strong>';
+}
+
+function tagNewline(){
+	return "<br />\n";
+}
+function outNewline(){
+	echo "<br />\n";
+}
+function tagParagraph(){
+	return '<p>';
+}
+function outParagraph(){
+	echo '<p>';
+}
+function tagParagraphEnd(){
+	return '<p>';
+}
+function outParagraphEnd(){
+	echo '<p>';
+}
+function tagTable($border = 0){
+	return "\n<table border=\"" . (0+$border) . '">'; 
+}
+function outTable($border = 0){
+	echo "\n<table border=\"";
+	echo (0+$border);
+	echo '">'; 
+}
+function tagTableEnd(){
+	return "</table>\n"; 
+}
+function outTableEnd(){
+	echo "</table>\n"; 
+}
+function tagTableRecord(){
+	return '<tr>';
+}
+function outTableRecord(){
+	echo '<tr>';
+}
+function tagTableAndRecord($border = 0){
+	return tagTable ($border) . tagTableRecord();
+}
+function outTableAndRecord($border = 0){
+	outTable ($border);
+	outTableRecord();
+}
+function tagTableAndRecordEnd(){
+	return tagTableRecordEnd() . tagTableEnd();
+}
+function outTableAndRecordEnd(){
+	outTableRecordEnd();
+	outTableEnd();
+}
+function tagTableRecordEnd(){
+	return '</tr>';
+}
+function outTableRecordEnd(){
+	echo '</tr>';
+}
+function tagTableDelim($halignment = AL_None){
+	if ($halignment == AL_None)
+		return '<td>';
+	else
+		return '<td text-align: ' . $alignment . '>';
+}
+function outTableDelim($halignment = AL_None){
+	if ($halignment == AL_None)
+		echo '<td>';
+	else{
+		echo '<td text-align: ';
+		echo $alignment;
+		echo  '>';
+	}
+}
+function tagTableDelimEnd(){
+	return '</td>';
+}
+function outTableDelimEnd(){
+	echo '</td>';
+}
+function tagTableDelimAndRecordEnd(){
+	return "</td></tr>\n";
+}
+function outTableDelimAndRecordEnd(){
+	echo "</td></tr>\n";
+}
+function tagTableCellDelim(){
+	return '</td><td>';
+}
+function outTableCellDelim(){
+	echo '</td><td>';
+}
+function tagTableRecordDelim(){
+	return "</tr>\n<tr>";
+}
+function outTableRecordDelim(){
+	echo "</tr>\n<tr>";
+}
+function tagTableCell($text, $halignment = AL_None){
+	return tagTableDelim ($halignment) . htmlentities ($text) . tagTableDelimEnd();
+}
+function outTableCell($text, $halignment = AL_None){
+	outTableDelim ($halignment);
+	echo $text;
+	outTableDelimEnd();
+}
+function tagTableCellConvert($text, $halignment = AL_None){
+	return tagTableDelim ($halignment) . htmlentities ($text) . tagTableDelimEnd();
+}
+function outTableCellConvert($text, $halignment = AL_None){
+	outTableDelim ($halignment);
+	echo htmlentities ($text);
+	outTableDelimEnd();
+}
+function outTableTextField ($prefix, $name, $value, $size, 
+		$maxsize=0, $halignment = AL_None){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim($halignment);
+	guiTextField ($name, $value, $size, $maxsize);
+	outTableDelimEnd();
+}
+function outTablePasswordfield ($prefix, $name, $value, $size, 
+		$maxsize=0, $halignment = AL_None){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim($halignment);
+	guiPasswordField ($name, $value, $size, $maxsize);
+	outTableDelimEnd();
+}
+function outTableButton ($prefix, $name, $text, $halignment = AL_None){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim ($halignment);
+	guiButton ($name, $text);
+	outTableDelimEnd(); 
+}
+function outTableCheckBox ($prefix, $name, $text, $selected, $halignment = AL_None){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim ($halignment);
+	guiCheckBox ($name, $text, $selected);
+	outTableDelimEnd(); 
+}
+function outTableComboBox ($prefix, $name, $names, $values, $index, $halignment = AL_None){
+	if ($prefix != null)
+		outTableCell ($prefix);
+	outTableDelim ($halignment);
+	guiComboBox ($name, $names, $values, $index);
+	outTableDelimEnd(); 
+}
 // --- Allgemeine Funktionen --------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
 	echo "<input type=\"$type\" name=\"$name\"";
@@ -133,10 +306,9 @@ function guiUploadFileAnswerUnique (&$session, $destination,
 	return $message;
 }
 
-function guiLine ($width) {
-	if (! isset ($width))
-		$width = 2;
-	echo '<hr style="width: 100%; height: ' . $width . "px;\">\n";
+function guiLine (&$session, $width = 2) {
+	$session->trace (TC_Gui2, "guiLine: $width");
+	echo '<hr style="width: 100%; height: ' . (0+$width) . "px;\">\n";
 }
 function guiFinishBody (&$session, $param_no){
 	$session->trace (TC_Gui2, 'guiFinishBody');
@@ -147,7 +319,7 @@ function guiFinishBody (&$session, $param_no){
 		&& ! empty ($text))
 		echo $text;
 	else {
-		guiLine (1);
+		guiLine ($session, 1);
 		modStandardLinks ($session);
 		echo "\n</body>\n</html>\n";
 	}
@@ -185,7 +357,7 @@ function guiHeadline (&$session, $level, $text) {
 }
 function guiStartForm (&$session, $pagename = null) {
 	$session->trace (TC_Gui2, 'guiStartForm');
-	echo '<form name="form" action="' . $session->fScriptURL . '" method="post">' . "\n";
+	echo '<form action="' . $session->fScriptURL . '" method="post">' . "\n";
 	if ($pagename)
 		guiHiddenField ('last_pagename', $pagename);
 }
@@ -296,7 +468,7 @@ function guiStandardBodyEnd (&$session, $pos) {
 		if (! defined ('Th_LoginBodyEnd'))
 			define ('Th_LoginBodyEnd', 0);
 		if ($pos != Th_LoginBodyEnd){
-			guiLine (1);
+			guiLine ($session, 1);
 			modStandardLinks ($session);
 			echo '</body>';
 		}
