@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.4 2004/09/26 23:00:02 hamatoma Exp $
+// $Id: install.php,v 1.5 2004/10/07 19:53:31 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -590,26 +590,35 @@ function populate ($session, $fn_sql) {
 					|| ($pos = strpos ($line, '//')) == 0 && is_int ($pos)
 					)
 					$comments++;
-				else if ($status == 'create') {
-					$sql .= ' ' . $line;
-					if ( ($pos = strpos ($line, ')')) == 0 && is_int ($pos)) {
-						sqlStatement ($session, $sql);
-						$status = null;
-					} else {
+				else if (strpos ($line, 'SE InfoBasar;') == 1)
+					$sesssion->trace (TC_Init1, "Use db gefunden");
+				else { 
+					$len = strlen ($line);
+					if ( ($pos = strpos ($line, ';', $len - 2)) > 0){
+						$line = substr ($line, 0, $pos);
+						$session->trace (TC_Gui3, "Strichpunkt entfernt: $line");
 					}
-				} elseif ( ($pos = strpos ($line, 'CREATE TABLE')) == 0 && is_int ($pos)) {
-						$sql = str_replace ('infobasar_', $db_prefix, $line);
-						$status = 'create';
-				} else {
-					if ( ($pos = strpos ($line, 'ROP TABLE')) == 1)
-						$line = str_replace ('infobasar_', $db_prefix, $line);
-					elseif ( ($pos = strpos ($line, 'NSERT INTO')) == 1)
-						$line = str_replace (' INTO infobasar_', ' INTO ' . $db_prefix,
-							$line);
-					elseif ( ($pos = strpos ($line, 'PDATE ')) == 1)
-						$line = str_replace ('UPDATE infobasar_', 'UPDATE ' . $db_prefix,
-							$line);
-					sqlStatement ($session, $line);
+					if ($status == 'create') {
+						$sql .= ' ' . $line;
+						if ( ($pos = strpos ($line, ')')) == 0 && is_int ($pos)) {
+							sqlStatement ($session, $sql);
+							$status = null;
+						} else {
+						}
+					} elseif ( ($pos = strpos ($line, 'CREATE TABLE')) == 0 && is_int ($pos)) {
+							$sql = str_replace ('infobasar_', $db_prefix, $line);
+							$status = 'create';
+					} else {
+						if ( ($pos = strpos ($line, 'ROP TABLE')) == 1)
+							$line = str_replace ('infobasar_', $db_prefix, $line);
+						elseif ( ($pos = strpos ($line, 'NSERT INTO')) == 1)
+							$line = str_replace (' INTO infobasar_', ' INTO ' . $db_prefix,
+								$line);
+						elseif ( ($pos = strpos ($line, 'PDATE ')) == 1)
+							$line = str_replace ('UPDATE infobasar_', 'UPDATE ' . $db_prefix,
+								$line);
+						sqlStatement ($session, $line);
+					}
 				}
 			}
 			fclose ($file);
@@ -637,7 +646,8 @@ function sqlUpdate (&$session, $table, $what, $where){
 function sqlStatement (&$session, $query) {
 	$session->trace (TC_Db1, 'sqlStatement: ' . $query);
 	if (!mysql_query($query, $session->fDbInfo))
-		echo '<p>+++ SQL-Fehler: ' . htmlentities (mySql_error ()) . " <br/>$query</p>";
+		echo '<p>+++ SQL-Fehler: ' . htmlentities (mySql_error ()) . '<br/>' 
+			. htmlentities ($query) . '</p>';
 }
 // -----------------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
