@@ -1,5 +1,5 @@
 <?php
-// $Id: base_module.php,v 1.4 2005/01/11 00:39:07 hamatoma Exp $
+// $Id: base_module.php,v 1.5 2005/01/11 01:44:44 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -67,6 +67,8 @@ define ('Th_EditEndWiki', 246);
 define ('Th_PreviewStart', 247);
 define ('Th_PreviewEnd', 248);
 
+if (empty ($_SESSION ['session_no']))
+	$_SESSION ['session_no'] = 1;
 $session = new Session ($start_time, $session_id, 
 	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
 	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
