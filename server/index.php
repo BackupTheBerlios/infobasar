@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.4 2004/05/27 22:45:43 hamatoma Exp $
+// $Id: index.php,v 1.5 2004/05/31 23:19:34 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -36,7 +36,6 @@ include "gui.php";
 if ($db_type == 'MySQL') {
 	include "db_mysql.php";
 }
-
 $session = new Session ();
 init ($session, $dbType);
 
@@ -44,9 +43,9 @@ init ($session, $dbType);
 dbOpen($session);
 
 //p ('User,Id,Login: ' . $session_user . "," . $session_id . "/" . $login_user);
-if (empty ($session_user) && getLoginCookie ($session, $user, $code)
+if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	&& dbCheckUser ($session, $user, $code) == ''){
-	$session->trace ($TC_Init, 'index.php: Cookie erfolgreich gelesen');
+	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
 }
 $rc = dbCheckSession ($session);
 $do_login = false;
@@ -150,7 +149,7 @@ function init (&$session, $dbType) {
 		+ 1 * TC_Update + 1 * TC_Insert + 0 * TC_Query
 		+ 0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2
 		+ TC_Error + TC_Warning + TC_X;
-	#$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
+	$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
 	#$session->fTraceFlags = TC_All;
 } // Config
 
