@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.2 2004/09/21 19:45:51 hamatoma Exp $
+// $Id: admin.php,v 1.3 2004/09/22 07:13:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -516,6 +516,7 @@ function admForumAnswer (&$session){
 	admForum ($session, $message, $mode);
 }
 function admBuildCondition (&$session, $pattern){
+	$session->trace(TC_Gui2, 'admBuildCondition');
 	$patterns = explode ('|', $pattern);
 	$session->trace(TC_Gui2, 'admBuildCondition');
 	if (count ($pattern) == 0)
@@ -603,7 +604,7 @@ function admExportPagesAnswer (&$session){
 								. "\tlines=" . (1+substr_count ($text [3], "\n")) 
 								. "\ttype=" . $text [0] 
 								. "\tpage=" . $page_id
-								. "\text=" . $text_id 
+								. "\ttext=" . $text_id 
 								. "\tby=" . $text [1]
 								. "\tat=" . $text [2]
 								. "\n");
@@ -619,7 +620,7 @@ function admExportPagesAnswer (&$session){
 	admExportPages ($session, $message);
 }
 function admImportPages (&$session,  $message) {
-	global $import_pattern, $import_preview, $import_exists, $last_page, $import_import;
+	global $import_pattern, $import_preview, $import_exists, $last_page, $import_import, $import_replace;
 	$session->trace(TC_Gui1, 'admImportPages');
 	
 	if (false && $message == null && isset ($import_import))
@@ -636,6 +637,9 @@ function admImportPages (&$session,  $message) {
 		$dir = opendir ($dir_name);
 		guiHeadline ($session, 3, "Importverzeichnis auf dem Server: " . $dir_name);
 		guiStartForm ($session, "import", P_ImportPages);
+		guiCheckBox ('import_replace', 'Historie löschen', 
+			isset ($import_replace) && $import_replace == C_CHECKBOX_TRUE);
+		echo '<br/>';
 		echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
 		echo '<td><b>Gr&ouml;&szlig;e</b></td><td><b>Ge&auml;ndert am</b></td><td><b>Aktion</b></td></tr>' . "\n";
 		$path = $session->fullPath ("import", true); 
@@ -650,7 +654,7 @@ function admImportPages (&$session,  $message) {
 				echo '</td><td>';
 				echo date ("Y.m.d H:i:s", filemtime ($name));
 				echo '</td><td>';
-				guiHiddenField ('import_file', $file);
+				guiHiddenField ('import_file', $name);
 				guiButton ('import_import', 'Importieren');
 				echo '</td></tr>' . "\n";
 			}
@@ -663,7 +667,10 @@ function admImportPages (&$session,  $message) {
 	}
 }
 function admImportPagesAnswer (&$session){
-	global $import_upload, $import_file, $import_preview;
+	global $import_upload, $import_file, $import_preview, $import_import, $import_replace;
+	
+	guiStandardHeader ($session, 'SeitenimportAntwort', Th_StandardHeader,
+		Th_StandardBodyStart);
 	$session->trace(TC_Gui1, 'admImportPagesAnswer');
 	$message = null;
 	if (isset ($import_upload)){
@@ -673,34 +680,50 @@ function admImportPagesAnswer (&$session){
 		# $filename = null, $button = 'upload_go', $file = 'upload_file'
 	} elseif (isset ($import_import)){
 		if (! file_exists ($import_file))
-			$message = "Datei nicht gefunden: " + $import_file;
+			$message = "Datei nicht gefunden: " . $import_file;
 		else {
 			$file = fopen ($import_file, "r");
 			$count_inserts = 0;
 			$count_updates = 0;
+			$count_lines = 0;
 			while ($line = fgets ($file)){
-				if (preg_match ('/^#name=([^\t])\tlines=(\d+)\ttype=(.)\t/', $line, $param)){
-					if ($page = dbPageId ($session, $param [0])){
+				if (preg_match ('/^#name=(\S+)\tlines=(\d+)\ttype=(\w+)\t/', $line, $param)){
+					$name = $param[1];
+					$lines = $param[2];
+					$type = $param [3];
+					$session->trace(TC_X, 'admImportPagesAnswer-2: ' . $line);
+					if ( ($page = dbPageId ($session, $name)) > 0){
 						$count_updates++;
+						if ($import_replace == C_CHECKBOX_TRUE)
+							dbDeleteByClause ($session, T_Text, 'page=' . $page);
 					} else {
 						$page = dbInsert ($session, T_Page, 'name,type', 
-							dbSqlString ($session, $param [0]) . ',' 
-							. dbSqlString ($session, $param [2]));
+							dbSqlString ($session, $name) . ',' 
+							. dbSqlString ($session, $type));
 						$count_inserts++;
 					}
 					$text = "";
-					for ($ii = 0; $ii < $param[1]; $ii++)
+					$session->trace(TC_X, 'admImportPagesAnswer-3: ' . $lines);
+					$count_lines += $lines;
+					for ($ii = 0; $ii < $lines; $ii++)
 						$text .= fgets ($file);
-					dbInsert ($session, T_Text, 'page,type,text', 
-						$page . ',' . dbSqlString ($session, $param [2]) . ','
+					if ($import_replace == C_CHECKBOX_TRUE)
+						$old_id = dbSingleValue ($session, 'select max(id) from ' . dbTable ($session, T_Text) 
+							. ' where page=' . (0+$page));
+					$text_id = dbInsert ($session, T_Text, 'page,type,text', 
+						$page . ',' . dbSqlString ($session, $type)
 						. ',' . dbSqlString ($session, $text));
+					if ($import_replace == C_CHECKBOX_TRUE && $old_id > 0)
+						dbUpdate ($session, T_Text, $old_id, 'replacedby=' . $text_id);
 				}
 			}
 			fclose ($file);
-			$message = "Datei " . $import_file . " wurde eingelesen. Neu: " . (0 + $count_inserts)
-				. " Geändert: " . (0 + $count_updates);
+			$message = 'Datei ' . $import_file . ' wurde eingelesen. Neu: ' . (0 + $count_inserts)
+				. ' Geändert: ' . (0 + $count_updates) . ' Zeilen: ' . (0 + $count_lines);
 		}
-	}
+	} else
+		$message = "unbekannte Antwort.";
+	
 	admImportPages ($session, $message);
 }
 function admSaveTable (&$session, $table, $ignore_id, &$file){

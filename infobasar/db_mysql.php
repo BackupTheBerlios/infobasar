@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.4 2004/09/21 19:45:51 hamatoma Exp $
+// $Id: db_mysql.php,v 1.5 2004/09/22 07:13:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -152,14 +152,21 @@ function dbFreeRecord (&$session) {
 	$session->setDbResult (null);
 }
 function dbInsert (&$session, $table, $idlist, $values){
-	$session->trace (TC_Db1 + TC_Insert, "dbInsert: $table, ($idlist), ($values)");
+	$query = 'insert into ' . dbTable ($session, $table) 
+		. "($idlist) values ($values);";
+	$session->trace (TC_Db1 + TC_Insert, "dbInsert: $query");
 	$rc = null;
-	if (!mysql_query ('insert into ' . dbTable ($session, $table)
-			. "($idlist) values ($values);", $session->fDbInfo))
+	if (!mysql_query ($query, $session->fDbInfo))
 		error ('dbInsert: ' . mysql_error () . ": $table ($idlist) ($values)");
 	else
 		$rc = mysql_insert_id ();
 	return $rc;
+}
+function dbDeleteByClause (&$session, $table, $what) {
+	$query = 'delete from ' . dbTable ($session, $table) . ' where ' . $what;
+	$session->trace (TC_Db1 + TC_Update, "dbDeleteByClause: $query");
+	if (!mysql_query ($query, $session->fDbInfo))
+		error ('dbDelete: ' . mysql_error () . " $query");
 }
 function dbUpdate (&$session, $table, $id, $what) {
 	$session->trace (TC_Db1 + TC_Update, "dbUpdate: $table, $id, $what");

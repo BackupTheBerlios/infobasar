@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.4 2004/09/21 19:45:51 hamatoma Exp $
+// $Id: classes.php,v 1.5 2004/09/22 07:13:30 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -268,7 +268,7 @@ class Session {
 			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
 			+ 0 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
 			+ 0 * TC_Layout1
-			+ 1 * (0 * TC_Update + 0 * TC_Insert + 1 * TC_Query)
+			+ 1 * (1 * TC_Update + 1 * TC_Insert + 1 * TC_Query)
 			+ 0 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
