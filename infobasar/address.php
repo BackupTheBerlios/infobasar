@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.1 2004/10/13 22:20:09 hamatoma Exp $
+// $Id: address.php,v 1.2 2004/10/14 02:46:20 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -43,9 +43,14 @@ define ('P_EditCard', 'editcard');
 define ('P_ShowBooks', 'showbooks');
 define ('P_ShowCards', 'showcards');
 
+// Theme param no:
 define ('Th_AddressHeader', 223);
 define ('Th_AddressBodyStart', 224);
 define ('Th_AddressBodyEnd', 225);
+
+// Tables:
+define ('Tab_Book', 'address_book');
+define ('Tab_Card', 'address_card');
 
 $session = new Session ($start_time);
 
@@ -85,28 +90,45 @@ if ($rc != null) {
 }
 exit (0);
 // ---------------------------------
-function addressEditBook (&$session){
-	global $HTTP_POST_VAR;
-	$bookname = $HTTP_POST []
-	guiStandardHeader ($session, 'Ändern eines Adressbuchs',
+function addressEditBook (&$session, $message = null){
+	$id_book = $_POST ['book_id'];
+	if (empty ($book_id)){
+		$book_id = dbGetValueByClause ($session, Tab_Book, 'min(id)', '1');
+		list ($name, $description) = dbGetRecordById ($session, Tab_Book, 
+			$book_id, 'name, description');
+	} else {
+		$name = $_POST ['book_name'];
+		$description = $_POST ['book_description'];	
+	}
+	guiStandardHeader ($session, 'Ändern eines Adressbuchs ',
 		Th_AddressHeader, Th_AddressBodyStart);
 	if (isset ($search_title) || isset ($search_body))
 		baseSearchResults ($session);
-	echo '<p>Addressbuch ';
-	echo $
+	if ($message <> null)
+		guiParagraph($session, $message, false);
 	guiStartForm ($session, 'search', P_EditBook);
-	guiHiddenField ('last_pagename', $last_pagename);
-	echo "<table border=\"0\">\n<tr><td>Titel:</td><td>";
-	guiTextField ('search_titletext', $search_titletext, 32, 64);
-	echo " "; guiButton ('search_title', "Suchen");
-	echo "</td></tr>\n<tr><td>Beitrag:</td><td>";
-	guiTextField ('search_bodytext', $search_bodytext, 32, 64);
-	echo " "; guiButton ('search_body', "Suchen");
-	echo "</td></tr>\n<tr><td>Maximale Trefferzahl:</td><td>";
-	guiTextField ("search_maxhits", $search_maxhits, 10, 10);
+	guiHiddenField ('book_id', $book_id);
+	echo "<table border=\"0\">\n<tr><td>Name:</td><td>";
+	guiTextField ('book_name', $name, 32, 64);
+	echo "</td></tr>\n<tr><td>Beschreibung:</td><td>";
+	guiTextField ('book_description', $description, 32, 64);
+	echo "</td></tr>\n<tr><td></td><td>";
+	guiButton ('book_change', 'Ändern');
+	echo ' ';
+	guiButton ('book_new', 'Neu');
+	echo "</td></tr>\n<tr><td>Nächster:</td><td>";
+	$book_list = dbColumnList (Tab_Book, 'name', '1');
+	guiComboBox ('book_next', $book_list, null);
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_AddressBodyEnd);
+}
+function addressEditBookAnswer (&$session){
+	$message = null;
+	if (! empty ($_POST ['book_change'])){
+	} elseif (! empty ($_POST ['book_new'])){
+	}
+	addressEditBook ($session, $message);
 	
 }
 ?>
