@@ -1,18 +1,30 @@
 #!/usr/bin/perl
 # Erstellen eines Archivs aus einem Dateibaum
 #
-# Format:
-# <hex4_size> <filename_with_path> <hex8_sec_since_1970)>
-# <hex8_size> <file_data>
+# Aufruf: mk_arch.pl <opts> file_list
+# Format Dateiliste:
+# Je Zeile ein Dateiname (mit Pfad).
+#
+# Archivformat:
+# Kopf:
+# <hex2_size_header>hamatomaarchive<char4_version>
+# Je Datei
+# <hex4_name_size> <filename_with_path> Pfadnamen mit '/' als Trenner!
+# <hex8_sec_since_1970)> <char_file_type> <char3_res_1>
+# <hex2_info_size> <hex8_rights>
+# <hex8_data_size> <file_data>
+# <hex8_magic> <hex16_checksum>
 use strict;
 
 my $archive = "a.hma";
 my $dir = ".";
 my $s_buf_size = 64;
+my $s_magic = 'HaMaToMa';
+#              12345678
 
 my $s_verbose = 0;
 
-while ($ARG[0] =~ /^-(.)(.*)/) {
+while ($ARGV[0] =~ /^-(.)(.*)/) {
 	if ($1 eq "a") {
 		$archive = $2;
 	} elsif ($1 eq "v") {
@@ -23,73 +35,84 @@ while ($ARG[0] =~ /^-(.)(.*)/) {
 	shift;
 } # while
 
-if ($#ARGS < 0) {
-	&one_dir (".");
+if ($#ARGV < 0) {
+	&help ("keine Dateiliste angegeben");
 } else {
-	while ($#ARGS >= 0){
-		$dir = shift;
-		chomp($olddir = `pwd`);
-		&one_dir ($dir);
-		
-	}
+	open (ARCHIVE, ">$archive") || die "$archive: $!";
+	my $header = "HamatomaArchive\t0100";
+	#             123456789 123456789
+	print ARCHIVE sprintf ("%02x", length ($header)), $header;
+	&FileList ($ARGV [0]);
 }
 exit 0;
 
 sub help {
 	print <<EOS;
-Aufruf: mk_archiv <opts> [<dir>]
+Aufruf: mk_archiv.pl [<opts>] filelist
 <opt>:
  -a<archive>    Archiv. VE: a.hma
  -v             Meldungen ausgeben
- -r             
-<dir>           VerzeichnisbaumDateibaum
+<filelist>      Listendatei mit einem Dateinamen pro Zeile, Kommentare mit #
 +++ $_[0]
 EOS
 	exit 1;
 }
 
 sub OneFile {
+# <hex4_name_size> <filename_with_path> 
+# <hex8_sec_since_1970)> <char_file_type> <char3_res_1>
+# <hex2_info_size> <hex8_rights>
+# <hex8_data_size> <file_data>
+# <hex8_magic_3141592653>
+# <hex128_checksum>
 	my $name = shift;
 	my $date = shift;
 	my $size = shift;
+	my $rights = shift;
 	print $name, "\n" if $s_verbose;
 	if (! open (FILE, $name)){
 		print "+++ nicht zu öffnen: $name: $!";
 	} else {
-		print ARCHIVE sprintf ("%04x", length ($name), $name, sprintf ("%08x%08x", $date), $size);
+		my $name2 = $name;
+		$name2 =~ s!\\!/!g;
+		print ARCHIVE sprintf ("%04x", length ($name2)), $name2;
+		print ARCHIVE sprintf ("%08x", $date);
+		print ARCHIVE -d $name ? 'd' : 'f', '   ';
+		print ARCHIVE sprintf ("%02x", 8);
+		print ARCHIVE sprintf ("%08x", $rights);
+		print ARCHIVE sprintf ("%08x", $size);
 		my $sum = 0;
-		my $bytes;
-		while ( ($bytes = fwrite (FILE, $buffer, $s_buf_size) {
+		my $checksum = '0' x 16;
+		my ($bytes, $buffer);
+		while ( ($bytes = read (FILE, $buffer, $s_buf_size)) > 0) {
 			print ARCHIVE $buffer;
-			$sum += bytes;
+			$sum += $bytes;
 		}
 		close (FILE);
-		if ($sum ne $size)
-			print "$name: Größe falsch: $bytes statt $size\n";
+		if ($sum ne $size){
+			print "+++ $name: Größe falsch: $bytes statt $size\n";
+		}
+		print ARCHIVE $s_magic, $checksum;
 	}
 }
 
-sub OneDir {
-	my $dir = shift;
-	print "= ", $dir, "\n" if $s_verbose;
-	if (! opendir (DIR, $dir)) {
-		print "+++ kann Verzeichnis nicht lesen: $dir ($!)\n";
-	} else {
-		@files = readdir (DIR);
-		close (DIR);
-		foreach (@files) {
-			next if /^\.{1,2}$/;
-			$name = $dir . $s_delim . $_;
-			# Filter
+sub FileList {
+	my $fn_list = shift;
+	open (LIST, $fn_list) || die "$fn_list: $!";
+	while (<LIST>){
+		chomp;
+		if (/\S/ && ! /^[#;]/) {
 			my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
        		$atime,$mtime,$ctime,$blksize,$blocks) = stat;
-			if (-d) {
-				&OneDir ($name);
+			if (! $mtime) {
+				print "+++ $_: $!\n";
 			} else {
-				&OneFile ($name, $size, $mtime);
+				OneFile ($_, $mtime, $size, $mode);
 			}
 		}
 	}
+	close ARCHIVE;
+	close (LIST);
 }
 
 
