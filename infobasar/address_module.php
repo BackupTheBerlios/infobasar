@@ -1,6 +1,5 @@
 <?php
-// address.php: Module for address administration.
-// $Id: address_module.php,v 1.1 2005/01/10 16:36:41 hamatoma Exp $
+// $Id: address_module.php,v 1.2 2005/01/10 19:33:48 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
