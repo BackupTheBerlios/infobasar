@@ -1,15 +1,18 @@
-# Export 
-# am: 2004.10.25 09:27:16
-# von: 
+# Seiten für die Initialisierung eines Wikis 
+# am: 2004.12.17 13:07:17
+# von: wk
 # Modus: wiki
-# Prefix: infobasar_
-# Muster: Hilfe%|Kategorie%|Wiki%
-# Seiten: 2, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 19, 22
 
 
-#name=HilfeAendern	lines=1	type=h	page=2	text=4	by=	at=
-<h1>Hilfe f&uuml; Formatieren:</h>
-#name=Wiki	lines=32	type=w	page=5	text=12	by=wk	at=2004-09-02 10:45:37
+#name=HilfeAendern	lines=7	type=w	page=12	text=147	by=wk	at=2004-12-07 22:34:30
+* Eine Wikiseite aufrufen
+* Auf den Button "Bearbeiten" drücken. Der Button befindet sich unten und oben.
+* Den Text in dem Textfeld bearbeiten, dabei die Wiki-Syntax beachten. Eine Kurzbeschreibung befindet sich unter dem Textfeld in einer Tabelle.
+* Am besten häufig zwischenspeichern, damit nichts verloren geht, wenn der Browser mal was verwirft (bei "unerwarteten Tastendrücken" wie Strg-Z). Nach dem Zwischenspeichern wird automatisch die Seite als Vorschau angezeigt.
+* Am Ende auf jeden Fal auf den Button "Speichern (fertig)" drücken.
+----
+KategorieHilfe
+#name=Wiki	lines=32	type=w	page=13	text=12	by=	at=
 Wiki ist die Abkürzung für Wiki-Wiki und stellt eine Interaktionsform im Internet dar:
 
 ! Grundprinzip
@@ -42,60 +45,60 @@ Wiki Wiki kommt aus dem Hawaianischen und bedeutet schnell, schnell.
 * Es können ganz einfach neue Seiten erstellt werden: Auf einer bestehenden Seite wird einfach der Name der neuen Seite (normalerweise ein Wiki-Name) eingetragen. Wird die Seite gespeichert, so erscheint vor dem Wiki-Namen ein ?. Dies sagt aus, dass diese Seite noch nicht existiert. Klickt man auf den Verweis, so wird diese Seite neu angelegt.
 ----
 KategorieHilfe
-#name=KategorieHilfe	lines=3	type=w	page=6	text=13	by=wk	at=2004-09-02 10:30:20
-<?plugin BackLinks?>
-----
-KategorieKategorie
-#name=KategorieKategorie	lines=1	type=w	page=7	text=14	by=wk	at=2004-09-02 10:33:24
-<?plugin BackLinks?>
-#name=HilfeFormatierungen	lines=6	type=w	page=8	text=15	by=wk	at=2004-09-02 10:34:30
+#name=HilfeFormatierungen	lines=6	type=w	page=14	text=61	by=wk	at=2004-09-22 14:46:43
 Es gibt folgende Formatierungsmöglichkeiten im Wiki:
 * [HilfeFormatierungImAbsatz] ('''Betonung''', ''Zitat'', __unterstrichen__...)
 * [HilfeAbsatzFormate] (Überschriften, Aufzählungen, Tabellen)
 * HilfeVerweise (Wiki-Namen, Externe Links, Bilder...)
 ----
 KategorieHilfe
-#name=HilfeFormatierungImAbsatz	lines=60	type=w	page=9	text=17	by=wk	at=2004-09-02 10:57:31
+#name=HilfeFormatierungImAbsatz	lines=66	type=w	page=15	text=62	by=wk	at=2004-09-22 14:46:56
 Ein Wiki bietet einfach zu bedienende Formatierungsmöglichkeiten:
 
-! Zitat
-Ein Zitat wird in doppelte einfache Apostrophe (auf der Tastatur neben dem Ä, über dem #) eingeschlossen:
-
-'''Beispiel''':
-
-Er sprach von '[']hochgradigem Blödsinn[']'.
-
-ergibt
-
-Er sprach von ''hochgradigem Blödsinn''.
 ! Betonung
 Eine Betonung wird in  doppelte einfache Apostrophe (auf der Tastatur neben dem Ä, über dem #) eingeschlossen:
 
 
-'''Beispiel''':
+''Beispiel'':
 
-Eine '[']'echte'[']' Qualifikation ist nachzuweisen.
+[code]
+Eine ''echte'' Qualifikation ist nachzuweisen.
+[/code]
 
 ergibt
 
-Eine '''echte''' Qualifikation ist nachzuweisen.
+Eine ''echte'' Qualifikation ist nachzuweisen.
+
+! Zitat
+Ein Zitat wird in dreifache einfache Apostrophe (auf der Tastatur neben dem Ä, über dem #) eingeschlossen:
+
+''Beispiel'':
+
+[code]
+Er sprach von '''hochgradigem Blödsinn'''.
+[/code]
+
+ergibt
+
+Er sprach von '''hochgradigem Blödsinn'''.
 
 !! Absatz
 Ein Absatz wird durch eine Leerzeile beendet.
 
-'''Beispiel''':
+''Beispiel'':
 
 Erster Teil des Absatzes in Zeile1,[Newline]
 zweiter Teil in Zeile 2
 
 wird zu
 
-Erster Teil des Absatzes in Zeile1, zweiter Teil in Zeile 2
+Erster Teil des Absatzes in Zeile1, 
+zweiter Teil in Zeile 2
 
 ! Unterstreichung:
 Eine Unterstreichung wird mit zwei Unterstrichen eingerahmt:
 
-'''Beispiel''':
+''Beispiel'':
 
 Ich weise  _[_]besonders[_]_ darauf hin.
 
@@ -107,7 +110,7 @@ Ich weise  __besonders__ darauf hin.
 ! Sonstiges
 Soll ein Sonderzeichen nicht seine Sonderfunktion annehmen, so wird es einfach in eckige Klammern gesetzt:
 
-'''Beispiel''':
+''Beispiel'':
 
 Hier kommen 2 _[[]_[]], die aber keine Unterstreichung bewirken sollen.
 
@@ -116,39 +119,43 @@ wird zu:
 Hier kommen 2 _[_], die aber keine Unterstreichung bewirken sollen.
 ----
 KategorieHilfe
-#name=HilfeAbsatzFormate	lines=93	type=w	page=10	text=38	by=wk	at=2004-09-21 08:34:58
+#name=HilfeAbsatzFormate	lines=121	type=w	page=16	text=59	by=wk	at=2004-09-22 14:16:52
+Absatzformate werden durch ein bestimmtes Zeichen am Zeilenanfang eingeleitet.
+
 Weitere Formatierungsmöglichkeiten:
 * HilfeFormatierungen
 * HilfeFormatierungImAbsatz
 * HilfeVerweise
-
-'''Absatzformate''' werden durch ein bestimmtes Zeichen am Zeilenanfang eingeleitet.
-
 ! Absatzende
 Ein Absatzende wird durch eine Leerzeile bewirkt.
 
-'''Beispiel''':
+''Beispiel'':
+
 [code]
-Hier werden 2 Zeilen 
+Hier werden 2 Zeilen
 ohne Leerzeile geschrieben.
 
 Nach einer Leerzeile beginnt der nächste Absatz.
 [/code]
+
 wird zu
 
 Hier werden 2 Zeilen 
 ohne Leerzeile geschrieben.
 
 Nach einer Leerzeile beginnt der nächste Absatz.
-! Überschrift
-Eine Überschrift wird mit einem '!' am Zeilenanfang erzeugt. Je mehr '!', um so höher der Grad der Überschrift (also um so kleiner die Darstellung):
 
-'''Beispiel''':
+! Überschrift
+Eine Überschrift wird mit einem '!' am Zeilenanfang erzeugt. Je mehr '!', um so höher der Grad der Überschrift:
+
+''Beispiel'':
+
 [code]
 ! Hauptüberschrift
 !! Überschrift 2. Grades
 !!! Überschrift 3. Grades
 [/code]
+
 wird zu
 
 ! Hauptüberschrift
@@ -158,184 +165,172 @@ wird zu
 !Horizontale Linie
 Beginnt eine Zeile mit mindestens 4 - (Minus), wird eine horizontale Linie gezeichnet. Je mehr -, um so dicker.
 
-'''Beispiel''':
+''Beispiel'':
+
 [code]
 ----
 --------
 [/code]
+
 ergibt
 
 ----
 ----------
 
-
 ! Aufzählung
 Steht als erstes Zeichen in der Zeile ein *, wird die Zeile als Teil einer Aufzählung verstanden:
 
-'''Beispiel''':
+''Beispiel'':
+
 [code]
 * Nordpferde
 * Südpferde
 [/code]
-ergibt
 
+ergibt
 * Nordpferde
 * Südpferde
+
 ! Nummerierte Aufzählung
 Bei nummerierten Aufzählungen ist das erste Zeichen ein #.
 
-'''Beispiel''':
+''Beispiel'':
+
 [code]
 # Nordpferde
 # Südpferde
 [/code]
 
 ergibt
+
 # Nordpferde
 # Südpferde
 
 ! Tabellen
-Eine Tabelle wird mit einem | (links neben dem Y auf der Tastatur) eingeleitet.
-Eine Tabellenüberschrift beginnt mit !| am Zeilenanfang.
+Eine Tabelle wird mit einem | (links neben dem Y auf der Tastatur) eingeleitet, ein Tabellenkopf mit einem !|:
 
-'''Beispiel''':
+''Beispiel'':
+
 [code]
 !|Platz|Name|Pferd
-|1|Pfister|Junior
+|1|Mayer|Dschungelboy
 [/code]
+
 ergibt
 
 !|Platz|Name|Pferd
-|1|Pfister|Junior
+|1|Mayer|Dschungelboy
+
+! Ohne Formatierung:
+Wenn ein Text orginal ohne Wiki-Interpretation eingefügt werden soll,
+dann muss er mit 2 Zeilen [[]code] und [[]/code] gerahmt werden:
+
+''Beispiel'':
+
+[Newline][[]code]
+[Newline]| Diese Zeile fängt mit | an, gehört aber zu keiner Tabelle
+[Newline]! Dies ist keine Überschrift!
+[Newline][[]/code]
+
+wird zu
+
+[code]
+| Diese Zeile fängt mit | an, gehört aber zu keiner Tabelle
+! Dies ist keine Überschrift!
+[/code]
 
 ----
 KategorieHilfe
-#name=HilfeVerweise	lines=69	type=w	page=11	text=21	by=wk	at=2004-09-02 10:52:46
-Weitere Formatierungsmöglichkeiten:
-* HilfeFormatierungen
-* HilfeFormatierungImAbsatz
-* HilfeAbsatzFormate
-
+#name=HilfeVerweise	lines=68	type=w	page=17	text=148	by=wk	at=2004-12-07 22:36:12
 ! Wiki-Namen
 Wiki-Namen sind die einfachste Möglichkeit eines Verweises: Jedes Wort, das innerhalb des Wortes einen oder mehrere Großbuchstaben enthält, ist ein Wiki-Wort. Ein Wiki-Wort benennt eine Seite: Wird ein Wiki-Name im Text geschrieben, so ist dies automatisch ein Verweis auf die Seite dieses Namens.
 
-'''Beispiel''':
+''Beispiel'':
 
 StartSeite
 
 !! Wiki-Namen entwerten
 Soll ein Wort mit mehreren Großbuchstaben kein Wiki-Namen sein, so wird ein ! vorangestellt:
 
-'''Beispiel''':
+''Beispiel'':
 [code]
 Dies ist eine !GmbH
 [/code]
+
 wird zu
 
 Dies ist eine !GmbH
 
 !Externe Links
-Wird eine korrekte !URL im Text eingetragen, so wird daraus automatisch ein Verweis:
+Wird eine korrekte URL im Text eingetragen, so wird daraus automatisch ein Verweis:
 
-'''Beispiel''':
+''Beispiel'':
+
+http://www.belios.de
+
+Soll ein Verweis einen anderen Text haben, so gilt die Formatierung: 
 [code]
-http://www.berlios.de
+[Verweis Text]
 [/code]
-ergibt
 
-http://www.berlios.de
+''Beispiel'':
 
-Soll ein Verweis einen anderen Text haben, so gilt die Formatierung: [[]Verweis Text[]]
-
-'''Beispiel''':
 [code]
-Siehe [http://www.berlios.de Open Source in Deutschland]
+Siehe [http://www.google.de Suchmaschine] 
 [/code]
+
 wird zu
 
-Siehe [http://www.berlios.de Open Source in Deutschland]
+Siehe [http://www.google.de Suchmaschine] 
 
 
-! Seitennamen ohne Wiki-Namen
-Soll eine Seite anderst als Wiki-Namen benannt werden, so ist die Bezeichnung in eckige Klammern zu setzen:
+! Seitennamen, die nicht Wiki-Namen sind
+Soll eine Seite anders als Wiki-Namen benannt werden, so ist die Bezeichnung in eckige Klammern zu setzen:
 
-'''Beispiel''':
+''Beispiel'':
 [code]
 [Wiki]
 [/code]
+
 wird zu
 
 [Wiki]
 
 ! Bilder
-Bilder sind einfach externe Verweise, jedoch mit einer !URL, die auf .jpg, .png, .gif endet.
+Bilder sind einfach externe Verweise, jedoch mit einer URL, die auf .jpg, .png, .gif endet.
 
-'''Beispiel''':
+''Beispiel'':
 [code]
-http://home.arcor.de/bewegendepferde/Pic/Logo3d.jpg
+http://google.de/intl/de_de/images/logo.gif
 [/code]
+
 wird zu
 
-http://home.arcor.de/bewegendepferde/Pic/Logo3d.jpg
+http://google.de/intl/de_de/images/logo.gif
 
 ----
 KategorieHilfe
-#name=KategorieHeimatSeite	lines=3	type=w	page=13	text=23	by=wk	at=2004-09-02 10:55:10
+#name=KategorieHeimatSeite	lines=3	type=w	page=128	text=30	by=wk	at=2004-09-22 11:26:28
 <?plugin BackLinks?>
 ----
 KategorieKategorie
-#name=Hilfe	lines=8	type=w	page=14	text=24	by=wk	at=2004-09-02 10:58:56
-*Wie benutze ich ein Forum: HilfeForum
-*Was ist [Wiki]
-*Wie erstelle ich eine Wiki-Seite: HilfeNeueWikiSeite
-*Wie gestalte ich meine Texte ansprechender: HilfeFormatierungen
-*Was sind Kategorien
-
-----
-KategorieHilfe | KategorieOrdnung
-#name=HilfeForum	lines=33	type=w	page=15	text=25	by=wk	at=2004-09-02 11:00:38
-! Wie benutze ich das Forum
-Ausgangspunkt ist die [http:!forumhome Forenübersicht].
-
-* Hier kannst Du ein Forum anklicken, das Dich interessiert.
-
-!! Im Forum lesen
-* Hier klickst Du ein Thema an, das Dich interessiert
-* Jetzt werden alle Beiträge zu diesem Thema angezeigt
-
-!! Auf einen Beitrag antworten
-* Willst Du auf ein Thema antworten, holst Du Dir das Thema her (siehe oben) und klickst dann auf "Antworten".
-* Es erscheint eine Seite, die das Thema aufführt und ein Eingabefeld enthält, das Deine Antwort aufnimmt.
-* Du kannst auf "Vorschau" klicken, dann siehst Du, wie der Beitrag dann erscheinen würde.
-* Am Ende klickst Du '''auf jeden Fall''' auf "Speichern", '''erst dann''' wird der Beitrag übernommen
-
-!! Ein neues Thema eröffnen:
-* Das Forum aufrufen (z.B. über die Forumsübersicht)
-* Auf "Neues Thema" klicken". Die Bedienung geht wie in "Auf einen Beitrag antworten".
-
-!! Eigene Beiträge ändern:
-Der Autor eines Beitrags hat das Recht, diesen zu ändern. Es erscheint dann ein Link "Ändern" unter dem Beitrag selbst.
-
-!! Suche in Foren:
-Man kann auch nach einem Stichwort in allen Foren suchen. Dies geschieht in der [http:!forumsearch Forumssuche].
-
-Hier kannst Du nach einem Begriff im Titel oder nach einem Begriff im Beitrag suchen.
-
-!! Textgestaltung:
-Für eine ansprechende Textgestaltung siehe auch HilfeFormatierungen.
-
-----
-
-KategorieHilfe | KategorieForum
-#name=KategorieForum	lines=3	type=w	page=16	text=26	by=wk	at=2004-09-02 11:32:25
+#name=KategorieOrdnung	lines=3	type=w	page=27	text=30	by=wk	at=2004-09-22 11:26:28
 <?plugin BackLinks?>
 ----
 KategorieKategorie
-#name=KategorieOrdnung	lines=3	type=w	page=19	text=33	by=wk	at=2004-09-16 00:43:15
+#name=KategorieKategorie	lines=4	type=w	page=28	text=31	by=wk	at=2004-09-22 11:27:00
+Hier sind alle Kategorien aufgelistet:
+<?plugin BackLinks?>
+----
+KategorieOrdnung
+#name=KategorieHilfe	lines=3	type=w	page=32	text=56	by=wk	at=2004-09-22 13:36:30
 <?plugin BackLinks?>
 ----
 KategorieKategorie
-#name=KategorieTest	lines=3	type=w	page=22	text=41	by=wk	at=2004-09-28 11:39:01
-<?plugin BackLinks?>
+#name=VorlageHeimatSeite	lines=5	type=w	page=32	text=56	by=wk	at=2004-09-22 13:36:30
+! Nachrichten an mich:
+
+! Meine Links
 ----
-KategorieKategorie
+KategorieHeimatSeite
+
