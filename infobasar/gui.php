@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.12 2004/11/05 17:53:25 hamatoma Exp $
+// $Id: gui.php,v 1.13 2004/11/05 23:59:44 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -71,7 +71,7 @@ function tagTable($border = 0){
 }
 function outTable($border = 0, $width = 0){
 	echo "\n<table border=\"";
-	echo (0+$border);
+	echo $border;
 	if ($width != null){
 		echo '" width="';
 		echo $width;
@@ -164,6 +164,13 @@ function outTableCell($text, $halignment = AL_None){
 	echo $text;
 	outTableDelimEnd();
 }
+function outTableCellStrong($text, $halignment = AL_None){
+	outTableDelim ($halignment);
+	echo '<strong>';
+	echo $text;
+	echo '</strong>';
+	outTableDelimEnd();
+}
 function tagTableCellConvert($text, $halignment = AL_None){
 	return tagTableDelim ($halignment) . htmlentities ($text) . tagTableDelimEnd();
 }
@@ -209,12 +216,18 @@ function outTableComboBox ($prefix, $name, $names, $values, $index, $halignment 
 	guiComboBox ($name, $names, $values, $index);
 	outTableDelimEnd(); 
 }
-function outTableInternLink ($prefix, $link, $text = null, $module = null, $halignment = AL_None){
+function outTableInternLink ($session, $prefix, $link, $text = null, $module = null, 
+		$halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
-	guiInternLink ($link, $text, $module);
+	guiInternLink ($session, $link, $text, $module);
 	outTableDelimEnd(); 
+}
+function outTableAuthorLink ($session, $author){
+	outTableDelim();
+	guiAuthorLink ($session, $author);
+	outTableDelimEnd();
 }
 // --- Allgemeine Funktionen --------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
@@ -228,6 +241,11 @@ function guiField ($name, $type, $text, $size, $maxlength, $special){
 	if (! empty ($special))
 		echo ' ' . $special;
 	echo ">";
+}
+function guiFileField ($name){
+	echo '<input name="';
+	echo $name;
+	echo '" type="file">'; 
 }
 function guiHiddenField ($name, $text) {
 	guiField ($name, "hidden", $text, 0, 0, null);
