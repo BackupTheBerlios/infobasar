@@ -118,7 +118,7 @@ CREATE TABLE infobasar_param (
 INSERT INTO infobasar_param VALUES (3237, 'DB-Schema-Version', 1, 10, '1.0 (2004.04.15)');
 INSERT INTO infobasar_param VALUES (3238, 'DB-Basisinhalt-Version', 1, 11, '1.0 (2004.04.15)');
 INSERT INTO infobasar_param VALUES (3239, 'DB-Erweiterungen', 1, 12, 'Design-PHPWiki 1.0 (2004.04.15)');
-INSERT INTO infobasar_param VALUES (3240, 'BasarName', 1, 13, 'Matobas lokaler InfoBasar');
+INSERT INTO infobasar_param VALUES (3240, 'BasarName', 1, 13, 'InfoBasar');
 INSERT INTO infobasar_param VALUES (3241, 'BenutzerTitel', 1, 14, '10:Neuling;25:Interessent;50:strebsam;75:fleißig;100:Spezialist;150:Profi;200:Meister;500:Guru');
 INSERT INTO infobasar_param VALUES (3242, 'Script-Basis', 1, 15, '/infobasar/index.php/');
 INSERT INTO infobasar_param VALUES (3243, 'Header für alle Seiten', 10, 101, '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">\r\n');
@@ -138,7 +138,7 @@ INSERT INTO infobasar_param VALUES (3256, 'Forumantwort-Head-Abschnitt', 10, 127
 INSERT INTO infobasar_param VALUES (3257, 'Forenantwort-Body-Abschnitt-Anfang', 10, 128, '<body>\r\n');
 INSERT INTO infobasar_param VALUES (3258, 'Forenantwort-Body-Abschnitt-Ende', 10, 129, '</body>\r\n');
 INSERT INTO infobasar_param VALUES (3259, 'Login-Head-Bodystart', 10, 131, '<title>Anmeldung fu&uml;r den InfoBasar</title>\r\n<body>\r\n<h1>Willkommen beim lokalen Infobasar</h1>');
-INSERT INTO infobasar_param VALUES (3260, 'Login-Body-End', 10, 132, '<p><small>Passwort vergessen? EMail an matoba AT gmx DOT de</small></p>');
+INSERT INTO infobasar_param VALUES (3260, 'Login-Body-End', 10, 132, '<p><small>Passwort vergessen? EMail an Webmaster</small></p>');
 INSERT INTO infobasar_param VALUES (3261, 'Wiki-Seiten-Head-Abschnitt', 10, 161, '<title>[PageName] (Wiki)</title></head>');
 INSERT INTO infobasar_param VALUES (3262, 'Wiki-Seiten Body-Abschnitt-Anfang', 10, 162, '<body>\r\n<h1>[PageName]</h1>\r\n');
 INSERT INTO infobasar_param VALUES (3263, 'Wiki-Seiten Body-Abschnitt-Ende', 10, 163, '<hr style="width: 100%; height: 2px;">\r\n[M_S_PageLastChange]<br>\r\n<table width="100%" border="0"><tr><td>[M_S_ButtonEdit]\r\n | [M_S_ButtonSearch]\r\n | [M_S_ButtonPageInfo]\r\n</td><td style="text-align: right;">\r\n[M_S_ButtonOverview]\r\n | [M_S_ButtonUserStart]\r\n | [M_S_ButtonForums]\r\n[M_S_ButtonHelp]\r\n | [M_S_ButtonAccount]\r\n</td><tr></table>');
@@ -163,7 +163,7 @@ INSERT INTO infobasar_param VALUES (3281, 'Forumantwort-Head-Abschnitt', 11, 127
 INSERT INTO infobasar_param VALUES (3282, 'Forenantwort-Body-Abschnitt-Anfang', 11, 128, '[M_T_BodyWikiText]');
 INSERT INTO infobasar_param VALUES (3283, 'Forenantwort-Body-Abschnitt-Ende', 11, 129, '[M_S_HintFormating]');
 INSERT INTO infobasar_param VALUES (3284, 'Login-Head-Bodystart', 11, 131, '<title>Anmeldung fu&uml;r den InfoBasar</title><body>\r\n<h1>Willkommen beim Infobasar der TDH-Arbeitsgruppe M&uuml;nchen</h1>\r\n<div class="wikitext">');
-INSERT INTO infobasar_param VALUES (3285, 'Login-Body-End', 11, 132, '<p><small>Passwort vergessen? EMail an matoba AT gmx DOT de</small></p>');
+INSERT INTO infobasar_param VALUES (3285, 'Login-Body-End', 11, 132, '<p><small>Passwort vergessen? EMail an Webmaster</small></p>');
 INSERT INTO infobasar_param VALUES (3286, 'Info-Head', 11, 134, '<title>[BasarName]</title></head>\r\n<body>\r\n<table border="0" width="100%"><tr><td><h1>[PageTitle]</h1>\r\n</a></td>[M_T_TopRightButtons]\r\n<div class="wikitext">');
 INSERT INTO infobasar_param VALUES (3287, 'Info- Body-End', 11, 135, '[M_T_BodyEndWikiText]');
 INSERT INTO infobasar_param VALUES (3288, 'Standard-Head', 11, 141, '<title>[BasarName]</title></head>\r\n');
