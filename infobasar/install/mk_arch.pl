@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: mk_arch.pl,v 1.4 2005/01/11 09:15:02 hamatoma Exp $
+# $Id: mk_arch.pl,v 1.5 2005/01/11 18:04:34 hamatoma Exp $
 # Erstellen eines Archivs aus einem Dateibaum
 #
 # Aufruf: mk_arch.pl <opts> file_list
@@ -14,7 +14,7 @@
 # <hex8_sec_since_1970)> <char_file_type> <char3_res_1>
 # <hex2_info_size> <hex8_rights>
 # <hex8_data_size> <file_data>
-# <hex8_magic> <hex16_checksum>
+# <char8_magic> <hex16_checksum>
 use strict;
 
 my $archive = "a.hma";
@@ -78,27 +78,28 @@ sub OneFile {
 	} else {
 		print $name, " -> ", $name_archive, "\n" if $s_verbose;
 	}
-	if (! open (FILE, $name)){
+	my $is_dir = -d $name;
+	if (! $is_dir && ! open (FILE, $name)){
 		print "+++ nicht zu öffnen: $name: $!";
 	} else {
 		my $name2 = $name_archive;
 		$name2 =~ s!\\!/!g;
+		my $checksum = '0' x 16;
 		print ARCHIVE sprintf ("%04x", length ($name2)), $name2;
 		print ARCHIVE sprintf ("%08x", $date);
 		print ARCHIVE -d $name ? 'd' : 'f', '   ';
 		print ARCHIVE sprintf ("%02x", 8);
 		print ARCHIVE sprintf ("%08x", $rights);
 		print ARCHIVE sprintf ("%08x", $size);
-		my $sum = 0;
-		my $checksum = '0' x 16;
-		my ($bytes, $buffer);
-		while ( ($bytes = read (FILE, $buffer, $s_buf_size)) > 0) {
-			print ARCHIVE $buffer;
-			$sum += $bytes;
-		}
-		close (FILE);
-		if ($sum ne $size){
-			print "+++ $name: Größe falsch: $bytes statt $size\n";
+		if (! $is_dir){
+			my $sum = 0;
+			my ($bytes, $buffer);
+			while ( ($bytes = read (FILE, $buffer, $s_buf_size)) > 0) {
+				print ARCHIVE $buffer;
+				$sum += $bytes;
+			}
+			print "+++ $name: Größe falsch: $bytes statt $size\n" if ($sum ne $size);
+			close (FILE);
 		}
 		print ARCHIVE $s_magic, $checksum;
 	}

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: extract_arch.pl,v 1.1 2005/01/11 17:47:16 hamatoma Exp $
+# $Id: extract_arch.pl,v 1.2 2005/01/11 18:04:34 hamatoma Exp $
 # Entpacken eines Archivs
 #
 # Aufruf: extract_arch.pl <opts> archive
@@ -54,6 +54,7 @@ my $header = "HamatomaArchive\t0100";
 &help ("kein Archiv angegeben") unless $archive;
 
 open (ARCHIVE, $archive) || die "$archive: $!";
+print "Ausgabe des Inhaltsverzeichnisses:\n" if $s_toc_only;
 my ($len, $val) = ReadBlock (2);
 print "Headerlaenge: ", $len, "\nHeader: ", $val, "\n" if $s_verbose > 1;
 &help ("Kein Archiv: $archive") if ($val ne $header);
@@ -106,9 +107,10 @@ sub OneFile {
 			&MkDir ($dir) unless -d $dir;
 		}
 		$name =~ s!/!\\!g if $path_delim ne "/";
-		my $write = $match && open (OUT, ">$name");
-		if (! $write && $match){
+		my $write = $match && ! $s_toc_only;
+		if ($write &&  ! open (OUT, ">$name")){
 			print "+++ $name: $!\n";
+			$write = 0;
 		}
 		while ($data_size >= $s_block_size){
 			$len = read ARCHIVE, $val, $s_block_size;
@@ -137,7 +139,7 @@ sub OneFile {
 sub MkDir{
 	my $fullname = shift;
 	my $abs_path = ord($fullname) == ord('/');
-	if ($fullname !~ /^\.{1,2}$/){
+	if (! $s_toc_only && $fullname !~ /^\.{1,2}$/){
 		my @f = split (/\//, $fullname);
 		my $name = "";
 		foreach (@f){

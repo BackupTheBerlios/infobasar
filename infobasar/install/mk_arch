@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mk_arch,v 1.5 2005/01/11 09:15:26 hamatoma Exp $
+# $Id: mk_arch,v 1.6 2005/01/11 18:04:34 hamatoma Exp $
 if [ -z $1 ] ; then
 	echo "Aufruf: mk_arch VERSION"
 	echo "Bsp: mk_arch 0.5.3"
@@ -18,3 +18,5 @@ gzip -9 $name
 name=infobasar-$Version-update.hma
 perl $OPT mk_arch.pl -v -a$name ib_update.lst
 gzip -9 $name
+echo Datei readme.txt:
+grep Version readme.txt
