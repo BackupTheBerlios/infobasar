@@ -1,11 +1,20 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.2 2004/05/26 22:14:24 hamatoma Exp $
+// $Id: classes.php,v 1.3 2004/05/27 22:40:50 hamatoma Exp $
+/*
+Diese Datei ist Teil von InfoBasar.
+Copyright 2004 hamatoma@gmx.de München
+InfoBasar ist freie Software. Du kannst es weitergeben oder verändern
+unter den Bedingungen der GNU General Public Licence.
+Näheres siehe Datei LICENCE.
+InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
+der Funktionalität.
+*/
 
 define ('PHP_Version', '0.5.1 (2004.05.27)');
 
 define ('PATH_DELIM', '/');
-
+define ('COOKIE_NAME', 'infobasar');
 define ('C_New', 'new');
 define ('C_Change', 'change');
 define ('C_Auto', 'auto');

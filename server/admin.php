@@ -1,6 +1,15 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.1 2004/05/23 22:10:22 hamatoma Exp $
+// $Id: admin.php,v 1.2 2004/05/27 22:39:49 hamatoma Exp $
+/*
+Diese Datei ist Teil von InfoBasar.
+Copyright 2004 hamatoma@gmx.de München
+InfoBasar ist freie Software. Du kannst es weitergeben oder verändern
+unter den Bedingungen der GNU General Public Licence.
+Näheres siehe Datei LICENCE.
+InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
+der Funktionalität.
+*/
 
 define ('ADMIN', true);
 define ('C_ScriptName', 'admin.php');
