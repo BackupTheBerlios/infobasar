@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.2 2004/06/17 22:57:18 hamatoma Exp $
+// $Id: forum.php,v 1.3 2004/06/28 22:09:41 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.0 (2004.06.13)');
+define ('PHP_ModuleVersion', '0.6.1 (2004.06.28)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -24,10 +24,6 @@ session_start();
 	$start = time();
  }
  $session_id = session_id();
- ob_start (); // ob_flush() --> index.php + guiLoginAnswer()
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<?php
 
 include "config.php";
 include "classes.php";
@@ -50,6 +46,7 @@ define ('Th_ForumHomeHeader', 311); // aus 171
 define ('Th_ForumHomeBodyStart', 312);
 define ('Th_ForumHomeBodyEnd', 313);
 
+define ('A_Answer', 'answer');
 define ('A_NewThread', 'newthread');
 define ('A_ChangeThread', 'changethread');
 define ('A_ShowThread', 'showthread');
@@ -88,10 +85,8 @@ if (! empty ($rc)) {
 }
 if ($do_login){
 		clearLoginCookie ($session);
-		eb_end_flush ($session);
 		baseLogin ($session, '');
 } else {
-		ob_end_flush ();
 		$session->trace (TC_Init, 'forum.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($action)) {
 		$session->trace (TC_Init, "forum.php: action: $action");
@@ -118,7 +113,7 @@ if ($do_login){
 			|| isset ($posting_change))
 			basePostingAnswer ($session);
 		else {
-			$session->trace (TC_Warning, PREFIX_Warning . 'index.php: Nichts gefunden');
+			$session->SetLocation (P_ForumHome);
 			baseForumHome ($session);
 		}
 	}
