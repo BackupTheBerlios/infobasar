@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.8 2004/10/22 09:04:53 hamatoma Exp $
+// $Id: db_mysql.php,v 1.9 2004/10/28 21:14:25 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -351,6 +351,39 @@ function dbColumnList (&$session, $table, $what, $where)
 		mysql_free_result ($result);
 	}
 	return $rc;
+}
+function dbPrintTable (&$session, $query, $headers, $max_lines){
+	$session->trace (TC_Db1, "dbPrintTable");
+	$result = mysql_query ($query, $session->fDbInfo);
+	if (! $result)
+		protoc (mysql_error ());
+	else {
+		$first = true;
+		$no = 0;
+		if ($max_lines <= 0)
+			$max_lines = 1000;
+		while ($row = mysql_fetch_row ($result)) {
+			if ($first){
+				echo '<table border="1"><tr><td>';
+				echo join ($headers, "</td><td>");
+				echo '</td></tr>';
+				$first = false;
+			}
+			if (++$no > $max_lines)
+				break;
+			echo "\n<tr><td>";
+			echo join ($row, "</td><td>");
+			echo "</td></tr>\n";
+		}
+		if ($first)
+			echo "Die Anfrage ergab keine Ergebnisse<br>\n";
+		else {
+			echo "</table>\n";
+			if ($no > $max_lines)
+				guiParagraph ($session, "Es gibt noch weitere Ergebnisse!", false);
+		}
+		mysql_free_result ($result);
+	}
 }
 function dbIdListOfThreadPage (&$session, $thread_id, $page) {
 	$session->trace (TC_Db3 + TC_Query, "dbIdListOfThreadPage: $thread_id, $page");
