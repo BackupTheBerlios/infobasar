@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.1 2004/05/20 20:55:05 hamatoma Exp $
+// $Id: util.php,v 1.2 2004/05/26 22:22:21 hamatoma Exp $
 function panicExit (&$session, $errormsg) {
 	static $exitwiki = 0;
 	global $dbi;
@@ -317,24 +317,28 @@ function decDump ($text) {
 		$rc .= ' ' . ord (substr ($text, $ii, 1));
 	return $rc;
 }
-function generatePassword (&$session, $length){
+function createPassword (&$session, $length){
+	$session->trace (TC_Util2, "createPassword");
 	srand ((double)microtime()*87785);
 	$rc = "";
-	$base = 'BCDFGHJKLMNPQRSTVWX1234567890.-$&';
+	$base = 'BCDFGHJKLMNPQRSTVWX1234567890.!$&';
 	for ($ii = 0; $ii < $length; $ii += 2)
 			$rc .= substr ('aeiouy', rand (0, 5), 1)
 				. substr ($base, rand (0, strlen ($base) - 1), 1);
 	return $rc;
 }
-function sendPassword (&$session, $user){
-	$email = 'hamatoma@gmx.de';
-	/* = dbSingleValue ($session, 'select email from '
-		dbTable ($session, T_User) . ' where name='
-		. dbSqlString ($user)); */
-	$password = generatePassword ($session, 6);
-	$session->trace (TC_X, 'sendPassword: ' . $password);
+function sendPassword (&$session, $id, $user, $email){
+	$session->trace (TC_Util1, "sendPassword");
+	$password = createPassword ($session, 6);
+	dbUpdate ($session, T_User, $id,
+		'code=' . dbSqlString ($session, 
+			encryptPassword ($session, $user, $password)) . ',');
 	mail ($email, 'Deine Anmeldedaten für den Infobasar',
 		'Es wurde ein neues Passwort erzeugt:' . "\n$password\n"
 		. 'Bitte nach dem Anmelden das Passwort wieder ändern');
+}
+function encryptPassword (&$session, $user, $code){
+	$session->trace (TC_Util2, "encryptPassword");
+	return strrev (crypt ($user, $code));
 }
 ?>
