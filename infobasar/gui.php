@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.19 2004/12/31 20:57:58 hamatoma Exp $
+// $Id: gui.php,v 1.20 2005/01/04 23:34:16 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -312,7 +312,9 @@ function guiFileField ($name){
 	echo $name;
 	echo TAG_APO_SUFFIX_NEWLINE; 
 }
-function guiHiddenField ($name, $text) {
+function guiHiddenField ($name, $text = null) {
+	if ($text == null)
+		$text = isset ($_POST [$name]) ? $_POST [$name] : "";
 	guiField ($name, TAGAV_HIDDEN, $text, 0, 0, null);
 }
 function guiTextField ($name, $text, $size, $maxlength = 0){
