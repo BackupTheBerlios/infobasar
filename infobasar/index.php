@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.9 2004/10/27 22:48:14 hamatoma Exp $
+// $Id: index.php,v 1.10 2004/10/28 09:47:34 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.5.2 (2004.10.23)');
+define ('PHP_ModuleVersion', '0.6.5.3 (2004.10.28)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -246,7 +246,10 @@ function baseEditPage (&$session, $message) {
 		guiFormatPage ($session, $edit_texttype, $edit_content);
 		echo guiParam ($session, Th_PreviewEnd, '<h1>Ende der Vorschau</h1>');
 	}
-	guiStartForm ($session, 'edit');
+	#guiStartForm ($session, 'edit');
+	echo '<form enctype="multipart/form-data" action="' . $session->fScriptURL
+		. '" method="post">' . "\n";
+	
 	guiHiddenField ('edit_texttype', $edit_texttype);
 	guiHiddenField ('last_pagename', $last_pagename);
 	guiHiddenField ('edit_pageid', $edit_pageid);
@@ -260,21 +263,28 @@ function baseEditPage (&$session, $message) {
 	echo "</td></tr>\n<tr><td>";
 	guiTextArea ("edit_content", $edit_content, $textarea_width,
 		$textarea_height);
-	echo '</td></tr>' . "\n" . '<tr><td><table border="0" width="100%"><tr><td>';
-	guiButton ('edit_previewandsave', 'Zwischenspeichern');
-	echo ' | '; guiButton ('edit_save', 'Speichern (fertig)');
-	echo ' | '; guiButton ('edit_cancel', 'Verwerfen');
-	echo ' | '; guiButton ('edit_preview', 'Vorschau');
-	echo '</td><td style="text-align: right;">Breite: ';
-	guiTextField ("textarea_width", $textarea_width, 3, 3);
-	echo " H&ouml;he: ";
+	echo '</td></tr>' . "\n" . '<tr><td><table border="0" width="100%">';
+	echo '<tr><td>'; guiButton ('edit_save', 'Speichern (fertig)');
+	echo '</td><td>'; guiButton ('edit_previewandsave', 'Zwischenspeichern');
+	echo ' '; guiButton ('edit_preview', ' Vorschau');
+	echo '</td><td>'; guiButton ('edit_cancel', ' Verwerfen'); 
+	if (! $session->testFeature (FEATURE_UPLOAD_ALLOWED)){
+		echo ' Breite: '; guiTextField ("textarea_width", $textarea_width, 3, 3);
+		echo " H&ouml;he: ";
+	} else {	
+		echo '</td><td>Breite:</td><td>'; guiTextField ("textarea_width", $textarea_width, 3, 3);
+		echo "</td></tr>\n<tr><td>";
+		echo "Bild einf&uuml;gen:";
+		echo '</td><td>';
+		guiHiddenField ('MAX_FILE_SIZE', 500000);
+		echo '<input name="edit_upload_file" type="file">';
+		echo '</td><td>'; guiButton ('edit_upload', 'Hochladen');
+		echo "</td><td>H&ouml;he:</td><td>";
+	} 
 	guiTextField ("textarea_height", $textarea_height, 3, 3);
 	echo "</td></tr>\n</table>\n</td></tr></table>\n";
 	guiFinishForm ($session, $session);
 	echo '<br/>';
-	guiUploadFile ($session, 'Einfügen eines Bildes:', null,
-		'edit_content', $edit_content, 'Hochladen', 'edit_upload', 
-		'edit_upload_file', 500000);
 	guiStandardBodyEnd ($session,
 		$edit_texttype == TT_Wiki ? Th_EditEndWiki : Th_EditEndHTML);
 }
@@ -287,10 +297,9 @@ function baseEditPageAnswerSave (&$session)
 
 	$session->trace (TC_Gui1, 'baseEditPageAnswerSave');
 	if (isset ($edit_upload)){
-		$session->trace (TC_X, "guiEditPageSaveAnswer: $edit_upload");
-		$message = guiUploadFileAnswer ($session,  "/pic/",
-			null, 'edit_upload', 'edit_upload_file');
-		$name = substr ($edit_upload_file, strrpos ($edit_upload_file, "/") + 1); 
+		$session->trace (TC_Gui1, 'guiEditPageSaveAnswer:');
+		$message = guiUploadFileAnswerUnique ($session, "/pic/",
+			null, 'edit_upload_file', $name);
 		$edit_content .= "\n\n[http:pic/$name $name]\n\n";
 	} else {
 		$edit_content = textAreaToWiki ($session, $edit_content);
@@ -315,7 +324,7 @@ function baseEditPageAnswerSave (&$session)
 	}
 	unset ($edit_save);
 	if (empty ($message) && ! isset ($edit_previewandsave) && ! isset ($edit_upload)){
-		guiShowPageById ($session, $edit_pageid, $x);
+		guiShowPageById ($session, $edit_pageid, null);
 	} else {
 		baseEditPage ($session, $message, $message);
 	}
