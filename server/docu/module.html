@@ -7,9 +7,10 @@
 </head>
 <body>
 <h1>Module f&uuml;r den Infobasar</h1>
-$Id: module.html,v 1.1 2004/06/13 11:07:50 hamatoma Exp $<br>
+$Id: module.html,v 1.2 2004/06/17 22:59:12 hamatoma Exp $<br>
 <p>Den Infobasar kann man erweitern. Daf&uuml;r ist eine Schnittstelle
-definiert, die hier beschrieben werden soll. </p>
+definiert, die hier beschrieben wird.<br>
+</p>
 <span style="font-weight: bold;">Definition</span>:<br>
 <p>Ein Infobasarmodul ist ein PHP-Programm, das f&uuml;r die
 Generierung einer bestimmte Sorte von Seiten im Infobasar&nbsp;
@@ -30,7 +31,6 @@ Namen von Objekten aus dem Infobasar werden <span
  style="font-style: italic;">kursiv</span> geschrieben, z.B. die
 Tabelle <span style="font-style: italic;">user.</span><br>
 <h2>Begriffe</h2>
-<br>
 <table style="text-align: left; width: 100%;" border="1" cellspacing="2"
  cellpadding="2">
   <tbody>
@@ -40,6 +40,17 @@ Tabelle <span style="font-style: italic;">user.</span><br>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiele</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Design-Rahmen"></a>Design-Rahmen<br>
+      </td>
+      <td style="vertical-align: top;">Die Teile der HTML-Seite, die
+vom Webseitenbetreiber festgelegt werden k&ouml;nnen und ein
+einheitliches und doch betreiberspezifisches Aussehen gestatten.<br>
+      </td>
+      <td style="vertical-align: top;">Men&uuml;-Links
+Schriftgr&ouml;&szlig;en HTML-Titel<br>
       </td>
     </tr>
     <tr>
@@ -58,13 +69,56 @@ gast: posting?<br>
 effektive O.b.: posting+?=</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">Gruppe<br>
+      <td style="vertical-align: top;"><a name="Gruppe"></a>Gruppe<br>
       </td>
       <td style="vertical-align: top;">Objekt, in dem die
 Objektberechtigung einer Objektklasse abgelegt wird. <br>
 Siehe auch <a href="#Gruppen">Gruppen.</a><br>
       </td>
       <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a
+ name="Heimatverzeichnis_des_Moduls"></a>Heimatverzeichnis des Moduls<br>
+      </td>
+      <td style="vertical-align: top;">Besteht das Modul aus vielen
+Dateien, so&nbsp; k&ouml;nnen diese in einem eigenen Verzeichnis
+abgelegt werden, das im Basisverzeichnis des Infobasar liegt. Der Name
+ist immer der <a href="#Installierter_Modulname">installierte Modulname</a>.<br>
+      </td>
+      <td style="vertical-align: top;">calendar<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Modul-Id"></a>Modul-Id<br>
+      </td>
+      <td style="vertical-align: top;">Eindeutige Identifikation des
+Moduls. Nach Konvention ist das ist eine URL.<br>
+      </td>
+      <td style="vertical-align: top;">calendar.hamatoma.de<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Modulname"></a>Modulname<br>
+      </td>
+      <td style="vertical-align: top;">Ein Wort zur Beschreibung des
+Moduls.<br>
+Der Modulname kommt in den Dateinamen der Installationsdateien vor.<br>
+      </td>
+      <td style="vertical-align: top;">calendar<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><a name="Installierter_Modulname"></a>Installierter
+Modulname<br>
+      </td>
+      <td style="vertical-align: top;">Wird bei der Installation aus
+dem Modulnamen abgeleitet. Ist eindeutig, d.h. es gibt keine zwei
+installierte Module mit dem gleichen installierten Modulnamen<br>
+      </td>
+      <td style="vertical-align: top;">Normalerweise: calendar<br>
+Wenn es schon ein calendar gibt: calendar2<br>
       </td>
     </tr>
     <tr>
@@ -118,8 +172,11 @@ Lesen (?), Schreiben (=), Sperren (#)</td>
 Module k&ouml;nnen in das System einbringen:<br>
 <ul>
   <li>Datenbank-Tabellen</li>
+  <li>neue Felder in vorhandenen Tabellen<br>
+  </li>
   <li>PHP-Code</li>
-  <li>Rechte<br>
+  <li>Rechte</li>
+  <li>Parameter<br>
   </li>
 </ul>
 Module k&ouml;nnen von den Basis-Modulen (oder anderen Module) nutzen:<br>
@@ -128,15 +185,24 @@ Module k&ouml;nnen von den Basis-Modulen (oder anderen Module) nutzen:<br>
   <li><a href="#Nutzung_der_Basismodule_PHP-Code">PHP-Code</a><br>
   </li>
   <li><a href="#Rechte">Rechteverwaltung</a></li>
-  <li><a href="#Nutzung_der_Sessiondaten">Sessiondaten</a><br>
-  </li>
+  <li><a href="#Nutzung_der_Sessiondaten">Sessiondaten</a></li>
 </ul>
-Ferner muss die Installation/Deinstallation gewissen Bedingungen
+Ferner muss die <a href="#Installation">Installation</a> / <a
+ href="#Deinstallation">Deinstallation</a> gewissen Bedingungen
 gen&uuml;gen.<br>
-<h3>Voraussetzungen</h3>
-Ein Modul besteht in jedem Fall aus einer PHP-Datei, das per Link
-aufgerufen werden kann. Es kann Parameter definieren, die Zust&auml;nde
-oder andere Steuerungsinformationen festlegen.<br>
+Damit die Einbindung verschiedener Module in beliebigen Kombinationen
+klappt, m&uuml;ssen Resourcen bei der Installation reserviert werden
+k&ouml;nnen, andererseits m&uuml;ssen die Module ihre Resourcen
+"verschiebbar" gestalten.<br>
+Bestimmte Verwaltungsvorg&auml;nge sollen zentral stattfinden, obwohl
+sie verschiedene Module betreffen. Daf&uuml;r ist eine Interaktion
+notwendig. <br>
+<h3>Grundstruktur</h3>
+Ein Modul besteht in jedem Fall aus einer PHP-Datei (Script), das per
+Link
+aufgerufen werden kann. Es kann mit Parametern aufgerufen werden, die
+die auszuf&uuml;hrende Aktion, oder Zust&auml;nde (z.B. Formulardaten)
+oder andere Steuerungsinformationen beinhalten.<br>
 Das Modul muss in jedem Fall diese Parameter auswerten und als Ergebnis
 eine HTML-Seite abliefern.<br>
 Es ist sinnvoll (aber nicht notwendig), dass die Sessiondaten des
@@ -224,15 +290,16 @@ Anwendung der anderen Module.<br>
 Die Sessiondaten sind in einer Inkarnation der Klasse Session
 gespeichert. Dort sind die Benutzerdaten, Datenbank-Zugangsdaten,
 Makro-Informationen usw. gespeichert. Diese Info wird in fast allen
-Funktion als Parameter &uuml;bergeben.<br>
+Funktionen als Parameter &uuml;bergeben.<br>
 Jedes Modul kann seine Daten auch hier ablegen. Daf&uuml;r ist die
 Variable fModuleData vorgesehen. Sie ist ein assoziatives Array, das
 den Modulnamen mit einem beliebigen Objekt verkn&uuml;pft.<br>
 <p><span style="font-weight: bold;">Beispiel:</span><code></code></p>
 <p><code></code></p>
-<code>$session-&gt;fModuleData ['calendar'] = new Calendar ();<br>
+<code>$session-&gt;fModuleData [$session-&gt;fModuleName] = new
+Calendar ();<br>
 ...<br>
-$calendar = $session-&gt;fModuleData ['calendar'];<br>
+$calendar = $session-&gt;fModuleData </code><code>$session-&gt;fModuleName</code><code>];<br>
 $calendar-&gt;getDaysPerMonth (time());<br>
 </code>
 <h2><a name="Rechte"></a>Rechte</h2>
@@ -451,15 +518,341 @@ Lesen.<br>
 <br>
 <h2>Programmcode</h2>
 Jedes Modul liefert seinen PHP-Programmcode mit in einer Datei
-modulname.php. <br>
+scriptname.php. <br>
 Siehe auch <a href="#Ablauf_in_einem_hypothetischen_Modul">Ablauf in
 einem hypothetischen Modul Calendar.</a><br>
+Der Scriptname wird bei der Installation festgelegt, damit Konflikte
+mit anderen Modulen beseitigt werden k&ouml;nnen.<br>
+<h3>Unterscheidung im Namensraum</h3>
+<p>Damit keine Namenskonflikte bei der Kombination verschiedener Module
+passiert, werden bei der Installation Pr&auml;fixe als Konstanten
+vergeben.<br>
+</p>
+<h5>Definition des eindeutigen Modulnames<br>
+</h5>
+<p>Das Modul bekommt bei der Installation einen eindeutigen
+Scriptnamen, der der Modulname mit dem Anh&auml;ngsel ".php" ist. Daher
+kann das Modul selbst&auml;ndig seinen Modulnamen ermitteln:</p>
+<p>global $SCRIPT_FILENAME;<br>
+$name = preg_replace ('/\.php.*$/', '.php', $script_url);<br>
+// Wichtig: die folgenden 2 \/sind 2 Zeichen: \ + / (typographisches
+Problem)<br>
+$name = preg_replace ('/^[^\/]*\//', '');<br>
+define ('ModuleName', $name); <br>
+</p>
+<h4><a name="Namenskonventionen"></a>Namenskonventionen</h4>
+Modulspezifische Makronamen beginnen mit dem Modulnamen. Dieser steht
+in der Konstante ModuleName zur Verf&uuml;gung.<br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-weight: bold;">Objekt:<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung:</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beispiel:</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Makronamen<br>
+      </td>
+      <td style="vertical-align: top;">Laufzeitwerte, die im<a
+ href="#Design-Rahmen"> Design-Rahmen</a> verwendet werden k&ouml;nnen.<br>
+      </td>
+      <td style="vertical-align: top;">[CalendarWeekNo]<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Tabellenpr&auml;fix<br>
+      </td>
+      <td style="vertical-align: top;">Vorspann f&uuml;r die Namen der
+modulspezifischen Tabellen<br>
+      </td>
+      <td style="vertical-align: top;">calendar_term<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">Feldpr&auml;fix<br>
+      </td>
+      <td style="vertical-align: top;">Vorspann f&uuml;r die Namen in
+schon vorhandenen Tabellen.<br>
+      </td>
+      <td style="vertical-align: top;">calendar_birthday in Tabelle
+user.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="Schnittstelle_zum_Basismodul"></a>Schnittstelle zum
+Basismodul</h3>
+Soll das Modul vom Basismodul mitbenutzt werden, so muss es ein Script
+so muss ein Script <span style="font-weight: bold;">scriptname_inc.php</span>
+existieren. Dieses Modul wird vom
+Basismodul per include eingebunden und daraus bestimmte Funktionen
+aufgerufen. Der Datenaustausch funktioniert normalerweise mit der
+Variable Session, die ja Modulspezifisches aufnehmen kann.<br>
+Es m&uuml;ssen immer alle Funktionen definiert sein, sie k&ouml;nnen
+jedoch auch einen leeren Rumpf besitzen.<br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Signatur</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Beschreibung</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Pflege
+Benutzerkonto:</span><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function moduleUserTableData
+(&amp;$session)<br>
+      </td>
+      <td style="vertical-align: top;">Diese Funktion gibt HTML-Code
+f&uuml;r Zeilen mit 2 Spalten aus (ohne Tabelleneinleitung /
+Tabellenende). In der 1. Spalte steht die Bezeichnung des Feldes, in
+der 2. Spalte der Wert bzw. das Eingabefeld.<br>
+Im Grenzfall gibt sie nichts aus.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function moduleUserOwnData
+(&amp;$session)<br>
+      </td>
+      <td style="vertical-align: top;">Diese Funktion gibt beliebigen
+HTML-Code aus, z.B. Tabellen mit mehr als 2 Spalten.<br>
+Im Grenzfall gibt sie nichts aus.<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function moduleUserStoreData
+(&amp;$session, $isnew, $id)<br>
+      </td>
+      <td style="vertical-align: top;">Diese Funktion speichert die
+Benutzerdaten. <br>
+$isnew ist true, wenn dabei der Benutzer angelegt wird.<br>
+$id ist die Id des Benutzers in der Tabelle infobasar_user.<br>
+Wird ein Feld in infobasar_user benutzt, muss der Update-Befehl
+verwendet werden, da die Basisroutine den Datensatz schon angelegt hat.
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function moduleUserGetData
+(&amp;$session, $id)<br>
+      </td>
+      <td style="vertical-align: top;">Diese Funktion wird beim
+Anmelden aufgerufen, wenn die Basisroutine den Datensatz liest.<br>
+$id ist die Id des Benutzers in der Tabelle infobasar_user. </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Runtime-Makros:</span><br>
+      </td>
+      <td style="vertical-align: top;">Sollen bestimmt Daten im
+Design-Rahmen angezeigt werden, so geschieht dies &uuml;ber Makros.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function moduleMacroNames
+(&amp;$session)<br>
+      </td>
+      <td style="vertical-align: top;">Liefert ein Array mit
+Makronamen. <br>
+Bsp: array ("[CalendarDayOfTheWeek]", "[CalendarWeekNo]");<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">function moduleMacroReplace
+(&amp;$session, $text)<br>
+      </td>
+      <td style="vertical-align: top;">Ersetzt die Makronamen und
+liefert das Ergebnis.<br>
+Wichtig: Immer einen Wert zur&uuml;ckgeben, mindestens: return $text;<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-weight: bold;"></span>
 <h2>Datenbanktabellen</h2>
-Damit Module auch wieder entfernt werden k&ouml;nnen, mu&szlig;
-festgehalten werden, welche Objekte es benutzt. Beim Entfernen
-d&uuml;rfen dann nur die Objekte entfernt werden, die <span
- style="font-weight: bold;">nicht</span> von anderen Module
-ben&ouml;tigt werden.<br>
+<h3>Modulspezifische Definitionen</h3>
+Jedes Modul kann bestehende Tabellen benutzen und auch eigene
+mitbringen. Bestehende Tabellen k&ouml;nnen auch um Felder erweitert
+werden. Es gelten die <a href="#Namenskonventionen">Namenskonventionen.</a><br>
+<h3>Benutzung der Tabelle param</h3>
+Jedes Modul kann Konfigurationsdaten in der Tabelle param ablegen. Die
+Identifikation eines Datensatzes erfolgt &uuml;ber eine Nummer. Deshalb
+wird bei der Installation ein n&ouml;tiger Nummernbereich reserviert.
+Die Anfangsnummer wird automatisch in $session abgelegt und kann mit
+$session-&gt;fParamBase abgefragt werden.<br>
+<br>
+Beispiel:<br>
+<pre>define ('Param_DateFormatingString', $session-&gt;fParamBase + 0);<br>...<br><br></pre>
+<br>
+<br>
+<h2><a name="Installation"></a>Installation</h2>
+<h3>Durchf&uuml;hrung</h3>
+Im Basis-Modul admin gibt es einen Punkt "Modulinstallation". Wird
+dieser aufgerufen, so wird die Installation&nbsp; in mehreren Schritten
+durchgef&uuml;hrt:<br>
+<ul>
+  <li>Hochladen der <a href="#Installationsdateien">Installationsdateien</a>
+(als Archiv) in das Verzeichnis install.</li>
+  <li>Entpacken des Archivs.<br>
+  </li>
+  <li>Pr&uuml;fen der Moduldaten (Modul schon installiert, zwingende
+Daten vorhanden...)</li>
+  <li>Reservieren der Resourcen</li>
+  <li>Festlegen des <a href="#Installierter_Modulname">Installierten
+Modulnamens</a>. Ausgangspunkt ist der <a href="#Modulname">Modulname.</a>
+Ist bereits ein Modul dieses Namens vorhanden, so wird der
+Administrator solange zum &Auml;ndern des Namens aufgefordert, bis der
+Name eindeutig ist.</li>
+  <li>Eintragen der Konfigurationsdaten in die Tabelle module.<br>
+  </li>
+  <li>Umbenennen der Dateien und Basisverzeichnisse (Umbenennen des
+Modulnamens in den installierten Modulnamen) und Verschieben in das
+Basisverzeichnis des InfoBasars bzw. in das Heimatverzeichnis des
+Moduls.<br>
+  </li>
+  <li>Wenn Datenbankdefinition vorhanden: Einlesen und Ausf&uuml;hren
+der SQL-Definitionen.</li>
+  <li>Entfernen der Installationsdateien (optional).<br>
+  </li>
+</ul>
+Jetzt ist das Modul installiert<br>
+<ul>
+  <li>Ist ein Administrationsbefehl in install_modulename.txt
+definiert: Verzweigen auf diesen Aufruf.<br>
+  </li>
+</ul>
+<h3><a name="Installationsdateien"></a>Installationsdateien</h3>
+Folgende Dateien geh&ouml;ren zu einer Installation (modulename kann
+eine beliebige Zeichenkette sein, z.B. calendar):<br>
+Bei Namenskonflikten wird modulname abge&auml;ndert, damit der Name
+eindeutig wird.<br>
+<table style="text-align: left; width: 100%;" border="1" cellspacing="2"
+ cellpadding="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Name:</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Bedeutung:</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"> <span
+ style="font-weight: bold;">verbindlich:</span> </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">install_modulename.txt</td>
+      <td style="vertical-align: top;">Konfigurationsdaten des Moduls,
+siehe xxx<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">modulename.php</td>
+      <td style="vertical-align: top;">Scriptdatei<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Optional:</span><br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">modulname_inc.php<br>
+      </td>
+      <td style="vertical-align: top;"><a
+ href="#Schnittstelle_zum_Basismodul">Kommunikation mit dem Basismodul</a><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">modulname_db.sql<br>
+      </td>
+      <td style="vertical-align: top;">SQL-Definitionen. Sie
+k&ouml;nnen ein Makro enthalten, das bei der Installation durch den
+Modulnamen ersetzt wird. Der Name des Makros ist in modulname_inc.php
+definiert.<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h3>Format von install_modulename.txt</h3>
+Das ist eine Textdatei, die je Zeile einen Wert beschreibt.
+Kommentarzeilen beginnen mit #<br>
+Leerzeilen sind erlaubt.<br>
+<br>
+<span style="font-weight: bold;">Beispiel:</span><br>
+<br>
+# install_calendar.txt<br>
+# Version des Formates von install_xxx.txt<br>
+formatversion=1.0<br>
+<br>
+# <a href="#Modul-Id">Modul-Id:</a><br>
+id=calendar.infobasar.hamatoma.de<br>
+<br>
+copyright=2004 hamatoma AT gmx DOT de, M&uuml;nchen<br>
+release=0.6.0<br>
+<br>
+# Tabellen, die benutzt werden:<br>
+usedtables=user<br>
+<br>
+# Tabellen, die dazukommen:<br>
+newtables=<br>
+<br>
+# Verzeichnisse, die benutzt werden:<br>
+directories=<br>
+<br>
+#Dateien, die benutzt werden (nach der Installation):<br>
+usedfiles=calendar.php calendar_inc.php<br>
+<br>
+# kein eigenes Verzeichnis f&uuml;r die Dateien benutzen:<br>
+ownhome=N<br>
+<br>
+#Dateien, die nur zur Installation benutzt werden:<br>
+installfiles=calendar_start.sql calendar_update_0.5.0.sql<br>
+<br>
+# Link zur Administration (nach der Installation):<br>
+aministration=calendar.php?action=admin&amp;caller=install<br>
+<br>
+# Makro f&uuml;r SQL-Datei. So w&auml;hlen, dass es in Texten nicht
+vorkommt. <br>
+# Keine Perl-Metazeichen $()[]\*/?{}@%:<br>
+macromodulename=!ModuleCalendar&amp;<br>
+<br>
+# ---- Ende von install_calendar.txt ---------------<br>
+<h2><a name="Deinstallation"></a>Deinstallation</h2>
+Noch nicht verf&uuml;gbar<br>
+<br>
 <h2><a name="Objektklassen_der_Grundversion_des"></a>Objektklassen der
 Grundversion des InfoBasars:</h2>
 <br>

@@ -1,7 +1,12 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.7 2004/06/10 19:47:28 hamatoma Exp $
+$Id: changelog.txt,v 1.8 2004/06/17 22:57:18 hamatoma Exp $
 
 Legende: F(ehler) N(eu)
+
+Version 0.6.0 vom 2004.06.13
+- N: module.html (Doku Module für InfoBasar)
+- Umstrukturierung: Aufteilung in 3 Module index.php, forum.php, admin.php
+- N: Laufzeitmessung
 
 Version 0.5.5 vom 2004.06.10
 - F: Entpacken hma-Archiv: Erzeugen überflüssiger Ordner

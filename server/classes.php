@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.7 2004/06/13 10:53:07 hamatoma Exp $
+// $Id: classes.php,v 1.8 2004/06/17 22:57:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -27,20 +27,6 @@ define ('C_CHECKBOX_TRUE', 'J');
 define ('Module_Base', 'index.php');
 define ('Module_Forum', 'forum.php');
 
-// Actions:
-define ('A_Edit', 'edit');
-define ('A_NewThread', 'newthread');
-define ('A_Search', 'search');
-define ('A_Answer', 'answer');
-define ('A_ChangeThread', 'changethread');
-define ('A_ShowThread', 'showthread');
-define ('A_ShowForum', 'showforum');
-define ('A_PageInfo', 'pageinfo');
-define ('A_ShowText', 'showtext');
-define ('A_Diff', 'diff');
-define ('A_Show', 'show');
-
-
 // Table names:
 define ('T_Page', 'page');
 define ('T_User', 'user');
@@ -50,23 +36,6 @@ define ('T_Param', 'param');
 define ('T_Forum', 'forum');
 define ('T_Posting', 'posting');
 define ('T_Macro', 'macro');
-
-// Predefined pages
-define ('P_Login', '!login');
-define ('P_Account', '!account');
-define ('P_Home', '!home');
-define ('P_NewPage', '!newpage');
-define ('P_ModifyPage', '!modifypage');
-define ('P_Search', '!search');
-define ('P_ForumSearch', '!forumsearch');
-define ('P_ForumHome', '!forumhome');
-define ('P_Forum', '!forum');
-define ('P_Thread', '!thread');
-define ('P_Start', '!start');
-define ('P_LastChanges', '!lastchanges');
-define ('P_Info', '!info');
-define ('P_NewWiki', '!newwiki');
-define ('P_Undef', '!undef');
 
 // Mime types:
 define ('M_Undef', '?');
@@ -89,54 +58,16 @@ define ('Param_ForumModule', 16);
 
 define ('Theme_Standard', 10);
 
+// Modulunabhängig je Design: 100-119
 define ('C_MinIdForThemes', 100);
 define ('Th_ThemeName', 100);
 define ('Th_Header', 101);
 define ('Th_CSSFile', 102);
 
-define ('Th_HeaderHTML', 111);
-define ('Th_BodyStartHTML', 112);
-define ('Th_BodyEndHTML', 113);
-define ('Th_EditHeaderHTML', 114);
-define ('Th_EditStartHTML', 115);
-define ('Th_EditEndHTML', 116);
 
-define ('Th_ThreadHeader', 121);
-define ('Th_ThreadBodyStart', 122);
-define ('Th_ThreadBodyEnd', 123);
-define ('Th_NewThreadHeader', 124);
-define ('Th_NewThreadBodyStart', 125);
-define ('Th_NewThreadBodyEnd', 126);
-define ('Th_AnswerHeader', 127);
-define ('Th_AnswerBodyStart', 128);
-define ('Th_AnswerBodyEnd', 129);
-
-define ('Th_LoginHeader', 131);
-define ('Th_LoginBodyEnd', 132);
-define ('Th_Overview', 133);
-define ('Th_InfoHeader', 134);
-define ('Th_InfoBodyEnd', 135);
-
-define ('Th_StandardHeader', 141);
-define ('Th_StandardBodyStart', 142);
-define ('Th_StandardBodyEnd', 143);
-
-define ('Th_SearchHeader', 151);
-define ('Th_SearchBodyStart', 152);
-define ('Th_SearchBodyEnd', 153);
-
-define ('Th_HeaderWiki', 161);
-define ('Th_BodyStartWiki', 162);
-define ('Th_BodyEndWiki', 163);
-define ('Th_EditHeaderWiki', 164);
-define ('Th_EditStartWiki', 165);
-define ('Th_EditEndWiki', 166);
-define ('Th_PreviewStart', 167);
-define ('Th_PreviewEnd', 168);
-
-define ('Th_ForumHomeHeader', 171);
-define ('Th_ForumHomeBodyStart', 172);
-define ('Th_ForumHomeBodyEnd', 173);
+define ('Th_StandardHeader', 111); // aus 141
+define ('Th_StandardBodyStart', 112);
+define ('Th_StandardBodyEnd', 113);
 
 
 
@@ -213,6 +144,7 @@ define ('R_Posting', 'post');
 define ('R_Wiki', 'wiki');
 define ('R_User', 'user');
 define ('R_Rights', 'right');
+
 class Session {
 	var $fDbType; // MySQL
 	var $fDbServer;
@@ -250,6 +182,8 @@ class Session {
 	var $fMacroTheme;
 	var $fMacroReplacementKeys; // Liste aller Macros als RegExpr
 	var $fMacroReplacementValues; // Ersatzstrings (mit addslashes()))
+	
+	var $fParamBase; 
 
 	var $fOutputState; // Init Header Body
 	var $fFormExists; // true: Es gab schon ein <form> im Text.

@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.10 2004/06/13 10:54:05 hamatoma Exp $
+// $Id: gui.php,v 1.11 2004/06/17 22:57:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -98,31 +98,6 @@ function guiLine ($width) {
 	if (! isset ($width))
 		$width = 2;
 	echo '<hr style="width: 100%; height: ' . $width . "px;\">\n";
-}
-function guiStandardLinkString (&$session, $page) {
-	$session->trace (TC_Gui3, 'guiStandardLinkString');
-	$rc = null;
-	$module = null;
-	switch ($page) {
-	case P_Home: $header = 'Übersicht'; break;
-	case P_ForumSearch: $header = 'Forumsuche'; $module = Module_Forum; break;
-	case P_ForumHome: $header = 'Forenübersicht'; $module = Module_Forum; break;
-	case P_Account: $header = 'Einstellungen'; break;
-	case P_Search: $header = 'Wikisuche'; break;
-	case P_LastChanges: $header = 'Letzte Änderungen'; break;
-	case P_Start: $header = 'Persönliche Startseite'; break;
-	case P_Login: $header = 'Neu anmelden'; break;
-	case P_Info: $header = 'Information'; break;
-	case P_NewWiki: $header = 'Neue Seite'; break;
-	default: $header = null; break;
-	}
-	if ($header)
-		$rc = guiInternLinkString ($session, $page, $header, $module);
-	return $rc;
-}
-function guiStandardLink (&$session, $page) {
-	$session->trace (TC_Gui3, 'guiStandardLink');
-	echo guiStandardLinkString ($session, $page);
 }
 function guiFinishBody (&$session, $param_no){
 	$session->trace (TC_Gui2, 'guiFinishBody');

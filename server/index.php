@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.8 2004/06/13 10:54:32 hamatoma Exp $
+// $Id: index.php,v 1.9 2004/06/17 22:57:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -32,6 +32,59 @@ define ('C_ScriptName', 'index.php');
 
 include "config.php";
 include "classes.php";
+// ----------- Definitions
+// Actions:
+define ('A_Edit', 'edit');
+define ('A_Search', 'search');
+define ('A_Answer', 'answer');
+define ('A_PageInfo', 'pageinfo');
+define ('A_ShowText', 'showtext');
+define ('A_Diff', 'diff');
+define ('A_Show', 'show');
+// Predefined pages
+define ('P_Login', '!login');
+define ('P_Account', '!account');
+define ('P_Home', '!home');
+define ('P_NewPage', '!newpage');
+define ('P_ModifyPage', '!modifypage');
+define ('P_Search', '!search');
+define ('P_Start', '!start');
+define ('P_LastChanges', '!lastchanges');
+define ('P_Info', '!info');
+define ('P_NewWiki', '!newwiki');
+define ('P_Undef', '!undef');
+
+define ('Th_HeaderHTML', 211); // von 111
+define ('Th_BodyStartHTML', 212);
+define ('Th_BodyEndHTML', 213);
+define ('Th_EditHeaderHTML', 214);
+define ('Th_EditStartHTML', 215);
+define ('Th_EditEndHTML', 216);
+
+
+define ('Th_LoginHeader', 221); // von 131
+define ('Th_LoginBodyEnd', 222);
+define ('Th_Overview', 223);
+define ('Th_InfoHeader', 224);
+define ('Th_InfoBodyEnd', 225);
+
+define ('Th_SearchHeader', 231); // von 151
+define ('Th_SearchBodyStart', 232);
+define ('Th_SearchBodyEnd', 233);
+
+define ('Th_HeaderWiki', 241); // von 161
+define ('Th_BodyStartWiki', 242);
+define ('Th_BodyEndWiki', 243);
+define ('Th_EditHeaderWiki', 244);
+define ('Th_EditStartWiki', 245);
+define ('Th_EditEndWiki', 246);
+define ('Th_PreviewStart', 247);
+define ('Th_PreviewEnd', 248);
+
+
+
+// ------------Program
+
 $session = new Session ($start_time);
 
 	// All requests require the database
@@ -122,6 +175,30 @@ if ($do_login){
 exit (0);
 
 // ------------------------------------------------------
+function baseStandardLinkString (&$session, $page) {
+	$session->trace (TC_Gui3, 'baseStandardLinkString');
+	$rc = null;
+	$module = null;
+	switch ($page) {
+	case P_Home: $header = 'Übersicht'; break;
+	case P_Account: $header = 'Einstellungen'; break;
+	case P_Search: $header = 'Wikisuche'; break;
+	case P_LastChanges: $header = 'Letzte Änderungen'; break;
+	case P_Start: $header = 'Persönliche Startseite'; break;
+	case P_Login: $header = 'Neu anmelden'; break;
+	case P_Info: $header = 'Information'; break;
+	case P_NewWiki: $header = 'Neue Seite'; break;
+	default: $header = null; break;
+	}
+	if ($header)
+		$rc = guiInternLinkString ($session, $page, $header, $module);
+	return $rc;
+}
+function baseStandardLink (&$session, $page) {
+	$session->trace (TC_Gui3, 'baseStandardLink');
+	echo baseStandardLinkString ($session, $page);
+}
+
 function baseShowCurrentPage (&$session){
 	if ( ($page = dbPageId ($session, $session->fPageName)) > 0)
 		guiShowPageById ($session, $page, null);
@@ -387,9 +464,9 @@ function baseAccount (&$session, $message) {
 	echo "</td></tr>\n<tr><td>Themen je Seite:</td><td>";
 	guiTextField ("account_threadsperpage", $account_threadsperpage, 64, 3);
 	echo "</td></tr>\n<tr><td>Startseite:</td><td>";
-	$names = array ('WikiSeite:', 'Übersicht', 'Forenübersicht', 'Forumsuche', 'Einstellungen',
+	$names = array ('WikiSeite:', 'Übersicht', 'Einstellungen',
 			'Wikisuche', 'Letze Änderungen', 'StartSeite', 'Hilfe');
-	$values = array ('', P_Home, P_ForumHome, P_ForumSearch, P_Account, 
+	$values = array ('', P_Home, P_Account, 
 			P_Search, P_LastChanges, 'StartSeite', 'Hilfe');
 	if ( ($pos = strpos ($account_startpage, '!')) == 0 && is_int ($pos))
 		$ix = array_search ($account_startpage, $values);
@@ -489,27 +566,23 @@ function baseHome (&$session) {
 			Th_StandardBodyStart);
 		guiHeadline ($session, 1, 'Willkommen ' . $session->fUserName);
 		echo '<table border="0"><tr><td>';
-		guiStandardLink ($session, P_Account);
+		baseStandardLink ($session, P_Account);
 		echo '</td><td>Einstellungen</td></tr>' . "\n" . '<tr><td>';
-		guiStandardLink ($session, P_Login);
+		baseStandardLink ($session, P_Login);
 		echo '</td><td>Abmelden (oder neu anmelden)</td></tr>'  . "\n" . '<tr><td>';
-		# echo '<p>';	guiStandardLink ($session, P_NewPage); echo '</p>';
-		# echo '<p>';	guiStandardLink ($session, P_ModifyPage); echo '</p>';
-		guiStandardLink ($session, P_Search);
-		echo '</td><td>Suche auf den Wiki-Seiten</td></tr>'  . "\n" . '<tr><td>';
-		guiStandardLink ($session, P_ForumHome);
-		echo '</td><td>Foren&uuml;bersicht</td></tr>' . '<tr><td>';
-		guiStandardLink ($session, P_ForumSearch);
-		echo '</td><td>Suche nach einem Forumsbeitrag</td></tr>'  . "\n" . '<tr><td>';
-		guiStandardLink ($session, P_Start);
+		# echo '<p>';	baseStandardLink ($session, P_NewPage); echo '</p>';
+		# echo '<p>';	baseStandardLink ($session, P_ModifyPage); echo '</p>';
+		baseStandardLink ($session, P_Search);
+		echo '</td></tr>'  . "\n" . '<tr><td>';
+		baseStandardLink ($session, P_Start);
 		echo '</td><td>Pers&ouml;nliche Startseite</td></tr>'  . "\n" . '<tr><td>';
 		guiInternLink ($session, 'StartSeite', 'StartSeite');
 		echo '</td><td>Wiki-Startseite</td></tr>'  . "\n" . '<tr><td>';
-		guiStandardLink ($session, P_NewWiki);
+		baseStandardLink ($session, P_NewWiki);
 		echo '</td><td>Neue Wikiseite</td></tr>'  . "\n" . '<tr><td>';
-		guiStandardLink ($session, P_LastChanges);
+		baseStandardLink ($session, P_LastChanges);
 		echo '</td><td>Neueste &Auml;nderungen</td></tr>'  . "\n" . '<tr><td>';
-		guiStandardLink ($session, P_Info);
+		baseStandardLink ($session, P_Info);
 		echo '</td><td>Information &uuml;ber den InfoBasar</td></tr></table>'  . "\n" ;
 		// echo 'Session-Id: ' . $session_id . ' User: ' . $session_user . '<br>';
 		guiStandardBodyEnd ($session, Th_StandardBodyEnd);
@@ -780,7 +853,7 @@ function baseCallStandardPage (&$session) {
 function baseCustomStart (&$session) {
 	$session->trace (TC_Gui2, 'baseCustomStart');
 	if (empty ($session->fUserStartPage))
-		$session->fUserStartPage = P_ForumHome;
+		$session->fUserStartPage = P_Home;
 	$session->setPageName ($session->fUserStartPage);
 	if (! baseCallStandardPage ($session))
 		if (($page_id = dbPageId ($session, $session->fUserStartPage)) > 0)

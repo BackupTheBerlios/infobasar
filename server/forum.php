@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.1 2004/06/13 10:53:52 hamatoma Exp $
+// $Id: forum.php,v 1.2 2004/06/17 22:57:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -31,6 +31,39 @@ session_start();
 
 include "config.php";
 include "classes.php";
+
+// ----------- Definitions
+// Alle Designs:
+define ('Th_UserTitles', 301);
+// Designspezifisch:
+define ('Th_ThreadHeader', 301); // aus 121
+define ('Th_ThreadBodyStart', 302);
+define ('Th_ThreadBodyEnd', 303);
+define ('Th_NewThreadHeader', 304);
+define ('Th_NewThreadBodyStart', 305);
+define ('Th_NewThreadBodyEnd', 306);
+define ('Th_AnswerHeader', 307);
+define ('Th_AnswerBodyStart', 308);
+define ('Th_AnswerBodyEnd', 309);
+
+define ('Th_ForumHomeHeader', 311); // aus 171
+define ('Th_ForumHomeBodyStart', 312);
+define ('Th_ForumHomeBodyEnd', 313);
+
+define ('A_NewThread', 'newthread');
+define ('A_ChangeThread', 'changethread');
+define ('A_ShowThread', 'showthread');
+define ('A_ShowForum', 'showforum');
+
+define ('P_ForumSearch', 'forumsearch');
+define ('P_ForumHome', 'forumhome');
+define ('P_Forum', 'forum');
+define ('P_Thread', 'thread');
+
+// ----------- Program
+
+
+
 $session = new Session ($start_time);
 
 	// All requests require the database
@@ -52,8 +85,6 @@ if (! empty ($rc)) {
 } else {
 		if (isset ($login_user))
 			baseLoginAnswer ($session);
-		else
-			$do_login = $session->fPageName == P_Login;
 }
 if ($do_login){
 		clearLoginCookie ($session);
@@ -93,6 +124,25 @@ if ($do_login){
 	}
 }
 exit (0);
+
+// ---------------------------------------------------------------------
+function baseStandardLinkString (&$session, $page) {
+	$session->trace (TC_Gui3, 'baseStandardLinkString');
+	$rc = null;
+	$module = null;
+	switch ($page) {
+	case P_ForumSearch: $header = 'Forumsuche'; $module = Module_Forum; break;
+	case P_ForumHome: $header = 'Forenübersicht'; $module = Module_Forum; break;
+	default: $header = null; break;
+	}
+	if ($header)
+		$rc = guiInternLinkString ($session, $page, $header, $module);
+	return $rc;
+}
+function baseStandardLink (&$session, $page) {
+	$session->trace (TC_Gui3, 'baseStandardLink');
+	echo baseStandardLinkString ($session, $page);
+}
 
 function getModuleInfo (&$name, &$description, &$copyright, &$version){
 	$name = 'forum';
