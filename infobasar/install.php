@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.9 2004/12/07 00:07:25 hamatoma Exp $
+// $Id: install.php,v 1.10 2004/12/22 17:53:33 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -606,6 +606,7 @@ function checkTableStatus (&$session, &$exists) {
 	}
 	return $status;
 }
+
 function populate (&$session, $fn_sql) {
 	global $db_prefix;
 	$session->trace (TC_Init, "populate:");
@@ -618,24 +619,24 @@ function populate (&$session, $fn_sql) {
 			$line_count = $comments = 0;
 			while (! feof ($file)) {
 				$line_count++;
-				$line = fgets ($file, 64000);
+				$line = fgets ($file, 0x7fff);
 				if (strlen ($line) <= 3 
-					|| getPos ($line, '#') >= 0 || getPos ($line, '//') >= 0)
+					|| preg_match ('!^\s*(#|/[*/])!', $line))
 					$comments++;
 				else if (strpos ($line, 'SE InfoBasar;') == 1)
 					$session->trace (TC_Init, "Use db gefunden");
 				else { 
 					$len = strlen ($line);
-					if ( ($pos = strpos ($line, ';', $len - 2)) > 0){
+					$with_colon = ($pos = strpos ($line, ';', $len - 2)) > 0;
+					if ($with_colon){
 						$line = substr ($line, 0, $pos);
 						$session->trace (TC_Gui3, "Strichpunkt entfernt: $line");
 					}
 					if ($status == 'create') {
 						$sql .= ' ' . $line;
-						if ( getPos ($line, ')') >= 0) {
+						if ($with_colon) {
 							sqlStatement ($session, $sql);
 							$status = null;
-						} else {
 						}
 					} elseif (getPos ($line, 'CREATE TABLE') == 0) {
 							$sql = str_replace ('infobasar_', $db_prefix, $line);
@@ -663,6 +664,9 @@ function populate (&$session, $fn_sql) {
 			sqlUpdate ($session, 'macro', " value='" . $path . "/index.php/'", "name = 'BaseModule'");
 			sqlUpdate ($session, 'macro', " value='" . $path . "/forum.php/'", "name = 'ForumModule'");
 			$message .= '<br>BaseModule wurde auf ' . $path . '/index.php gesetzt.';
+			sqlUpdate ($session, 'macro', " value='" . $path . "/'", "name = 'ScriptBase'");
+			$message .= '<br>ScriptBase wurde auf ' . $path . ' gesetzt.';
+			
 			sqlUpdate ($session, 'param', " text='" . $path . "/css/phpwiki.css'", "theme=11 and pos=102");
 			$message .= '<br>CSS wurde auf ' . $path . '/css/phpwiki.css gesetzt.';
 			$fn_pages = instGetStandardPageFile ($session);
