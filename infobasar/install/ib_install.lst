@@ -1,14 +1,18 @@
 # Dateien Infobasar
-# $Id: ib_install.lst,v 1.3 2004/10/27 22:47:02 hamatoma Exp $
+# $Id: ib_install.lst,v 1.4 2005/01/06 11:40:02 hamatoma Exp $
 ../overwrite/modules.php	../modules.php
 ../install/license
 ../install/mk_arch.pl
 ../install/install.txt
 ../install/changelog.txt
 ../install/readme.txt
+../install/index.html
 ../install/release-notes.txt
+../import/index.html
 ../css/phpwiki.css
+../css/index.html
 ../pic/logo.png
+../pic/index.html
 ../docu/overview.html
 ../docu/index.html
 ../docu/module.html
@@ -22,4 +26,5 @@
 ../classes.php
 ../admin.php
 ../db/infobasar_start.sql
+../db/infobasar_pages.wiki
 
