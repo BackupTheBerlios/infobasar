@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.17 2005/01/08 23:52:43 hamatoma Exp $
+// $Id: db_mysql.php,v 1.18 2005/01/11 00:12:27 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -172,19 +172,35 @@ function dbDeleteByClause (&$session, $table, $what) {
 	if (!mysql_query ($query, $session->fDbInfo))
 		error ('dbDelete: ' . mysql_error () . " $query");
 }
-function dbUpdate (&$session, $table, $id, $what) {
+function dbUpdate (&$session, $table, $id, $what, $return_count = false) {
 	$session->trace (TC_Db1 + TC_Update, "dbUpdate: $table, $id, $what");
+	$rc = -1;
+	if ($return_count){
+		$query = 'select count(id) from ' . dbTable ($session, $table)
+			. ' where id=' . $id;
+		$session->trace (TC_X, "sqlUpdate: $query");
+		$rc = dbSingleValue ($session, $query);
+	}
 	$query = 'update ' . dbTable ($session, $table) . ' set ' . $what
 		. 'changedat=now()' . ' where id=' . $id;
 	if (!mysql_query ($query, $session->fDbInfo))
 		error ('dbUpdate: ' . mysql_error () . " $query");
+	return $rc;
 }
-function dbUpdateRaw (&$session, $table, $id, $what) {
+function dbUpdateRaw (&$session, $table, $id, $what, $return_count = false) {
 	$session->trace (TC_Db1 + TC_Update, "dbUpdateRaw: $table, $id, $what");
+	$rc = -1;
+	if ($return_count){
+		$query = 'select count(id) from ' . dbTable ($session, $table)
+			. ' where id=' . $id;
+		$session->trace (TC_X, "sqlUpdate: $query");
+		$rc = dbSingleValue ($session, $query);
+	}
 	$query = 'update ' . dbTable ($session, $table) . ' set ' . $what
 		. ' where id=' . $id;
 	if (!mysql_query ($query, $session->fDbInfo))
 		error ('dbUpdateRaw: ' . mysql_error () . " $query");
+	return $rc;
 }
 function dbTable (&$session, $name) {
 	$session->trace (TC_Db3, 'dbTable');
