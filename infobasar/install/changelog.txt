@@ -1,8 +1,27 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.7 2005/01/10 19:37:52 hamatoma Exp $
+$Id: changelog.txt,v 1.8 2005/01/13 03:40:04 hamatoma Exp $
 
 Legende: F(ehler) N(eu) A(enderung)
 
+Version 0.7.2 vom 2005.01.12
+ -F: Alle Input-Felder: Doppelte Gaensefuesschen bei typ-Attribut.
+ -F: Dateiupload: leerer Dateiname, Link nur bei Erfolg
+ -F: admin.php: Dateiexport/import.
+ -N: admin.php: Standardisierte Verzeichnisansicht admShowDir ().
+ -A: HTML-Felder mit Paragraph-Check (validiertes HTML)
+ -N: Auslagerung von db/design_start.sql aus db/infobasar_start.sql
+ -F: admin.php: Optionen (Logo-Laden)
+ -F: Info: Ausgabe der Version von classes.php
+ -N: Info: Ausgabe des Version des Basismoduls.
+ -N: Wikiseiten sind validiertes HTML
+Version 0.7.1 vom 2005.01.11
+ -F: admin.php: Setzen des Basarnamens
+Version 0.7.1 vom 2005.01.11
+ -N: expand_arch.pl: *.hma-Archive entpacken.
+ -N: create_release: Script zum Erstellen einer Dowload-Zipdatei
+ -N: Wiki-Syntax-Konvertierung: Bild-Verweise: [] werden entfernt.
+ -A: Doku in readme.txt
+ -N: install.txt: Beschreibung Manuelle Installation, Update.
 Version 0.7.0 vom 2005.01.05
  -A: keine global-Variablen, damit unter register-globals=off lauffähig
  -A: Wiki-Syntax: ; Einrückung, Verweise mit [[]] [newline] statt [Newline] wichtig und Zitat getauscht
