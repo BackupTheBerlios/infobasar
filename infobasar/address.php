@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.2 2004/10/14 02:46:20 hamatoma Exp $
+// $Id: address.php,v 1.3 2004/10/15 23:23:12 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -67,6 +67,7 @@ if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 }
 $rc = dbCheckSession ($session);
 #$session->dumpVars ("Init");
+$session->trace (TC_X, 'address_init: rc: ' . ($rc == null ? "null" : rc));
 if ($rc != null) {
 	$session->trace (TC_Init, 'keine Session gefunden: ' . $rc . ' ' 
 		. (empty($login_user) ? "-" : '>' . $login_user));
@@ -86,17 +87,28 @@ if ($rc != null) {
 			putHeaderBase ($session);
 			break;
 		}
-	} 
+	} else {
+		$session->trace (TC_X, 'address_init: fPageName: "' . $session->fPageName . '"');
+		switch ($session->fPageName){
+		case P_ShowBooks: addressShowBooks ($session); break;
+		case P_EditBook: addressEditBook ($session); break;
+		case P_EditCard: addressEditCard ($session); break;
+		case P_ShowCard: addressShowCard ($session); break;
+		default:
+			putHeaderBase ($session);
+		}
+	}
 }
 exit (0);
 // ---------------------------------
 function addressEditBook (&$session, $message = null){
-	$id_book = $_POST ['book_id'];
-	if (empty ($book_id)){
+	
+	if (! isset ($_POST ['book_id']) || empty ($_POST ['book_id'])){
 		$book_id = dbGetValueByClause ($session, Tab_Book, 'min(id)', '1');
 		list ($name, $description) = dbGetRecordById ($session, Tab_Book, 
 			$book_id, 'name, description');
 	} else {
+		$book_id = $_POST ['book_id'];
 		$name = $_POST ['book_name'];
 		$description = $_POST ['book_description'];	
 	}
@@ -117,7 +129,7 @@ function addressEditBook (&$session, $message = null){
 	echo ' ';
 	guiButton ('book_new', 'Neu');
 	echo "</td></tr>\n<tr><td>Nächster:</td><td>";
-	$book_list = dbColumnList (Tab_Book, 'name', '1');
+	$book_list = dbColumnList ($session, Tab_Book, 'name', '1');
 	guiComboBox ('book_next', $book_list, null);
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session, $session);
