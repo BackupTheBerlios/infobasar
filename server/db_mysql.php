@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.5 2004/05/31 23:17:10 hamatoma Exp $
+// $Id: db_mysql.php,v 1.6 2004/06/02 00:05:12 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -254,7 +254,8 @@ function dbUserAdd (&$session, $user, $code, $rights, $locked,
 		. dbSqlString ($session, $startpage) . ',' . dbSqlString ($session, $email));
 }
 function dbCheckSession (&$session) {
-	global $session_id, $session_user, $REQUEST_URI, $SCRIPT_NAME, $SCRIPT_FILENAME;
+	global $session_id, $session_user;
+	global $REQUEST_URI, $SCRIPT_NAME, $SCRIPT_FILENAME, $PATH_INFO;
 	$session->trace (TC_Db1, 'dbCheckSession: ' . "REQEST_URI: $REQUEST_URI SCRIPT_NAME: $SCRIPT_NAME");
 	if (empty ($session_user))
 		$fields = null;
@@ -276,7 +277,7 @@ function dbCheckSession (&$session) {
 			while (strpos ($uri, "index") == 0 && strpos ($uri, '/') > 0)
 				$uri = substr ($uri, strpos ($uri, "/") + 1);
 			$session->setScriptBase ($REQUEST_URI, $SCRIPT_NAME, $SCRIPT_FILENAME);
-			$session->setPageName ($uri);
+			$session->setPageName (substr ($PATH_INFO, 1));
 			$session->setMacros ();
 			$rc = false;
 		}

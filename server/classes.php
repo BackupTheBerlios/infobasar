@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.3 2004/05/27 22:40:50 hamatoma Exp $
+// $Id: classes.php,v 1.4 2004/06/02 00:04:38 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -329,7 +329,8 @@ class Session {
 	}
 	function setPageName ($uri){
 		global $last_pagename;
-		$this->trace (TC_Init, 'setPageName: ' . $uri . "($last_pagename)<br>");
+		$this->trace (TC_Init, 'setPageName: ' . $uri
+			. " last_pagename: ($last_pagename)");
 		$this->fPageName = preg_replace ('/\?.*$/', '', $uri);
 		if (strpos ($this->fPageName, '.php') > 0)
 			$this->fPageName = empty ($last_pagename)
