@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.6 2004/10/27 22:43:33 hamatoma Exp $
+// $Id: admin.php,v 1.7 2004/10/28 09:41:41 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -411,7 +411,7 @@ function admMacroAnswerChange (&$session, $mode){
 		. " where theme=$macro_theme and name=" . dbSqlString ($session, $macro_name))) <= 0)
 		$message = 'Ändern nicht möglich, da (Theme, Name) nicht existiert';
 	else {
-		$session->trace(TC_X, 'admMacroAnswerChange-2: ' . $count . " / " . $mode);
+		$session->trace(TC_Gui3, 'admMacroAnswerChange-2: ' . $count . " / " . $mode);
 		
 		if ($mode == C_New) {
 			dbInsert ($session, T_Macro, 'theme,name,description,value',
@@ -692,7 +692,7 @@ function admImportPagesAnswer (&$session){
 					$name = $param[1];
 					$lines = $param[2];
 					$type = $param [3];
-					$session->trace(TC_X, 'admImportPagesAnswer-2: ' . $line);
+					$session->trace(TC_Gui1, 'admImportPagesAnswer-2: ' . $line);
 					if ( ($page = dbPageId ($session, $name)) > 0){
 						$count_updates++;
 						if ($import_replace == C_CHECKBOX_TRUE)
@@ -704,7 +704,7 @@ function admImportPagesAnswer (&$session){
 						$count_inserts++;
 					}
 					$text = "";
-					$session->trace(TC_X, 'admImportPagesAnswer-3: ' . $lines);
+					$session->trace(TC_Gui1, 'admImportPagesAnswer-3: ' . $lines);
 					$count_lines += $lines;
 					for ($ii = 0; $ii < $lines; $ii++)
 						$text .= fgets ($file);
