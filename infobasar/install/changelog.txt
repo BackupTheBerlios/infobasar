@@ -1,5 +1,5 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.4 2005/01/06 16:54:52 hamatoma Exp $
+$Id: changelog.txt,v 1.5 2005/01/08 13:09:32 hamatoma Exp $
 
 Legende: F(ehler) N(eu) A(enderung)
 
@@ -9,6 +9,10 @@ Version 0.7.0 vom 2005.01.05
  -A: TM_Newline von [Newline] auf [newline]
  -N: admin.php: Wiki-Syntax-Konversion
  -N: Wiki-Syntax: tt, sup, sub, teletype, superscript, subscript, %%%
+ -A: sessionStart() und successfullLogin(), guiLogin()... für Standard-Hauptprogramm.
+ -N: Unterscheidung eingebettetes Bild (Link) und Bild-Verweis ([[link]]).
+ -A: Parameternummern: 100-149 jetzt modul- und designunabhängig, 150-199 modulunabh, designabhängig
+ -N: sql_update_06_07.sql
 Version 0.6.6.1 vom 2004.12.25
  -F: Aufzählung mit verschiedenem Einrücktiefen
  -F: Tipps im Änderungsmodus. Hilfeseiten
