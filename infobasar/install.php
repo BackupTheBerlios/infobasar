@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: install.php,v 1.2 2004/09/20 23:02:22 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -145,42 +145,57 @@ $session->fTraceFlags = TC_Error + TC_Warning + TC_X;
 
 
 $session->setScriptBase();
-
-if (! isset ($inst_step))
-	$inst_step = 0;
-if (isset ($inst_next))
-	$inst_step++;
-elseif (isset ($inst_last))
-	$inst_step--;
-if ($inst_step > 1)
-	include ('config.php');
-switch ($inst_step){
-case 2: 
-	if (isset ($inst_populate))
-		instDBAnswer ($session);
-	else
-		instDB ($session); 
-	break;
-case 3: 
-	instFinish ($session); 
-	break;
-case 4: 
-	instExit ($session);
-	break;
-case 1:
-	if (isset ($config_save) || isset ($config_access) || isset ($config_createdb))
-		instConfigFileAnswer ($session);
-	else
-		instConfigFile ($session, null);
-	break;
-default:
-case 0:
-	instArchiveAnswer ($session);
-	break;
+if (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/install"){
+	echo '<html><body>install.php <strong>muss</strong> in einem Verzeichnis install liegen!';
+	echo '<br>';
+	echo $session->fScriptBase;
+	echo '<br>';
+	echo substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8);
+	echo '</body></html>';
+} else {
+	if (! isset ($inst_step))
+		$inst_step = 0;
+	if (isset ($inst_next))
+		$inst_step++;
+	elseif (isset ($inst_last))
+		$inst_step--;
+	if ($inst_step > 1)
+		include ('..' . PATH_DELIM . 'config.php');
+	switch ($inst_step){
+	case 2: 
+		if (isset ($inst_populate))
+			instDBAnswer ($session);
+		else
+			instDB ($session); 
+		break;
+	case 3: 
+		instFinish ($session); 
+		break;
+	case 4: 
+		instExit ($session);
+		break;
+	case 1:
+		if (isset ($config_save) || isset ($config_access) || isset ($config_createdb))
+			instConfigFileAnswer ($session);
+		else
+			instConfigFile ($session, null);
+		break;
+	default:
+	case 0:
+		instArchiveAnswer ($session);
+		break;
+	}
 }
 exit (0);
 
 // -----------------------------------
+function getMicroTime(&$session, $time = null){ 
+	$session->trace (TC_Util1, 'getMicroTime');
+	if (empty ($time))
+		$time = microtime ();
+	list($usec, $sec) = explode(" ", $time); 
+	return ((float) $usec + (float)$sec); 
+}
 function instArchive (&$session, $message =  null) {
 	global $archive_dir;
 	$session->trace (TC_Init, 'instArchive');
@@ -195,7 +210,7 @@ function instArchive (&$session, $message =  null) {
 	guiHeadline ($session, 2, 'Archiv hochladen');
 	
 	if (empty ($archive_name))
-		$archive_name = $session->fFileSystemBase . PATH_DELIM . 'infobasar.hma';
+		$archive_name = $session->fFileSystemBase . PATH_DELIM . "install" . PATH_DELIM . 'infobasar.hma';
 	$archive_exists = file_exists ($archive_name);
 
 	echo '<form enctype="multipart/form-data" action="' . C_ScriptName
@@ -294,7 +309,7 @@ function instArchiveAnswer (&$session){
 	instArchive ($session, $message);
 }
 function instGetSqlFile (&$session){
-	return $session->fFileSystemBase . PATH_DELIM . 'infobasar_start.sql';
+	return $session->fFileSystemBase . PATH_DELIM . '../db/infobasar_start.sql';
 }
 function instConfigFile (&$session, $message =  null) {
 	global $db_server, $db_user, $db_passw, $db_name, $db_prefix;
@@ -308,7 +323,7 @@ function instConfigFile (&$session, $message =  null) {
 	
 	instGetConfig ($session);
 	
-	$name = $session->fFileSystemBase . PATH_DELIM . 'config.php';
+	$name = $session->fFileSystemBase . PATH_DELIM . '..' . PATH_DELIM . 'config.php';
 	$config_exists = file_exists ($name);
 	guiParagraph ($session, 'Konfigurationsdatei existiert ' 
 		. ($config_exists ? '.' : ' <b>nicht</b>!'), false);
@@ -343,7 +358,7 @@ function instConfigFile (&$session, $message =  null) {
 	if ($status == NO_DB)
 		guiButton ('config_createdb', 'Datenbank ' . $db_name . ' erzeugen');
 	guiLine ($session, 2);
-	guiParagraph ($session, "DB-Definitiondatei $file " . ($sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
+	guiParagraph ($session, "DB-Definitionsdatei $file " . ($sql_exists ? "" : "<b>nicht</b> ") . "gefunden.", false);;
 	guiButton ('inst_last', 'zurück');
 	echo ' | ';
 	guiButton ('inst_next', 'weiter');
@@ -375,7 +390,7 @@ function instConfigFileAnswer (&$session){
 		elseif (empty ($db_user))
 			$message = '+++ Kein Datenbank-Benutzer angegeben. Evt. Administrator fragen.';
 		else {
-			$name = $session->fFileSystemBase . PATH_DELIM . 'config.php';
+			$name = $session->fFileSystemBase . PATH_DELIM . '..' . PATH_DELIM . 'config.php';
 			if (file_exists ($name)){
 				$no = 1;
 				while (file_exists (
@@ -500,7 +515,7 @@ function instExit (&$session){
 		}
 		guiParagraph ($session, 'Die Installation ist jetzt beendet.', false);
 		guiLine ($session, 2);
-		guiExternLink ($session, 'index.php', 'Zur Anmeldung');
+		guiExternLink ($session, '../index.php', 'Zur Anmeldung');
 		guiFinishBody ($session);
 	}
 }
@@ -714,7 +729,7 @@ function instGetConfig (&$session){
 	global $db_server, $db_user, $db_passw, $db_name;
 	$session->trace (TC_Init, 'instGetConfig: ');
 	
-	$name = $session->fFileSystemBase . "/config.php";
+	$name = $session->fFileSystemBase . PATH_DELIM . ".." . PATH_DELIM . "config.php";
 	$session->trace (TC_Init, 'instGetConfig: ' . $name);
 	if (is_file ($name)){
 		$file = fopen ($name, "r");
