@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.3 2004/10/15 23:23:12 hamatoma Exp $
+// $Id: address.php,v 1.4 2004/10/17 21:16:06 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -66,7 +66,7 @@ if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	$session->trace (TC_X, 'address.php: Cookie erfolgreich gelesen. User: ' . $session_user);
 }
 $rc = dbCheckSession ($session);
-#$session->dumpVars ("Init");
+$session->dumpVars ("Init");
 $session->trace (TC_X, 'address_init: rc: ' . ($rc == null ? "null" : rc));
 if ($rc != null) {
 	$session->trace (TC_Init, 'keine Session gefunden: ' . $rc . ' ' 
@@ -88,21 +88,25 @@ if ($rc != null) {
 			break;
 		}
 	} else {
-		$session->trace (TC_X, 'address_init: fPageName: "' . $session->fPageName . '"');
-		switch ($session->fPageName){
-		case P_ShowBooks: addressShowBooks ($session); break;
-		case P_EditBook: addressEditBook ($session); break;
-		case P_EditCard: addressEditCard ($session); break;
-		case P_ShowCard: addressShowCard ($session); break;
-		default:
-			putHeaderBase ($session);
+		if (isset ($_POST ['book_change']) || isset ($_POST ['book_new']))
+			addressEditBookAnswer ($session);
+		else {
+			$session->trace (TC_X, 'address_init: fPageName: "' . $session->fPageName . '"');
+			switch ($session->fPageName){
+			case P_ShowBooks: addressShowBooks ($session); break;
+			case P_EditBook: addressEditBook ($session); break;
+			case P_EditCard: addressEditCard ($session); break;
+			case P_ShowCards: addressShowCard ($session); break;
+			default:
+				putHeaderBase ($session);
+			}
 		}
 	}
 }
 exit (0);
 // ---------------------------------
 function addressEditBook (&$session, $message = null){
-	
+	$session->trace (TC_Gui1, 'addressEditBook');
 	if (! isset ($_POST ['book_id']) || empty ($_POST ['book_id'])){
 		$book_id = dbGetValueByClause ($session, Tab_Book, 'min(id)', '1');
 		list ($name, $description) = dbGetRecordById ($session, Tab_Book, 
@@ -128,7 +132,7 @@ function addressEditBook (&$session, $message = null){
 	guiButton ('book_change', 'Ändern');
 	echo ' ';
 	guiButton ('book_new', 'Neu');
-	echo "</td></tr>\n<tr><td>Nächster:</td><td>";
+	echo "</td></tr>\n<tr><td>Nächster DS:</td><td>";
 	$book_list = dbColumnList ($session, Tab_Book, 'name', '1');
 	guiComboBox ('book_next', $book_list, null);
 	echo "</td></tr>\n</table>\n";
@@ -136,11 +140,38 @@ function addressEditBook (&$session, $message = null){
 	guiStandardBodyEnd ($session, Th_AddressBodyEnd);
 }
 function addressEditBookAnswer (&$session){
+	$session->trace (TC_Gui1, 'addressEditBookAnswer');
+	$session->trace (TC_X, 'addressEditBookAnswer');
 	$message = null;
-	if (! empty ($_POST ['book_change'])){
-	} elseif (! empty ($_POST ['book_new'])){
+	if (isset ($_POST ['book_change'])){
+		$session->trace (TC_Gui1, 'addressEditBook-change entdeckt');
+		$name = $_POST ['book_name'];
+		$id = $_POST ['book_id'];
+		if (empty ($name))
+			$message = 'Bitte Namen angeben';
+		else if (dbSingleValue ($session, 'select count(id) from ' . dbTable ($session, Tab_Book) 
+			. ' where name=' . dbSqlString ($session, $name) . ' and id<>' . (0+$id)) > 0)
+			$message = "Addressbuch mit Namen $name existiert schon!";
+		else {
+			dbUpdate ($session, Tab_Book, $id, 'name=' . dbSqlString ($session, $name)
+				. ',description=' . dbSqlString ($session, $_POST ['book_description']) . ',');
+			$message = "Addressbuch $name wurde geändert.";
+		}
+	} elseif (isset ($_POST ['book_new'])){
+		$session->trace (TC_Gui1, 'addressEditBook-new entdeckt');
+		$name = $_POST ['book_name'];
+		if (empty ($name))
+			$message = 'Bitte Namen angeben';
+		else if (dbSingleValue ($session, 'select count(id) from ' . dbTable ($session, Tab_Book) 
+			. ' where name=' . dbSqlString ($session, $name)) > 0)
+			$message = "Addressbuch mit Namen $name existiert schon!";
+		else {
+			dbInsert ($session, Tab_Book, 'name,description',
+				dbSqlString ($session, $name) . ','
+				. dbSqlString ($session, $_POST ['book_description']));
+			$message = "Addressbuch $name wurde erstellt.";
+		}
 	}
 	addressEditBook ($session, $message);
-	
 }
 ?>
