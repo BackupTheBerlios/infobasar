@@ -1,5 +1,5 @@
 # sql_update_0.5_0.6.sql
-# $Id: sql_update_0.5_0.6.sql,v 1.2 2004/09/21 19:47:33 hamatoma Exp $
+# $Id: sql_update_0.5_0.6.sql,v 1.3 2005/01/10 20:07:16 hamatoma Exp $
 # Ergänzen der Datenbanktabellen von Version 0.5 auf 0.6
 #
 
