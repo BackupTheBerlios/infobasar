@@ -1,0 +1,22 @@
+#!/bin/sh
+# $Id: create_release,v 1.1 2005/01/11 17:47:21 hamatoma Exp $
+if [ -z $1 ] ; then
+	echo "Aufruf: create_release VERSION"
+	echo "Bsp: create_release 0.7.0"
+	exit 1
+fi
+Version=$1
+rm -f infobasar-*zip
+cd ..
+Zip=infobasar-$Version.zip
+zip -9ovn ".gz" install/$Zip docu/* \
+	install/*.hma.gz \
+	install/*.txt \
+	install/licence \
+	install/*.pl \
+	install/mk_arch \
+	install.php
+rm -f backup/$Zip
+cp install/$Zip backup/$Zip
+echo Datei readme.txt:
+grep Version install/readme.txt
