@@ -1,5 +1,5 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.6 2005/01/09 23:53:11 hamatoma Exp $
+$Id: changelog.txt,v 1.7 2005/01/10 19:37:52 hamatoma Exp $
 
 Legende: F(ehler) N(eu) A(enderung)
 
@@ -13,7 +13,13 @@ Version 0.7.0 vom 2005.01.05
  -N: Unterscheidung eingebettetes Bild (Link) und Bild-Verweis ([[link]]).
  -A: Parameternummern: 100-149 jetzt modul- und designunabhängig, 150-199 modulunabh, designabhängig
  -N: sql_update_06_07.sql
- -N: cat_src.pl: Erstellen einer optimierten Version: Geschwindigkeitsgewinn: Faktor 5-10
+ -N: opt_php_modules.pl: Erstellen einer optimierten Version: Geschwindigkeitsgewinn: Faktor 5-10
+ -N: install.php liefert WC3-konformes 4.01-HTML
+ -N: base_src.php statt index.php forum_module.php statt forum.php, address_module.php statt address.php.
+ -N: index.php ist ein Link auf base_module.php oder base_opt.php, forum.php ein Link auf forum_module.php oder forum_opt.php ...
+ -N: install.php: Dokumentation der Standardaktionen auf den Seiten
+ -N: Installieren von SQL- und Wiki-Dateien (für Update).
+ -N: CVS-Quellen bereinigt.
  Version 0.6.6.1 vom 2004.12.25
  -F: Aufzählung mit verschiedenem Einrücktiefen
  -F: Tipps im Änderungsmodus. Hilfeseiten
