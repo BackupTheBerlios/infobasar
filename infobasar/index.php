@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.13 2004/10/30 10:43:53 hamatoma Exp $
+// $Id: index.php,v 1.14 2004/10/30 23:54:44 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -475,6 +475,14 @@ function baseAccountAnswer(&$session, $user) {
 	}
 	baseAccount ($session, $message);
 }
+function baseOutStandardLink (&$session, $name, $description){
+	outTableRecord();
+	outTableDelim();
+	baseStandardLink ($session, $name);
+	outTableDelimEnd();
+	outTableCell ($description);
+	outTableRecordEnd();
+}
 function baseHome (&$session) {
 	global $session_id, $session_user;
 
@@ -486,32 +494,30 @@ function baseHome (&$session) {
 		guiStandardHeader ($session, 'Übersicht', Th_StandardHeader,
 			Th_StandardBodyStart);
 		guiHeadline ($session, 1, 'Willkommen ' . $session->fUserName);
-		echo '<table border="0"><tr><td>';
-		baseStandardLink ($session, P_Account);
-		echo '</td><td>Benutzerspezifische Einstellungen f&uuml;r ';
-		echo $session->fUserName;
-		echo "</td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_Logout);
-		echo "</td><td>Abmelden</td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_Login);
-		echo "</td><td>Neu anmelden</td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_Start);
-		echo "</td><td>Startseite, wie sie in den benutzerspezifischen Einstellungen festgelegt ist</td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_Info);
-		echo '</td><td>Information &uuml;ber den InfoBasar</td></tr>';
-		echo "\n<td><br><strong>Wiki- und HTML-Seiten:</strong></td></tr><tr><td>";
-		guiInternLink ($session, encodeWikiName ($session, 'StartSeite'), 'StartSeite');
-		echo "</td><td>Wiki-Startseite</td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_LastChanges);
-		echo "</td><td>Liste der in den letzten n Tagen ge&auml;nderten Wikiseiten</td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_Search);
-		echo "</td><td>Titel- oder Volltextsuche im Wikibereich<td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_NewWiki);
-		echo "</td><td>Anlegen einer neue Wikiseite</td></tr>\n<tr><td>";
-		baseStandardLink ($session, P_NewPage);
-		echo "</td><td>Anlegen einer neue Seite (Wiki oder HTML)</td></tr>\n";
+		outTable ();
+		baseOutStandardLink($session, P_Account, 
+			'Benutzerspezifische Einstellungen f&uuml;r ' . $session->fUserName);
+		baseOutStandardLink($session, P_Logout, 'Abmelden');
+		baseOutStandardLink($session, P_Login, 'Neu anmelden');
+		baseOutStandardLink($session, P_Start, 
+			'Startseite, wie sie in den benutzerspezifischen Einstellungen festgelegt ist');
+		baseOutStandardLink($session, P_Info, 'Information &uuml;ber den InfoBasar');
+		outTableRecordAndDelim ();
+		outTableCell (tagNewline() .tagStrong ('Wiki- und HTML-Seiten:'));
+		outTableCell (' ');
+		outTableRecordDelim();
+		outTableInternLink (null, $session, encodeWikiName ($session, 'StartSeite'), 
+			'StartSeite'); 
+		outTableCell ('Wiki-Startseite');
+		baseOutStandardLink($session, P_LastChanges, 
+			'Liste der in den letzten n Tagen ge&auml;nderten Wikiseiten');
+		baseOutStandardLink($session, P_Search, 
+			'Titel- oder Volltextsuche im Wikibereich');
+		baseOutStandardLink($session, P_NewWiki, 'Anlegen einer neue Wikiseite');
+		baseOutStandardLink($session, P_NewPage, 
+			'Anlegen einer neue Seite (Wiki oder HTML)');
 		modOverview ($session);
-		echo "</table>\n" ;
+		outTableEnd();
 		guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 	}
 }
@@ -576,64 +582,86 @@ function baseEditPage (&$session, $mode,
 	guiHiddenField ('edit_changedat', $changedat);
 	guiHiddenField ('edit_changedby', $changedby);
 
-	if (! empty ($message))
-		guiParagraph ($session, '<td><strong>' . htmlentities ($message)
-			. '</strong></tr>' . "\n", false);
-	if (! empty ($message2))
-		guiParagraph ($session, '<td><strong>' . htmlentities ($message2) 
-			. '</strong></tr>' . "\n", false);
-	echo "<table border=\"0\">\n";
-	echo "<tr><td><table border=\"0\">\n";
-	if ($mode == C_New){
-		echo "<tr><td>Name:</td><td>";
-		guiTextField ('edit_name', $name, 43, 64);
-		echo "</td></tr>\n";
+	if (! empty ($message)){
+		outParagraph();
+		outStrong (htmlentities ($message));
+		outParagraphEnd();
 	}
-	echo "</td></tr>\n<tr><td>Typ:</td><td>";
+	if (! empty ($message2)){
+		outParagraph();
+		outStrong (htmlentities ($message2));
+		outParagraphEnd();
+	}
+	outTable ();
+	outTableRecordAndDelim();
+	outTable ();
+	if ($mode == C_New){
+		outTableRecord();
+		outTableTextField('Name:', 'edit_name', $name, 43, 64);
+		outTableRecordEnd();
+	}
+	outTableRecord();
 	if ($mode == C_New && $type == M_Undef)
-		guiComboBox ('edit_mimetype', array (M_Wiki, M_HTML), null);
+		outTableComboBox ('Typ', 'edit_mimetype', array (M_Wiki, M_HTML), null);
 	else {
-		echo $mimetype;
+		outTableRecord ();
+		outTableCell ('Typ:');
+		outTableCell ($mimetype);
 		guiHiddenField ('edit_mimetype', $mimetype);
+		outTableRecordEnd ();
 	}
 	if ($mode == C_New){
 		$templates = dbColumnList ($session, T_Page, 'name', 
 			'name like ' . dbSqlString ($session, 'Vorlage%'));
 		if (count ($templates) > 0){
-			echo "</td></tr>\n<tr><td>Seitenvorlage:</td><td>";
+			outTableRecord ();
+			outTableCell ('Seitenvorlage:');
+			outTableDelim ();
 			guiComboBox('edit_template', $templates, null);
 			echo (' ');
 			guiButton ('edit_appendtemplate', 'Vorlage einkopieren');
+			outTableDelimAndRecordEnd();
 		}
 	}
-	echo "</td></tr></table>\n";
-	echo "</td></tr>\n<tr><td>";	
-	guiTextArea ('edit_content', $content, $textarea_width,
-		$textarea_height);
-	echo '</td></tr>' . "\n" . '<tr><td><table border="0" width="100%">';
-	echo '<tr><td>'; guiButton ('edit_save', 'Speichern (fertig)');
-	echo '</td><td>'; guiButton ('edit_previewandsave', 'Zwischenspeichern');
-	echo ' '; guiButton ('edit_preview', ' Vorschau');
-	echo '</td><td>'; guiButton ('edit_cancel', ' Verwerfen'); 
+	outTableEnd();
+	outTableDelimAndRecordEnd();
+	outTableRecordAndDelim();
+	guiTextArea ('edit_content', $content, $textarea_width, $textarea_height);
+	outTableDelimAndRecordEnd();
+	outTableRecordAndDelim();
+	outTable (0, '100%');
+	outTableRecord();
+	outTableButton (null, 'edit_save', 'Speichern (fertig)');
+	outTableDelim(AL_Justify);
+	guiButton ('edit_previewandsave', 'Zwischenspeichern');
+	echo ' '; 
+	guiButton ('edit_preview', ' Vorschau');
+	outTableCellDelim();
+	guiButton ('edit_cancel', ' Verwerfen'); 
 	if (! $session->testFeature (FEATURE_UPLOAD_ALLOWED)){
 		echo ' Breite: '; guiTextField ("textarea_width", $textarea_width, 3, 3);
-		echo " H&ouml;he: ";
+		echo ' H&ouml;he: ';
 	} else {	
-		echo '</td><td>Breite:</td><td>'; guiTextField ("textarea_width", $textarea_width, 3, 3);
-		echo "</td></tr>\n<tr><td>";
-		echo "Bild einf&uuml;gen:";
-		echo '</td><td>';
+		outTableDelimEnd();
+		outTableTextField ('Breite:', 'textarea_width', $textarea_width, 3, 3);
+		outTableRecordEnd();
+		outTableRecord();
+		outTableCell ('Bild einf&uuml;gen:');
 		guiHiddenField ('MAX_FILE_SIZE', 500000);
+		outTableDelim(AL_Justify);
 		echo '<input name="edit_upload_file" type="file">';
-		echo '</td><td>'; guiButton ('edit_upload', 'Hochladen');
-		echo "</td><td>H&ouml;he:</td><td>";
+		outTableDelimEnd();
+		outTableButton (null, 'edit_upload', 'Hochladen');
+		outTableCell ('H&ouml;he:');
+		outTableDelim();
 	} 
 	guiTextField ("textarea_height", $textarea_height, 3, 3);
-	echo "</td></tr>\n</table>\n";
-	echo "</td></tr></table>\n";	
+	outTableAndRecordEnd();
+	outTableDelimEnd();
+	outTableAndRecordEnd();
 	
 	guiFinishForm ($session, $session);
-	echo '<br/>';
+	outNewline();
 	guiStandardBodyEnd ($session,
 		$mimetype == M_Wiki ? Th_EditEndWiki : Th_EditEndHTML);
 }
@@ -941,22 +969,53 @@ function baseSearch (&$session, $message){
 		baseSearchResults ($session);
 	guiStartForm ($session, 'search', P_Search);
 	guiHiddenField ('last_pagename', $last_pagename);
-	echo "<table border=\"0\">\n<tr><td>Titel:</td><td>";
+	outTableAndRecord();
+	outTableCell ('Titel:');
+	outTableDelim();
 	guiTextField ('search_titletext', $search_titletext, 32, 64);
 	echo " "; guiButton ('search_title', "Suchen");
-	echo "</td></tr>\n<tr><td>Beitrag:</td><td>";
+	outTableDelimAndRecordEnd();
+	outTableRecord();
+	outTableCell ('Beitrag:');
+	outTableDelim();
 	guiTextField ('search_bodytext', $search_bodytext, 32, 64);
 	echo " "; guiButton ('search_body', "Suchen");
-	echo "</td></tr>\n<tr><td>Maximale Trefferzahl:</td><td>";
-	guiTextField ("search_maxhits", $search_maxhits, 10, 10);
-	echo "</td></tr>\n</table>\n";
+	outTableDelimAndRecordEnd();
+	outTableTextField('Maximale Trefferzahl:', 'search_maxhits',
+		$search_maxhits, 10, 10);
+	outTableAndRecordEnd();
 	guiFinishForm ($session, $session);
-	guiParagraph ($session, 
-		'<strong>Hinweis:</strong><br>Vorl&auml;ufig nur ein Suchbegriff m&ouml;glich.<br>'
-		. 'Joker (Wildcards) sind % (beliebig) und _ (1 Zeichen).<br>'
-		. 'Bsp:<br> <i>a_t</i> findet "Kin<b>ast</b>" und "<b>Amt</b>sperson", aber nicht "h<b>a</b>s<b>st</b>".<br>'
-		. ' <i>Hilfe%format</i> findet <b>Hilfe</b>Bei<b>Format</b>ierung und "<b>Hilfe</b> f&uuml;r ein Datei<b>format</b>"".',
-		false);
+	outParagraph ();
+	outStrong ('Hinweis:');
+	outNewline();
+	echo 'Vorl&auml;ufig nur ein Suchbegriff m&ouml;glich.';
+	outNewline();
+	echo 'Joker (Wildcards) sind % (beliebig) und _ (1 Zeichen).';
+	outNewline();
+	outStrong ('Bsp:');
+	outNewline();
+	outQuotation('a_t ');
+	echo ' findet "Kin';
+	outStrong ('ast');
+	echo '" und "';
+	outStrong ('Amt');
+	echo 'sperson", aber nicht "h';
+	outStrong ('a');
+	echo 's';
+	outStrong ('st');
+	echo '"';
+	outNewline();
+	outQuotation('Hilfe%format');
+	echo ' findet ';
+	outStrong ('Hilfe');
+	echo 'Bei';
+	outStrong ('Format');
+	echo 'ierung und "';
+	outStrong ('Hilfe');
+	echo ' f&uuml;r ein Datei';
+	outStrong ('format');
+	echo '".',
+	outParagraphEnd();
 	guiStandardBodyEnd ($session, Th_SearchBodyEnd);
 }
 function baseSearchResults (&$session){
@@ -974,15 +1033,20 @@ function baseSearchResults (&$session){
 		if (! $row)
 			guiParagraph ($session, '+++ keine passenden Seiten gefunden', false);
 		else {
-			echo '<table border="1"><tr><td>Seite:</td><td>Typ:</td></tr>';
+			outTable (1);
+			outTableRecord();
+			outTableCell ('Seite:');
+			outTableCell ('Typ:');
+			outTableRecordEnd();
 			while ($row) {
-				echo "\n<tr><td>"
-					. guiInternLinkString ($session, 
-						encodeWikiName ($session, $row[0]), $row[0])
-					. "</td><td>$row[1]</td></tr>";
+				outTableRecord();
+				outTableInternLink(null, $session, 
+						encodeWikiName ($session, $row[0]), $row[0]);
+				outTableCell (textTypeToMime($row[1]));
+				outTableRecordEnd();
 				$row = dbNextRecord ($session);
 			}
-			echo "\n</table>\n";
+			outTableEnd();
 		}
 	} else {
 		if (empty ($search_bodytext))
