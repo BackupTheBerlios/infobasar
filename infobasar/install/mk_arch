@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mk_arch,v 1.4 2005/01/10 19:38:23 hamatoma Exp $
+# $Id: mk_arch,v 1.5 2005/01/11 09:15:26 hamatoma Exp $
 if [ -z $1 ] ; then
 	echo "Aufruf: mk_arch VERSION"
 	echo "Bsp: mk_arch 0.5.3"
