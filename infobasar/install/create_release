@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: create_release,v 1.1 2005/01/11 17:47:21 hamatoma Exp $
+# $Id: create_release,v 1.2 2005/01/11 22:27:00 hamatoma Exp $
 if [ -z $1 ] ; then
 	echo "Aufruf: create_release VERSION"
 	echo "Bsp: create_release 0.7.0"
@@ -7,15 +7,18 @@ if [ -z $1 ] ; then
 fi
 Version=$1
 rm -f infobasar-*zip
-cd ..
+cd ../..
 Zip=infobasar-$Version.zip
-zip -9ovn ".gz" install/$Zip docu/* \
-	install/*.hma.gz \
-	install/*.txt \
-	install/licence \
-	install/*.pl \
-	install/mk_arch \
-	install.php
+zip -9ovn ".gz" infobasar/install/$Zip \
+	infobasar/docu/* \
+	infobasar/install/*.hma.gz \
+	infobasar/install/*.txt \
+	infobasar/install/licence \
+	infobasar/install/*.pl \
+	infobasar/install/ib_*.lst \
+	infobasar/install/mk_arch \
+	infobasar/install.php
+cd infobasar
 rm -f backup/$Zip
 cp install/$Zip backup/$Zip
 echo Datei readme.txt:
