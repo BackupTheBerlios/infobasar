@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.24 2005/01/06 11:56:18 hamatoma Exp $
+// $Id: classes.php,v 1.25 2005/01/06 16:58:04 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -35,6 +35,10 @@ define ('CL_WikiName', '_A-Za-z0-9\xc4\xd6\xdc\xe4\xf6\xfc\xdf');
 define ('CC_WikiName_Uppercase', '[' . CL_WikiName_Uppercase . ']');
 define ('CC_WikiName_Lowercase', '[' . CL_WikiName_Lowercase . ']');
 define ('CC_WikiName', '[' . CL_WikiName . ']');
+
+// Standard page names:
+define ('P_Login', '!login');
+define ('P_Logout', '!logout');
 
 // Special page names:
 define ('PN_SystemLog', '!log!');
@@ -244,6 +248,10 @@ define ('TAG_SELECT_END', "</select>\n");
 define ('TAG_SELECT_NAME', '<select name="');
 define ('TAG_STRONG_END', '</strong>');
 define ('TAG_STRONG', '<strong>');
+define ('TAG_SUB', '<sub>');
+define ('TAG_SUP', '<sup>');
+define ('TAG_SUB_END', '</sub>');
+define ('TAG_SUP_END', '</sup>');
 define ('TAG_SUFFIX', '>'); 	
 define ('TAG_SUFFIX_NEWLINE', ">\n"); 	
 define ('TAG_TABLE_BOLD_DELIM_END', '</b></td>');
@@ -260,6 +268,8 @@ define ('TAG_TABLE_RECORD_END', "</tr>\n");
 define ('TAG_TABLE_RECORD', '<tr>');
 define ('TAG_TEXTAREA_END', "</textarea>\n");
 define ('TAG_TEXTAREA_NAME', '<textarea name="');
+define ('TAG_TT', '<tt>');
+define ('TAG_TT_END', '</tt>');
 define ('TAG_TITLE_END_BODY', "</title>\n</head>\n<body>\n");
 define ('TAG_TITLE_HEAD_END',  "</title></head>\n");
 define ('TAG_TITLE', '<title>');
