@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: admin.php,v 1.2 2004/09/21 19:45:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.2 (2004.09.01)');
+define ('PHP_ModuleVersion', '0.6.5 (2004.09.21)');
 
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
@@ -31,16 +31,19 @@ define ('C_ScriptName', 'admin.php');
 define ('M_Base', 'index.php');
 
 // Seitennamen: (Admin-Modus)
+define ('P_Login', 'login');
 define ('P_Home', 'home');
 define ('P_Param', 'param');
+define ('P_Macro', 'macro');
 define ('P_Forum', 'forum');
 define ('P_Backup', 'backup');
 define ('P_ExportPages', 'exportpages');
+define ('P_ImportPages', 'importpages');
 define ('P_Options', 'options');
 define ('P_PHPInfo', 'info');
 define ('P_Rename', 'rename');
 // Dateinamen
-define ('FN_PageExport', 'exp_pages.sql');
+define ('FN_PageExport', 'exp_pages.wiki');
 
 
 include "config.php";
@@ -55,16 +58,24 @@ $rc = dbCheckSession ($session);
 if (! empty ($rc)) {
 	// p ("Keine Session gefunden: $session_id / $session_user ($rc)");
 	if (! empty ($login_user))
-		guiLoginAnswer ($session);
+		admLoginAnswer ($session);
 	else
-		guiLogin ($session, '');
+		admLogin ($session, '');
 } else {
 	switch ($session->fPageName) {
 	case P_Param: admParam ($session, ''); break;
+	case P_Macro: admMacro ($session, ''); break;
 	case P_Home: admHome($session, ''); break;
+	case P_Login: admLogin($session, ''); break;
 	case P_Forum: admForum($session, '', C_New); break;
 	case P_Backup: admBackup ($session, true, null); break;
 	case P_ExportPages: admExportPages ($session, null); break;
+	case P_ImportPages: 
+		if (isset ($import_import))
+			admImportPagesAnswer ($session);
+		else 
+			admImportPages ($session, null); 
+		break;
 	case P_Options: admOptions ($session, null); break;
 	case P_Rename: admRename ($session, null); break;
 	case P_PHPInfo: admInfo ($session); break;
@@ -77,6 +88,12 @@ if (! empty ($rc)) {
 			admParamAnswerChange ($session, C_New);
 		elseif (isset ($param_change))
 			admParamAnswerChange ($session, C_Change);
+		elseif (isset ($macro_load))
+			admMacroAnswerLoad ($session);
+		elseif (isset ($macro_insert))
+			admMacroAnswerChange ($session, C_New);
+		elseif (isset ($macro_change))
+			admMacroAnswerChange ($session, C_Change);
 		elseif (isset ($backup_save))
 			admBackupAnswer ($session);
 		elseif (isset ($forum_change) || isset ($forum_load)
@@ -86,6 +103,8 @@ if (! empty ($rc)) {
 			admAnswerRename ($session);
 		elseif (isset ($export_export) || isset ($export_preview))
 			admExportPagesAnswer ($session);
+		elseif (isset ($import_import) || isset ($import_file))
+			admImportPagesAnswer ($session);
 		else admHome ($session);
 	}
 }
@@ -95,9 +114,12 @@ function admStandardLinkString(&$session, $page){
 	$rc = null;
 	switch ($page) {
 	case P_Home: $header = 'Übersicht'; break;
-	case P_Param: $header = 'Parameter'; break;
+	case P_Login: $header = 'Ein/Ausloggen'; break;
+	case P_Param: $header = 'Parameter ändern'; break;
+	case P_Macro: $header = 'Makros ändern'; break;
 	case P_Forum: $header = 'Forumsverwaltung'; break;
 	case P_ExportPages: $header = 'Seitenexport'; break;
+	case P_ImportPages: $header = 'Seitenimport'; break;
 	case P_Backup: $header = 'Datensicherung'; break;
 	case P_Options: $header = 'Einstellungen'; break;
 	case P_Rename: $header = 'Umbenennen'; break;
@@ -111,44 +133,100 @@ function admStandardLinkString(&$session, $page){
 function admStandardLink(&$session, $page){
 	echo admStandardLinkString ($session, $page);
 }
+function admLogin (&$session, $message) {
+	global $login_user, $login_email;
+	guiStandardHeader ($session, 'Anmeldung f&uuml;r den InfoBasar', Th_StandardHeader,
+		Th_StandardBodyStart);
+	guiStartForm ($session, 'login', P_Login);
+	if (! empty ($message)) {
+		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
+		guiParagraph ($session, $message, false);
+	}
+	echo "<table border=\"0\">\n<tr><td>Benutzername:</td><td>";
+	guiTextField ("login_user", $login_user, 32, 32);
+	echo "</td></tr>\n<tr><td>Passwort:</td><td>";
+	guiPasswordField ("login_code", "", 32, 32);
+	echo "</td></tr>\n<tr><td></td><td>";
+	guiButton ("but_login", "Anmelden");
+	echo "</td></tr>\n</table>\n";
+	guiLine ($session, 2);
+	guiParagraph ($session, "Passwort vergessen? ", false);
+	echo "<table border=\"0\">\n<tr><td>EMail-Adresse:</td><td>";
+	guiTextField ('login_email', $login_email, 32, 0);
+	echo "</td></tr>\n<tr><td></td><td>";
+	guiButton ('but_forget', 'Passwort ändern');
+	echo '<br/>(Das neue Passwort wird dann zugeschickt)';
+	echo "</td></tr>\n</table>\n";
+	guiFinishForm ($session, $session);
+	guiStandardBodyEnd ($session, Th_LoginBodyEnd);
+	return 1;
+}
+function admLoginAnswer (&$session) {
+	$login_again = true;
+	$session->trace (TC_Gui1, 'admLoginAnswer');
+	global $login_user, $login_code, $session_user, $but_forget, $login_email;
+	if (isset ($but_forget)) {
+		$message = null;
+		if (empty ($login_user))
+			$message = "+kein Benutzername angegeben";
+		elseif (empty ($login_email))
+			$message = "+keine EMail-Adresse angegeben";
+		else {
+			$row = dbSingleRecord ($session, 'select id,email from ' . dbTable ($session, T_User)
+				. ' where name=' . dbSqlString ($session, $login_user));
+			if (! $row)
+				$message = "+unbekannter Benutzer";
+			elseif (empty ($row [1]))
+				$message = "+keine EMail-Adresse eingetragen";
+			elseif (strcasecmp ($row [1], $login_email) != 0)
+				$message = "+EMail-Adresse ist nicht bekannt";
+			else {
+				sendPassword ($session, $row [0], $login_user, $login_email);
+				$message = 'Das Passwort wurde an ' . $login_email . ' verschickt';
+			}
+		}
+		admLogin ($session, $message);
+	} else {
+		$rc = dbCheckUser ($session, $login_user, $login_code);
+		if (! empty ($rc))
+			admLogin ($session, $rc);
+		else {
+			setLoginCookie ($session, $login_user, $login_code);
+			$session->setPageName (P_Home);
+			$login_again = false;
+		}
+	}
+	return $login_again;
+}	
 
 function admHome (&$session){
 	global $session_id, $session_user;
-	guiHeader ($session, 'Adminstration-Startseite f&uuml;r ' . $session->fUserName);
+	guiStandardHeader ($session, 'Adminstration-Startseite f&uuml;r ' . $session->fUserName,
+		Th_StandardHeader, Th_StandardBodyStart);
 	guiParagraph ($session, 'Willkommen ' . $session->fUserName, false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Param), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_Macro), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Forum), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_ExportPages), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_ImportPages), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Rename), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Backup), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_Options), false);
+	guiParagraph ($session, admStandardLinkString ($session, P_Login), false);
 	guiParagraph ($session, admStandardLinkString ($session, P_PHPInfo), false);
 	guiFinishBody ($session, null);
 }
 function admParam (&$session, $message){
 	global $param_id, $param_theme, $param_pos, $param_name, $param_text,
-		$textarea_width, $text_area_height;
+		$textarea_width, $textarea_height;
 	$session->trace(TC_Gui1, 'admParam');
+	guiStandardHeader ($session, 'Parameter', Th_StandardHeader, Th_StandardBodyStart);
 
 	if (empty ($param_theme))
 		$param_theme = Theme_Standard;
 
 	getUserParam ($session, U_TextAreaWidth, $textarea_width);
 	getUserParam ($session, U_TextAreaHeight, $textarea_height);
-	guiHeader ($session, 'Parameter');
-	echo '<table border="1"><tr><td><b>Id</b></td><td><b>Beschreibung</b></td>';
-	echo '<td><b>Wert</b></td></tr>' . "\n";
-	$row = dbFirstRecord ($session, 'select pos,name,text from '
-		. dbTable ($session, T_Param) . ' where theme=' . $param_theme);
-	while ($row) {
-		echo "<tr><td>$row[0]</td><td>";
-		echo htmlentities ($row [1]);
-		echo '</td><td>';
-		echo htmlentities ($row [2]);
-		echo "</td></tr>\n";
-		$row  = dbNextRecord ($session);
-	}
-	echo '</table>' . "\n";
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiStartForm ($session, "param", P_Param);
@@ -159,6 +237,7 @@ function admParam (&$session, $message){
 	guiTextField ("param_theme", $param_theme, 4, 4);
 	echo ' / ';
 	guiTextField ("param_pos", $param_pos, 4, 4);
+	echo ' ';
 	guiButton ('param_load', 'Datensatz laden');
 	echo "</td></tr>\n<tr><td>Name:</td><td>";
 	guiTextField ("param_name", $param_name, 64, 64);
@@ -172,6 +251,20 @@ function admParam (&$session, $message){
 	echo " Höhe: ";
 	guiTextField ("textarea_height", $textarea_height, 3, 3);
 	echo "</td></tr>\n</table>\n";
+	guiHeadline ($session, 2, 'Parameter von Theme ' . $param_theme);
+	echo '<table border="1"><tr><td><b>Pos</b></td><td><b>Beschreibung</b></td>';
+	echo '<td><b>Wert</b></td></tr>' . "\n";
+	$row = dbFirstRecord ($session, 'select pos,name,text from '
+		. dbTable ($session, T_Param) . ' where theme=' . $param_theme . ' order by pos');
+	while ($row) {
+		echo "<tr><td>$row[0]</td><td>";
+		echo htmlentities ($row [1]);
+		echo '</td><td>';
+		echo htmlentities ($row [2]);
+		echo "</td></tr>\n";
+		$row  = dbNextRecord ($session);
+	}
+	echo '</table>' . "\n";
 	guiFinishForm ($session);
 	guiFinishBody ($session, null);
 }
@@ -228,13 +321,121 @@ function admParamAnswerChange (&$session, $mode){
 	}
 	admParam ($session, $message);
 }
+
+function admMacro (&$session, $message){
+	global $macro_theme, $macro_description, $macro_name, $macro_text,
+		$textarea_width, $textarea_height;
+	$session->trace(TC_Gui1, 'admMacro');
+	guiStandardHeader ($session, 'Makros', Th_StandardHeader, Th_StandardBodyStart);
+	if (empty ($macro_theme))
+		$macro_theme = Theme_All;
+	getUserParam ($session, U_TextAreaWidth, $textarea_width);
+	getUserParam ($session, U_TextAreaHeight, $textarea_height);
+	if (! empty ($message))
+		guiParagraph ($session, $message, false);
+	guiStartForm ($session, "macro", P_Macro);
+	echo "<table border=\"0\">\n<tr><td>Theme/Name:</td><td>";
+	guiTextField ("macro_theme", $macro_theme, 4, 4);
+	echo ' / ';
+	guiTextField ("macro_name", $macro_name, 32, 64);
+	echo ' ';
+	guiButton ('macro_load', 'Datensatz laden');
+	echo "</td></tr>\n<tr><td>Beschreibung:</td><td>";
+	guiTextField ("macro_description", $macro_description, 64, 255);
+	echo "</td></tr>\n<tr><td>Wert:</td><td>";
+	guiTextArea ("macro_text", $macro_text, $textarea_width, $textarea_height);
+	echo "</td></tr>\n<tr><td></td><td>";
+	echo " "; guiButton ('macro_insert', 'Eintragen');
+	echo " "; guiButton ('macro_change', 'Ändern');
+	echo "<br /><br />Eingabefeld: Breite: ";
+	guiTextField ("textarea_width", $textarea_width, 3, 3);
+	echo " Höhe: ";
+	guiTextField ("textarea_height", $textarea_height, 3, 3);
+	echo "</td></tr>\n</table>\n";
+	guiHeadline ($session, 2, 'Makros von Theme ' . $macro_theme);
+	echo '<table border="1"><tr><td><b>Id</b></td><td><b>Theme</b></td><td><b>Name</b></td>';
+	echo '<td><b>Beschreibung</b></td><td><b>Wert</b></td></tr>' . "\n";
+	$row = dbFirstRecord ($session, 'select id,theme,name,description,value from '
+		. dbTable ($session, T_Macro) . ' where theme=' . $macro_theme . ' order by name');
+	while ($row) {
+		echo "<tr><td>$row[0]</td><td>";
+		echo htmlentities ($row [1]);
+		echo '</td><td>';
+		echo htmlentities ($row [2]);
+		echo '</td><td>';
+		echo htmlentities ($row [3]);
+		echo '</td><td>';
+		echo htmlentities ($row [4]);
+		echo "</td></tr>\n";
+		$row  = dbNextRecord ($session);
+	}
+	echo '</table>' . "\n";
+	guiFinishForm ($session);
+	guiFinishBody ($session, null);
+}
+function admMacroAnswerLoad (&$session){
+	global $macro_theme, $macro_name, $macro_text, $macro_description;
+
+	$session->trace(TC_Gui1, 'admMacroAnswerLoad');
+	$macro_text = textAreaToWiki ($session, $macro_text);
+	if (! isInt ($macro_theme))
+		$error = 'Theme nicht gültig: ' . $macro_theme;
+	elseif (empty ($macro_name))
+		$error = 'Kein Name angegeben: ' . $macro_name;
+	else {
+		list ($macro_name, $macro_description, $macro_text) = dbGetRecordByClause ($session, 
+			T_Macro, 'name,description,value', "theme=$macro_theme and name=" 
+			. dbSqlString ($session, $macro_name));
+		$error = '';
+	}
+	admMacro ($session, $error);
+}
+function admMacroAnswerChange (&$session, $mode){
+	global $macro_theme, $macro_name, $macro_text, $macro_description;
+
+	$session->trace(TC_Gui1, 'admMacroAnswerChange');
+	$id = null;
+	$macro_text = textAreaToWiki ($session, $macro_text);
+	if (! isInt ($macro_theme))
+		$message = 'Theme nicht gültig: ' . $macro_theme;
+	elseif (empty ($macro_name))
+		$message = 'kein Name angegeben: ' . $macro_name;
+	elseif ($mode == C_New
+		&& ($count = dbSingleValue ($session, 'select count(id) from ' . dbTable ($session, T_Macro)
+		. " where theme=$macro_theme and name="
+		. dbSqlString ($session, $macro_name))) > 0)
+		$message = 'Eintrag nicht möglich, da (Theme,Name) schon existiert';
+	elseif ($mode == C_Change
+		&& ($id = dbSingleValue ($session, 'select id from ' . dbTable ($session, T_Macro)
+		. " where theme=$macro_theme and name=$macro_name")) <= 0)
+		$message = 'Ändern nicht möglich, da (Theme, Name) nicht existiert';
+	else {
+		$session->trace(TC_X, 'admMacroAnswerChange-2: ' . $count . " / " . $mode);
+		
+		if ($mode == C_New) {
+			dbInsert ($session, T_Macro, 'theme,name,description,value',
+				$macro_theme . ',' 
+				. dbSqlString ($session, $macro_name) . ','
+				. dbSqlString ($session, $macro_description) . ','
+				. dbSqlString ($session, $macro_text));
+			$message = "Makro $macro_name wurde eingefügt";
+		} elseif ($mode == C_Change){
+			dbUpdateRaw ($session, T_Macro, $id, 'value='
+				. dbSqlString ($session, $macro_text)
+				. ',' . 'description=' . dbSqlString ($session, $macro_description)
+				. ',' . 'value=' . dbSqlString ($session, $macro_text));
+			$message = "Makro $macro_name wurde geändert";
+		} else
+			$message = 'Unbekannter Modus: ' . $mode;
+	}
+	admMacro ($session, $message);
+}
 function admForum (&$session, $message, $mode){
 	global $forum_id, $forum_changeid, $forum_name, $forum_description;
 	$session->trace(TC_Gui1, 'admForum');
-	guiHeader ($session, 'Foren verwalten');
+	guiStandardHeader ($session, 'Forumsverwaltung', Th_StandardHeader, Th_StandardBodyStart);
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-	guiHeadLine ($session, 1, 'Forumsverwaltung');;
 	guiStartForm ($session, "forum", P_Forum);
 	guiHiddenField ('forum_id', $forum_id);
 	guiShowTable ($session, "<h2>Existierende Foren</h2>\n",
@@ -336,7 +537,6 @@ function admExportPages (&$session, $message) {
 		Th_StandardBodyStart);
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-
 	if (isset ($export_preview) && ! empty ($export_pattern))
 		guiShowTable ($session, '<h2>Ausgesuchte Seiten ('
 			. htmlentities ($export_pattern) . "):</h2>\n",
@@ -348,13 +548,14 @@ function admExportPages (&$session, $message) {
 		guiParagraph ($session, 'Exportdatei: '
 			. guiInternLinkString ($session, $export_exists, null), false);
 	guiStartForm ($session, "export", P_ExportPages);
-	guiHiddenField ('export_exists', $export_exists);
+	if (isset ($export_exists))
+		guiHiddenField ('export_exists', $export_exists);
 	echo '<table border="0">';
 	echo '<tr><td>Namensmuster:</td><td>';
 	guiTextField ('export_pattern', $export_pattern, 64, 0);
 	echo '</td><td>Joker: %: beliebig viele Zeichen _: ein Zeichen |: neues Teilmuster Bsp: Hilfe%|%Test%';
 	echo '</td></tr>' . "\n" . '<tr><td>Exportform:</td><td>';
-	guiComboBox ('export_type', array ('insert', 'update'), null);
+	guiComboBox ('export_type', array ('wiki'), null);
 	echo '</td><tr>' . "\n" . '<tr><td></td><td>';
 	guiButton ('export_preview', 'Vorschau');
 	echo ' | ';
@@ -374,72 +575,133 @@ function admExportPagesAnswer (&$session){
 		} else {
 			$page_list = dbIdList ($session, T_Page,
 				admBuildCondition ($session, $export_pattern));
-			if (! $file = fopen (FN_PageExport, 'w'))
-				$message = 'kann Datei nicht öffnen: ' . FN_PageExport;
+			$fn = $session->fullPath ("import", true) . FN_PageExport;
+			if (! $file = fopen ($fn, 'w'))
+				$message = 'kann Datei nicht öffnen: ' . $fn;
 			else {
 				$prefix = $session->fDbTablePrefix;
-				fputs ($file, '/* Export ' . "\n"
-					. 'am: ' . strftime ("%Y.%m.%d %H:%M:%S") . "\n"
-					. 'von: ' . $session->fUserName . "\n"
-					. 'Modus: ' . $export_type . "\n"
-					. 'Prefix: ' . $prefix . "\n"
-					. 'Seiten: ' . implode (', ', $page_list) . "\n"
-					. "*/\n");
+				fputs ($file, '# Export ' . "\n"
+					. '# am: ' . strftime ("%Y.%m.%d %H:%M:%S") . "\n"
+					. '# von: ' . $session->fUserName . "\n"
+					. '# Modus: ' . $export_type . "\n"
+					. '# Prefix: ' . $prefix . "\n"
+					. '# Muster: ' . $export_pattern . "\n"
+					. '# Seiten: ' . implode (', ', $page_list) . "\n"
+					. "\n");
+				$count = 0;
 				foreach ($page_list As $ii => $page_id) {
+					$count++;
 					$page = dbGetRecordById ($session, T_Page, $page_id,
-						'name,type,readgroup,writegroup');
+						'name,type');
 					$text_id = dbSingleValue ($session, 'select max(id) from '
 						. dbTable ($session, T_Text) . ' where page=' . (0+$page_id));
 					$text = dbGetRecordById ($session, T_Text, $text_id,
 						'type,createdby,createdat,text');
-					if ($export_type == 'insert') {
+					if ($export_type == 'wiki') {
 						fputs ($file,
-							'insert into ' . $prefix
-								. 'page(id,name,type,readgroup,writegroup) values ('
-							. (0 + $page_id) . ','
-							. dbSqlString ($session, $page [0]) . ','
-							. dbSqlString ($session, $page [1]) . ','
-							. (0 + $page [2]) . ',' . (0 + $page [3])
-							. ');' . "\n");
-						fputs ($file,
-							'insert into ' . $prefix
-							. 'text(page,type,createdby,createdat,text) values ('
-							. (0 + $page_id) . ','
-							. dbSqlString ($session, $text [0]) . ','
-							. dbSqlString ($session, $text [1]) . ','
-							. dbSqlString ($session, $text [2]) . ','
-							. dbSqlString ($session, $text [3])
-							. ');' . "\n");
-					} else {
-						fputs ($file, '/* Seite ' . $page [0] . "*/\n");
-						fputs ($file,
-							'/* delete from ' . $prefix
-							. dbTable ($session, T_Text)
-							. ' where page=' . $page_id . ';' . "\n*/\n");
-						fputs ($file,
-							'update ' . $prefix
-							. 'page set type='
-							. dbSqlString ($session, $page [1])
-							. ' where name=' . dbSqlString ($session, $page [0])
-							. ';' . "\n");
-						fputs ($file,
-							'insert into ' . $prefix
-							. 'text(page,createdby,createdat,text) values ('
-							. (0 + $page_id) . ','
-							. dbSqlString ($session, $text [0]) . ','
-							. dbSqlString ($session, $text [1]) . ','
-							. dbSqlString ($session, $text [2]) . ','
-							. dbSqlString ($session, $text [3])
-							. ');' . "\n");
+							"\n#name=" . $page [0]  
+								. "\tlines=" . (1+substr_count ($text [3], "\n")) 
+								. "\ttype=" . $text [0] 
+								. "\tpage=" . $page_id
+								. "\text=" . $text_id 
+								. "\tby=" . $text [1]
+								. "\tat=" . $text [2]
+								. "\n");
+						fputs ($file, $text [3]);
 					}
 				}
 				fclose ($file);
-				$export_exists = FN_PageExport;
-				$message = 'Datei ' . FN_PageExport . ' wurde exportiert';
+				$export_exists = $fn;
+				$message = 'Datei ' . $fn . ' wurde exportiert: ' . ($count+0) . " Seite(n)";
 			}
 		}
 	}
 	admExportPages ($session, $message);
+}
+function admImportPages (&$session,  $message) {
+	global $import_pattern, $import_preview, $import_exists, $last_page, $import_import;
+	$session->trace(TC_Gui1, 'admImportPages');
+	
+	if (false && $message == null && isset ($import_import))
+		admImportPagesAnswer ($session);
+	else {
+		guiStandardHeader ($session, 'Seitenimport', Th_StandardHeader,
+			Th_StandardBodyStart);
+		if (! empty ($message))
+			guiParagraph ($session, $message, false);
+	
+		guiUploadFile ($session, 'Importdatei:', $last_page, null, null, "Hochladen", "import_upload",
+			"import_file", 500000);
+		$dir_name = $session->fullPath ("import");
+		$dir = opendir ($dir_name);
+		guiHeadline ($session, 3, "Importverzeichnis auf dem Server: " . $dir_name);
+		guiStartForm ($session, "import", P_ImportPages);
+		echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
+		echo '<td><b>Gr&ouml;&szlig;e</b></td><td><b>Ge&auml;ndert am</b></td><td><b>Aktion</b></td></tr>' . "\n";
+		$path = $session->fullPath ("import", true); 
+		$no = 0;
+		while ($file = readdir ($dir)){
+			if ($file != '.' && $file != '..'){
+				$name = $path . $file;
+				echo '<tr><td>';
+				echo htmlentities ($file);
+				echo '</td><td>';
+				echo is_dir ($name) ? 'Verzeichnis' : filesize ($name);
+				echo '</td><td>';
+				echo date ("Y.m.d H:i:s", filemtime ($name));
+				echo '</td><td>';
+				guiHiddenField ('import_file', $file);
+				guiButton ('import_import', 'Importieren');
+				echo '</td></tr>' . "\n";
+			}
+		}
+		echo '</table>' . "\n";
+		closedir ($dir);
+	
+		guiFinishForm ($session);
+		guiFinishBody ($session, null);
+	}
+}
+function admImportPagesAnswer (&$session){
+	global $import_upload, $import_file, $import_preview;
+	$session->trace(TC_Gui1, 'admImportPagesAnswer');
+	$message = null;
+	if (isset ($import_upload)){
+		$message = guiUploadFileAnswer ($session,  $session->fullPath ("import"),
+			$import_file, "import_upload", "upload_file"); 
+		# $destination = PATH_DELIM,
+		# $filename = null, $button = 'upload_go', $file = 'upload_file'
+	} elseif (isset ($import_import)){
+		if (! file_exists ($import_file))
+			$message = "Datei nicht gefunden: " + $import_file;
+		else {
+			$file = fopen ($import_file, "r");
+			$count_inserts = 0;
+			$count_updates = 0;
+			while ($line = fgets ($file)){
+				if (preg_match ('/^#name=([^\t])\tlines=(\d+)\ttype=(.)\t/', $line, $param)){
+					if ($page = dbPageId ($session, $param [0])){
+						$count_updates++;
+					} else {
+						$page = dbInsert ($session, T_Page, 'name,type', 
+							dbSqlString ($session, $param [0]) . ',' 
+							. dbSqlString ($session, $param [2]));
+						$count_inserts++;
+					}
+					$text = "";
+					for ($ii = 0; $ii < $param[1]; $ii++)
+						$text .= fgets ($file);
+					dbInsert ($session, T_Text, 'page,type,text', 
+						$page . ',' . dbSqlString ($session, $param [2]) . ','
+						. ',' . dbSqlString ($session, $text));
+				}
+			}
+			fclose ($file);
+			$message = "Datei " . $import_file . " wurde eingelesen. Neu: " . (0 + $count_inserts)
+				. " Geändert: " . (0 + $count_updates);
+		}
+	}
+	admImportPages ($session, $message);
 }
 function admSaveTable (&$session, $table, $ignore_id, &$file){
 	$session->trace (TC_Gui1, 'admSaveTable: ' . $table);
@@ -479,7 +741,7 @@ function admBackup (&$session, $with_header, $message){
 	global $backup_table, $backup_compressed, $backup_save, $backup_file;
 	$session->trace(TC_Gui1, 'admBackup');
 	if ($with_header)
-		guiHeader ($session, 'Datenbank-Backup');
+		guiStandardHeader ($session, 'Datenbank-Backup', Th_StandardHeader, Th_StandardBodyStart);
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	if (empty ($backup_file))
@@ -521,7 +783,7 @@ function admBackupAnswer (&$session){
 			$backup_table = '*';
 		guiHeadline ($session, 1, 'Backup der Tabelle ' . $backup_table);
 		$filename = $backup_table == '*' ? 'db_infobasar' : 'table_' . $backup_table;
-		if (! is_dir ($dir = $session->fFileSystemBase . PATH_DELIM . 'backup'))
+		if (! is_dir ($dir =  $session->fullPath ("backup")))
 			mkdir ($dir);
 		if (empty ($backup_file))
 			$backup_file = $session->fMacroBasarName 
@@ -530,8 +792,8 @@ function admBackupAnswer (&$session){
 		if ($backup_compressed)
 			$filename .= '.gz';
 		$open_name = $backup_compressed 
-			? 'compress.zlib://' .  $session->fFileSystemBase . '/' . $filename
-			: $session->fFileSystemBase . '/' . $filename;
+			? 'compress.zlib://' . $session->fullPath ($filename)
+			:  $session->fullPath ($filename);
 		$file = fopen ($open_name, $backup_compressed  ? 'wb9' : 'wb');
 		fwrite ($file, '# InfoBasar: SQL Dump / Version: ' . PHP_ClassVersion
 			. " \n# gesichert am " 
@@ -561,7 +823,7 @@ function admBackupAnswer (&$session){
 		}
 		fclose ($file);
 		$size = ! $backup_compressed ? $bytes
-			: filesize ( $session->fFileSystemBase . '/' . $filename);
+			: filesize ( $session->fullPath ($filename));
 		echo '<tr><td>Summe:</td><td>' . (0 + $bytes);
 		if ($backup_compressed)
 			echo ' (' . (0 + $size) . ')';
@@ -574,8 +836,7 @@ function admBackupAnswer (&$session){
 function admOptions (&$session, $message){
 	global $opt_basarname, $opt_save, $upload_go, $upload_file;
 	$session->trace (TC_Gui1, 'admOptions');
-	guiHeader ($session, 'Einstellungen');
-	guiHeadline ($session, 1, 'Allgemeine Einstellungen');
+	guiStandardHeader ($session, 'Allgemeine Einstellungen', Th_StandardHeader, Th_StandardBodyStart);
 	if (isset ($upload_go))
 		$message = guiUploadFileAnswer ($session, PATH_DELIM . 'pic' . PATH_DELIM, 
 			'logo.png');
@@ -603,8 +864,7 @@ function admOptions (&$session, $message){
 function admRename (&$session, $message){
 	global $rename_oldname, $rename_newname, $rename_backlinks;
 	$session->trace (TC_Gui1, 'admRename');
-	guiHeader ($session, 'Umbenennen einer Seite');
-	guiHeadline ($session, 1, 'Umbenennen einer Seite');
+	guiStandardHeader ($session, 'Umbenennen einer Seite', Th_StandardHeader, Th_StandardBodyStart);
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 
@@ -741,6 +1001,7 @@ function admAnswerRename (&$session){
 
 function admInfo (&$session) {
 	$session->trace (TC_Gui1, 'admInfo');
+	guiStandardHeader ($session, 'PHP-Info', Th_StandardHeader, Th_StandardBodyStart);
 	phpinfo ();
 }
 function modStandardLinks (&$session){

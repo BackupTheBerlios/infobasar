@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
+// $Id: db_mysql.php,v 1.4 2004/09/21 19:45:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -239,8 +239,8 @@ function dbCheckUser (&$session, $user, $code) {
 		$session_user = $fields [0];
 	#function setUserData ($id, $name, $theme, $width, $height,
 	#	$maxhits, $postingsperpage, $threadsperpage, $startpage) {
-		$session->setUserData ($session_user, $user, $fields [3],
-			$fields [4], $fields [5], $fields [6], $fields [7], $fields [8],
+		$session->setUserData ($session_user, $user, $fields [3], $fields [4], $fields [5], 
+			$fields [6], $fields [7], $fields [8],
 			$fields [9]);
 		$session->setMacros ();
 		break;
@@ -279,9 +279,11 @@ function dbCheckSession (&$session) {
 		if (false && dbStringToBool ($session, $fields[1]))
 			$rc = "Benutzer $session_user ist gesperrt";
 		else {
-			$session->setUserData ($session_user, $fields[0], $fields [1],
+		# function setUserData ($id, $name, $theme, $width, $height,
+		#	$maxhits, $postingsperpage, $threadsperpage, $startpage) {
+			$session->setUserData ($session_user, $fields[0],
 				$fields[2], $fields[3], $fields[4], $fields[5], $fields[6],
-				$fields[7]);
+				$fields[7], $fields [8]);
 			$uri = substr ($REQUEST_URI, strlen ($SCRIPT_NAME) + 1);
 			while (strpos ($uri, "index") == 0 && strpos ($uri, '/') > 0)
 				$uri = substr ($uri, strpos ($uri, "/") + 1);

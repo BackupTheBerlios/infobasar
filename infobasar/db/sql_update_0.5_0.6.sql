@@ -1,5 +1,5 @@
 # sql_update_0.5_0.6.sql
-# $Id: sql_update_0.5_0.6.sql,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+# $Id: sql_update_0.5_0.6.sql,v 1.2 2004/09/21 19:47:33 hamatoma Exp $
 # Ergänzen der Datenbanktabellen von Version 0.5 auf 0.6
 #
 
@@ -35,7 +35,37 @@ CREATE TABLE infobasar_module (
   PRIMARY KEY  (id)
 ) TYPE=MyISAM AUTO_INCREMENT=1 ;
 
-insert into infobasar_base (moduleid, name, script, description, paramfrom, paramto, release, files, directories, dependencies, paramfrom, paramcount) values ('basis.infobasar.hamatoma.de', 'basis', 'index.php', 'Wiki- und HTML-Seiten', 100, '0.6.0', 'classes.php;config.php;db_mysql.php;index.php;gui.php', '', '', 100, 50);
-insert into infobasar_module (moduleid, name, script, description, themepos, release, files, directories, dependencies, paramfrom, paramcount) values ('admin.infobasar.hamatoma.de', 'admin', 'admin.php', 'Grundlegende Verwaltung Infobasar', '0.6.0', 'admin.php', '', '', 0, 0);
-insert into infobasar_module (moduleid, name, script, description, themepos, release, files, directories, dependencies, paramfrom, paramcount) values ('forum.infobasar.hamatoma.de','forum', 'forum.php', 'Foren im InfoBasar', '0.6.0', 'admin.php', '', '', 140, 10);
 
+insert into infobasar_base (moduleid, name, script, description, paramfrom, paramto, release, files, directories, dependencies, paramfrom, paramcount) values ('basis.infobasar.hamatoma.de', 'basis', 'index.php', 'Wiki- und HTML-Seiten', 100, '0.6.1', 'classes.php;config.php;db_mysql.php;index.php;gui.php', '', '', 100, 50);
+insert into infobasar_module (moduleid, name, script, description, themepos, release, files, directories, dependencies, paramfrom, paramcount) values ('admin.infobasar.hamatoma.de', 'admin', 'admin.php', 'Grundlegende Verwaltung Infobasar', '0.6.1', 'admin.php', '', '', 0, 0);
+insert into infobasar_module (moduleid, name, script, description, themepos, release, files, directories, dependencies, paramfrom, paramcount) values ('forum.infobasar.hamatoma.de','forum', 'forum.php', 'Foren im InfoBasar', '0.6.1', 'admin.php', '', '', 140, 10);
+
+CREATE TABLE infobasar_right (
+  id int(11) NOT NULL auto_increment,
+  createdat datetime default NULL,
+  changedat datetime NOT NULL default '0000-00-00 00:00:00',
+  name varchar(64) NOT NULL,
+  fullname varchar(64) NOT NULL,
+  description varchar(255) default NULL,
+  put varchar(16) default NULL,
+  get varchar(16) default NULL,
+  new varchar(16) default NULL,
+  del varchar(16) default NULL,
+  lock varchar(16) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM AUTO_INCREMENT=1 ;
+
+insert into infobasar_right (name, fullname, description, put, get, new, del, lock) values ("myaccount", "myaccount", "Eigene Kontodaten", "Ändern", "Lesen", null, null, null);
+insert into infobasar_right (name, fullname, description, put, get, new, lock) values ("accounts", "accounts", "Andere Benutzerkonten", "Ändern", "Lesen", "Hinzufügen", "Löschen", "Sperren");
+insert into infobasar_right (name, fullname, description, put, get, new, lock) values ("html", "html", "Zugriff auf HTML-Seiten", "Ändern", "Lesen", "Erzeugen", "Löschen", "Sperren");
+insert into infobasar_right (name, fullname, description, put, get, new, lock) values ("wiki", "wiki", "Zugriff auf WikiL-Seiten", "Ändern", "Lesen", "Erzeugen", "Löschen", "Sperren");
+
+CREATE TABLE infobasar_division (
+  id int(11) NOT NULL auto_increment,
+  createdat datetime default NULL,
+  changedat datetime NOT NULL default '0000-00-00 00:00:00',
+  name varchar(64) NOT NULL,
+  fullname varchar(64) NOT NULL,
+  description varchar(255) default NULL,
+  PRIMARY KEY  (id)
+) TYPE=MyISAM AUTO_INCREMENT=1 ;

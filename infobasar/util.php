@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.4 2004/09/21 09:59:05 hamatoma Exp $
+// $Id: util.php,v 1.5 2004/09/21 19:45:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -136,6 +136,8 @@ function writeWikiName ($name, $text, &$status) {
 			guiPageReference ($status->fSession, $link, $text);
 	}
 }
+		// Klammer 0: Vorspann Klammer 1: Muster, das evt. ersetzt wird
+		// unterstrichen, (kursiv, fett, kursiv-fett),
 define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		//  Extern-Link
 		// Klammer 2: URL Klammer 3: Text
@@ -144,7 +146,6 @@ define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		// Klammer 4: Protokollname
 		. '|(https?|ftp):\/\/\S+'
 		// (Nicht-)Wiki-Name
-		# '|!?[A-Z\xc4\xd6\xdc][a-z_0-9\xf6\xe4\xfc\xdf]+[A-Z0-0_\xc4\xd6\xdc][A-Za-z0-9_\xc4\xd6\xdc\xf6\xe4\xfc\xdf]*'
 		. '|!?' . CC_WikiName_Uppercase . CC_WikiName_Lowercase . '+[' . CC_WikiName_Uppercase
 			. CC_WikiName . '*'
 		// Genau ein Zeichen:
@@ -159,21 +160,14 @@ define ('ib_reg_expr', '/^(.*?)(__|\'{2,4}'
 		// Klammer 7: Plugin-Name Klammer 8: Parameter
 		. '|<\?plugin\s+(\w+)(.*)\?>'
 		// Hex-Anzeige:
-		// Klammer 9:  Oktalbereich
+		// Klammer 9:  Hexdumplbereich
 		. '|%hex\((.*?)\)'
 		. ')/');
 function writeText ($body, &$status) {
 	global $ib_reg_expr;
 	$status->trace (TC_Util2, "writeText: $body");
 	$count = 0;
-	// iso-8859-1: ÄÖÜäöüß : 196 214 220 ! 228 246 252 223
-	// octal: 0304 326 334 ! 344 366 374 337
-	// \0304\0326\0334 \0344\0366\0374 \0337
-	// Hex:  c4 d6 dc f6 e4 fc df
-	// \xc4\xd6\xdc \xf6\xe4\xfc\xdf
 	while (strlen ($body) > 0
-		// Klammer 0: Vorspann Klammer 1: Muster, das evt. ersetzt wird
-		// unterstrichen, (kursiv, fett, kursiv-fett),
 		&& preg_match (ib_reg_expr,
 			$body, $match)) {
 		$args = count ($match);
@@ -329,10 +323,10 @@ function wikiToHtml (&$session, $wiki_text) {
 }
 function getUserParam ($session, $name, &$param) {
 	$session->trace (TC_Util2, "getUserParam: $name");
-	if (! isset ($param))
+	if (! isset ($param) || empty ($param))
 		switch ($name){
 		case U_TextAreaWidth: $param = $session->fUserTextareaWidth; break;
-		case U_TextAreaHeight: $param = $param = $session->fUserTextareaHeight; break;
+		case U_TextAreaHeight: $param = $session->fUserTextareaHeight; break;
 		case U_MaxHits: $param = $session->fUserMaxHits; break;
 		case U_PostingsPerPage: $param = $session->fUserPostingsPerPage; break;
 		case U_Theme: $param = $session->fUserTheme;

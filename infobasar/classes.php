@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
+// $Id: classes.php,v 1.4 2004/09/21 19:45:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -266,10 +266,10 @@ class Session {
 			= 0 * (0 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
 			+ 0 * (1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3)
 			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
-			+ 1 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
+			+ 0 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
 			+ 0 * TC_Layout1
 			+ 1 * (0 * TC_Update + 0 * TC_Insert + 1 * TC_Query)
-			+ 0 * (0 * TC_Convert + 0 * TC_Init + 0 * TC_Diff2)
+			+ 0 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
@@ -367,7 +367,7 @@ class Session {
 	}
 	function setUserData ($id, $name, $theme, $width, $height,
 		$maxhits, $postingsperpage, $threadsperpage, $startpage) {
-		$this->trace (TC_Session1, "setUserData: $id, $name, $theme, $startpage");
+		$this->trace (TC_Session1, "setUserData: $id, $name, $theme, $startpage w=$width h=$height");
 		$this->fUserId = $id;
 		$this->fUserName = $name;
 		$this->fUserRights = null; 
@@ -434,6 +434,12 @@ class Session {
 		return ($rc = strpos ($this->fGroups[$group], ',' . $user . ',')) >= 0
 			&& is_int ($rc);
 	}
+	function fullPath($node, $with_trailing_delim = false){
+		$rc = $this->fFileSystemBase . PATH_DELIM . $node;
+		if ($with_trailing_delim)
+			$rc .= PATH_DELIM;
+		return $rc;
+	}
 	function setPageData ($name, $date, $by) {
 		$this->fPageName = $name;
 		$this->fPageChangedAt = dbSqlDateToText ($this, $date);
@@ -456,7 +462,7 @@ class Session {
 					$again = true;
 				else {
 					$macroname = substr ($text, $pos, 20);
-					$this->trace (TC_Error, 'replaceMacrosNoHTML: zu verschachtelt: Pos: ' . $pos . " Makro: $macroname  $text");
+					$this->trace (TC_Error, 'replaceMacrosNoHTML: zu verschachtelt: Pos: ' . $pos . " Macro: $macroname  $text");
 					break;
 				}
 			}

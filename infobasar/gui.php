@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
+// $Id: gui.php,v 1.4 2004/09/21 19:45:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -66,6 +66,7 @@ function guiUploadFile (&$session, $prefix, $lastpage = null,
 		$custom_field = null, $custom_value = null,
 		$caption = 'Hochladen', 
 		$button = 'upload_go', $file = 'upload_file', $max_file_size = 100000) {
+	global $last_pagename;
 	echo '<form enctype="multipart/form-data" action="' . $session->fScriptURL
 		. '" method="post">' . "\n";
 	guiHiddenField ('last_pagename', $lastpage ? $lastpage : $last_pagename);
@@ -234,18 +235,18 @@ function guiStandardHeader (&$session, $title, $pos_header, $pos_body){
 	$session->setPageTitle ($title);
 	guiHeader ($session, null);
 	$header = dbGetText ($session, $pos_header);
-	if (empty ($header))
+	if (empty ($header)){
 		echo '<head><title>' . htmlentities ($title) . '</title></head>' . "\n";
-	else
+	} else
 		echo $session->replaceMacrosNoHTML ($header);
 	if ($pos_body > 0) {
 		$header = dbGetText ($session, $pos_body);
 		if (empty ($header))
-			$pos_body = null;
+			$pos_body = 0;
 		else
 			echo $session->replaceMacrosNoHTML ($header);
 	}
-	if (! $pos_body && $pos_body != 0)
+	if ($pos_body == 0)
 		echo '<body><h1>' . $title . '</h1>' . "\n";
 }
 function guiStandardBodyEnd (&$session, $pos) {
