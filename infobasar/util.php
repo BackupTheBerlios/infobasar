@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.18 2004/12/31 01:35:36 hamatoma Exp $
+// $Id: util.php,v 1.19 2004/12/31 20:58:42 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -247,23 +247,20 @@ function writeHeader ($line, &$status) {
 function writeUList ($line, &$status) {
 	$status->trace (TC_Util3, "writeUList: $line");
 	$count = countRepeats ($line, '\*');
-	if ($status->fUListLevel != $count)
-		$status->changeUListLevel ($count);
-	writeTagPair (TAGN_LISTITEM, substr ($line, $count), $status);
+	$status->changeUListLevel ($count);
+	writeText (substr ($line, $count), $status);
 }
 
 function writeOrderedList ($line, &$status) {
 	$status->trace (TC_Util3, "writeOrderedList: $line");
 	$count = countRepeats ($line, '#');
-	if ($status->fOrderedListLevel != $count)
-		$status->changeOrderedListLevel ($count);
-	writeTagPair (TAGN_LISTITEM, substr ($line, $count), $status);
+	$status->changeOrderedListLevel ($count);
+	writeText (substr ($line, $count), $status);
 }
 function writeIndent ($line, &$status) {
 	$status->trace (TC_Util3, "writeIndent: $line");
 	$count = countRepeats ($line, ' ');
-	if ($status->fIndentLevel != $count)
-		$status->changeIndentLevel ($count);
+	$status->changeIndentLevel ($count);
 	writeLine (substr ($line, $count), $status);
 }
 function writeTable ($line, &$status) {
@@ -316,7 +313,7 @@ function wikiToHtml (&$session, $wiki_text) {
 			$last_linetype = '';
 			$status->changeOfLineType ($last_linetype, '');
 		} else {
-			$linetype = substr ($line, 0, 1);
+			$linetype = $status->fPreformatted ? '[' : substr ($line, 0, 1);
 			switch ($linetype){
 			case '-': 
 				$count = countRepeats ($line, '-');
@@ -329,7 +326,7 @@ function wikiToHtml (&$session, $wiki_text) {
 				elseif (strpos ($line, '/code]') == 1){
 					$status->finishCode();
 					$last_linetype = 'x';
-					$line = substr ($line, 7);
+					$line = $line_trimmed = substr ($line, 7);
 					$session->trace (TC_Util2, 'wikiToHtml: /code-Restzeile: ' . $line);
 				} else
 					$linetype = 'x'; 
@@ -352,8 +349,7 @@ function wikiToHtml (&$session, $wiki_text) {
 			case '[':
 				if ($start_code)
 					$status->startCode();
-				$session->trace (TC_X, 'wikiToHtml-2:'  . ($status->fPreformatted ? 'T' : 'F'));
-				$line = substr ($line_trimmed, 7);
+				$line = substr ($line_trimmed, 6);
 				if (! empty ($line))
 					writeLine ($line, $status); 
 				break;

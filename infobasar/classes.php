@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.20 2004/12/31 01:31:06 hamatoma Exp $
+// $Id: classes.php,v 1.21 2004/12/31 20:56:42 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -225,8 +225,9 @@ define ('TAG_INPUT_TYPE', '<input type=');
 define ('TAG_INPUT_WIKIACTION_NAME', '<input class="wikiaction" name="');
 define ('TAG_ITALIC_BOLD_END', '</i></b>');
 define ('TAG_LINK_STYLESHEET', '<link rel="stylesheet" type="text/css" href="');
-define ('TAG_LISTITEM_END', "</li>\n");
 define ('TAG_LISTITEM', '<li>');
+define ('TAG_LISTITEM_END', "</li>\n");
+define ('TAG_LISTITEM_END_LISTITEM', "</li>\n<li>");
 define ('TAG_META', "<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">\n");
 define ('TAG_NEWLINE', "<br/>\n");
 define ('TAG_OPTION', '<option');
@@ -262,14 +263,14 @@ define ('TAG_TEXTAREA_NAME', '<textarea name="');
 define ('TAG_TITLE_END_BODY', "</title>\n</head>\n<body>\n");
 define ('TAG_TITLE_HEAD_END',  "</title></head>\n");
 define ('TAG_TITLE', '<title>');
-define ('TAG_ULIST_END', "</ulist>\n");
-define ('TAG_ULIST', '<ulist>');
+define ('TAG_ULIST_END', "</ul>\n");
+define ('TAG_ULIST', '<ul>');
 // Tag-Names:
 define ('TAGN_HEADLINE', 'h');		
 define ('TAGN_LISTITEM', 'li');
 define ('TAGN_OLIST', 'ol');
 define ('TAGN_TABLE_DELIM', 'td');
-define ('TAGN_ULIST', 'ulist');		
+define ('TAGN_ULIST', 'ul');		
 // Tag-Attributes:
 define ('TAGA_APO_COLS',  '" cols="');
 define ('TAGA_APO_NAME', '" name="');
@@ -421,19 +422,19 @@ class Session {
 		#$this->fTraceFile = null;
 		$this->fTraceDirect = false;
 		$this->fTraceFlags
-			= 0 * (1 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
-			+ 1 * (1 * TC_Gui1 + 2 * TC_Gui2 + 0 * TC_Gui3)
+			= 1 * (1 * TC_Util1 + 1 * TC_Util2 + 1 * TC_Util3)
+			+ 0 * (1 * TC_Gui1 + 2 * TC_Gui2 + 0 * TC_Gui3)
 			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
 			+ 0 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
-			+ 0 * TC_Layout1
+			+ 1 * (1 * TC_Layout1 + 1 * 1 * TC_Layout2 + 1 * 1 * TC_Layout3)
 			+ 0 * (1 * TC_Update + 1 * TC_Insert + 0 * TC_Query)
 			+ 1 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
-		#$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
-		$this->fTraceFlags = TC_All;
+		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
+		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 		$this->fTraceInFile = false;
-		$this->fTraceInFile = true;
+		#$this->fTraceInFile = true;
 		$this->trace (TC_Init, "TC: " . $this->fTraceFlags . " InFile: " . ($this->fTraceInFile ? 'f' : 'f'));
 		$this->fTraceFile = "/tmp/trace.log";
 		$this->trace (TC_Init, "Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
@@ -746,19 +747,36 @@ class LayoutStatus {
 	function changeListLevel ($val, &$level, $tag) {
 		$this->fSession->trace (TC_Layout3 + TC_Formating, "changeListLevel: $val.$level.$tag");
 		$this->stopSentence ();
-		if ($val < $level) {
+		if ($val == $level){
+			echo TAG_LISTITEM_END_LISTITEM; 
+		} elseif ($val < $level) {
 			while ($val < $level) {
+				$this->fSession->trace (TC_Layout3 + TC_Formating, "changeListLevel-1: .$tag");
+				echo TAG_LISTITEM_END;
 				echo TAG_ENDPREFIX;
 				echo $tag;
 				echo TAG_SUFFIX;
 				$level--;
 			}
-		} else while ($val > $level) {
-			echo TAG_PREFIX;
-			echo $tag;
-			echo TAG_SUFFIX;
-			$level++;
+			if ($val > 0)
+				echo TAG_LISTITEM_END_LISTITEM;
+		} else {
+			while ($val > $level) {
+				$text = TAG_PREFIX . $tag . TAG_SUFFIX . TAG_LISTITEM;
+				$this->fSession->trace (TC_Layout3 + TC_Formating, "changeListLevel-2: .$text");
+				if (true)
+					echo $text;
+				else {
+				echo TAG_PREFIX;
+				echo $tag;
+				echo TAG_SUFFIX;
+				echo TAG_LISTITEM;
+				}
+				$level++;
+				$this->fSession->trace (TC_Layout3 + TC_Formating, "changeListLevel-2b: .$tag");
+			}
 		}
+		$this->fSession->trace (TC_Layout3 + TC_Formating, 'changeListLevel: end');
 	}
 	function changeUListLevel ($val) {
 		$this->fSession->trace (TC_Layout2 + TC_Formating, "changeUListLevel");
@@ -793,9 +811,12 @@ class LayoutStatus {
 	}
 	function changeOfLineType (){
 		$this->trace (TC_Layout1, 'changeOfLineType:');
-		$this->changeUListLevel (0);
-		$this->changeOrderedListLevel (0);
-		$this->changeIndentLevel(0);
+		if ($this->fUListLevel > 0)
+			$this->changeUListLevel (0);
+		if ($this->fOrderedListLevel > 0)
+			$this->changeOrderedListLevel (0);
+		if ($this->fIndentLevel > 0)
+			$this->changeIndentLevel(0);
 		$this->stopTable ();
 		if ($this->fOpenParagraph) {
 			$this->fOpenParagraph = false;
