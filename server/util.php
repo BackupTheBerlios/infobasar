@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.6 2004/06/13 10:57:21 hamatoma Exp $
+// $Id: util.php,v 1.7 2004/06/28 22:14:03 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -382,10 +382,6 @@ function getLoginCookie (&$session, &$user, &$code){
 function clearLoginCookie (&$session){
 	$session->trace (TC_Util2, 'clearLoginCookie');
 	setCookie (COOKIE_NAME, null);
-}
-function ObFlush(&$session){
-	if ($session->fVersion >= 400)
-		ob_end_flush();
 }
 function getMicroTime(&$session, $time = null){ 
 	$session->trace (TC_Util1, 'getMicroTime');
