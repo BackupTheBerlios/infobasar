@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.22 2005/01/06 11:58:49 hamatoma Exp $
+// $Id: gui.php,v 1.23 2005/01/06 16:59:36 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -814,6 +814,90 @@ function guiShowPageById (&$session, $page, $text_id) {
 			: ('en ' . $count_newer . ' neuere Versionen')), false);
 	guiFormatPage ($session, $type, $content);
 	guiStandardBodyEnd ($session, $type == TT_Wiki ? Th_BodyEndWiki : Th_BodyEndHTML);
+}
+function guiLogin (&$session, $message) {
+	guiStandardHeader ($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader,
+		null);
+	guiStartForm ($session, 'login', P_Login);
+	if (! empty ($message)) {
+		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
+		guiParagraph ($session, $message, false);
+	}
+	if (! isset ($_POST ['login_user'])){
+		$_POST ['login_user'] = $session->fUserName;
+		$_POST ['login_email'] = '';
+	}
+	
+	outTableAndRecord ();
+	outTableTextField ('Benutzername:', 'login_user', null, 32, 32);
+	outTableRecordDelim();
+	outTablePasswordField ('Passwort:', 'login_code', '', 32, 32);
+	outTableRecordDelim();
+	outTableButton (' ', 'but_login', 'Anmelden');
+	outTableAndRecordEnd ();
+	guiLine ($session, 2);
+	guiParagraph ($session, 'Passwort vergessen?', false);
+	outTableAndRecord();
+	outTableTextField ('EMail-Adresse:', 'login_email', null, 32, 0);
+	outTableRecordDelim();
+	outTableButton (' ', 'but_forget', 'Passwort ändern');
+	outTableAndRecordEnd();
+	echo '(Das neue Passwort wird dann zugeschickt.)';
+	outNewline();
+	outStrong('Achtung:');
+	echo 'Benutzername muss ausgefüllt sein!';
+	guiFinishForm ($session, $session);
+	guiStandardBodyEnd ($session, Th_LoginBodyEnd);
+	return 1;
+}
+function guiLoginAnswer (&$session, &$message) {
+	$session->trace (TC_Gui1, 'guiLoginAnswer; login_user: ' . $_POST ['login_user']);
+	$login_again = true;
+	$message = null;
+	$again = false;
+	$user =$_POST ['login_user'];
+	$email = $_POST ['login_email'];
+	$code = $_POST ['login_code'];
+	if (isset ($_POST ['but_forget'])) {
+		if (empty ($user))
+			$message = "+kein Benutzername angegeben";
+		elseif (empty ($email))
+			$message = "+keine EMail-Adresse angegeben";
+		else {
+			$row = dbSingleRecord ($session, 'select id,email from ' . dbTable ($session, T_User)
+				. ' where name=' . dbSqlString ($session, $user));
+			if (! $row)
+				$message = "+unbekannter Benutzer";
+			elseif (empty ($row [1]))
+				$message = "+keine EMail-Adresse eingetragen";
+			elseif (strcasecmp ($row [1], $email) != 0)
+				$message = "+EMail-Adresse ist nicht bekannt";
+			else {
+				sendPassword ($session, $row [0], $user, $email);
+				$message = 'Das Passwort wurde an ' . $email . ' verschickt';
+			}
+		}
+		$again = true;
+	} else {
+		$message = dbCheckUser ($session, $user,$code);
+		if (! empty ($message))
+			$again = true;
+		else {
+			setLoginCookie ($session, $user, $code);
+			$session->setPageName (P_Start);
+			$session->setSessionNo (1);
+		}
+	}
+	return $again;
+}	
+function guiLogout (&$session){
+	clearLoginCookie ($session);
+	setLoginCookie ($session, '?', '?');
+	$session->clearSessionData ();
+	$session->fUserId = null;
+	$name = $session->fUserName;
+	$session->fUserName = null;
+	guiLogin ($session, 'Daten für automatische Anmeldung wurden gelöscht: ' . $name);
 }
 
 ?>
