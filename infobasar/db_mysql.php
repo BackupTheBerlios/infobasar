@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.9 2004/10/28 21:14:25 hamatoma Exp $
+// $Id: db_mysql.php,v 1.10 2004/11/05 17:46:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -191,6 +191,7 @@ function dbTable (&$session, $name) {
 }
 function dbSqlString (&$session, $value) {
 	$session->trace (TC_Db3 + TC_Convert, 'dbSqlString');
+	$session->trace (TC_X + TC_Convert, 'dbSqlString: ' . ".$value." );
 	$value = addcslashes ($value, "\'\\\n\r");
 	return '\'' . $value . '\'';
 }
