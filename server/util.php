@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.4 2004/05/31 23:21:51 hamatoma Exp $
+// $Id: util.php,v 1.5 2004/06/10 19:46:48 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -37,8 +37,11 @@ function error ($message) {
 function textToHtml ($text){
 	return htmlentities ($text);
 }
-function htmlToText ($text){
-	return html_entity_decode ($text);
+function htmlToText (&$session, $text){
+	if ($session->fVersion >= 430)
+		return html_entity_decode ($text);
+	else
+		return htmlspecialchars ($text);
 }
 function p ($message){
 	echo "<p>$message</p>\n";
@@ -379,5 +382,9 @@ function getLoginCookie (&$session, &$user, &$code){
 function clearLoginCookie (&$session){
 	$session->trace (TC_Util2, 'clearLoginCookie');
 	setCookie (COOKIE_NAME, null);
+}
+function ObFlush(&$session){
+	if ($session->fVersion >= 400)
+		ob_end_flush();
 }
 ?>
