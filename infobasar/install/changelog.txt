@@ -1,5 +1,5 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.9 2005/01/14 03:17:38 hamatoma Exp $
+$Id: changelog.txt,v 1.10 2005/01/17 02:35:05 hamatoma Exp $
 
 Legende: F(ehler) N(eu) A(enderung)
 
@@ -10,19 +10,21 @@ Version 0.7.3 (PHP-Code) vom 2005.01.xx
      Vorher wurden alle Makronamen ersetzt, wenn ein Makro gefunden wurde.
  -N: Parameter Param_MacroPattern
  -N: Admin:Einstellungen: Webmaster änderbar
- -N: Validiert: Login, Einstellungen, 
+ -N: base_mod.php: Validiert: Login, Einstellungen, 
  -N: admin.php: Validiert: Einstellungen, Parameter, Export, Import, Wiki-Syntax-Konversion
      Seite umbenennen, Benutzerübersicht, Backup
+ -A: Makronamen in der Form url:name
  
-Version 1.2 (DB-Erweiterungen (Design)) vom 2005.01.13
+Version 2.0 (Skin-minimal und Skin-PHPWiki) vom 2005.01.13
  -N: Makros: BasarName Webmaster DBSchemaVersion DBBaseContentVersion DBExtensions
- -A: Entfernen der designunabh. Parameter 1,10-1,15 (Ersatz durch Makros)
+ -A: Entfernen der Skin-unabh. Parameter 1,10-1,15 (Ersatz durch Makros)
  -A: Namen der Makros ohne Praefix T_M_ oder T_S_
  -N: Regel: <body><div> und </div></body>
  -A: Aus Th_LoginHeader wird jetzt Th_LoginHeader und Th_LoginBodyStart.
      (Trennung <head>...</head>  und <body>...)
  -N: Anmeldedialog mit Logo
  -N: 111 und 112: Th_AdminStandardHeader und Th_AdminStandardBodyStart
+ -A: Makronamen in der Form url:name
 
 
 Version 0.7.2 vom 2005.01.12
