@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.5 2004/09/22 07:13:30 hamatoma Exp $
+// $Id: db_mysql.php,v 1.6 2004/10/07 14:27:57 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -271,33 +271,29 @@ function dbUserAdd (&$session, $user, $code, $locked,
 }
 function dbCheckSession (&$session) {
 	global $session_id, $session_user;
-	global $REQUEST_URI, $SCRIPT_NAME, $SCRIPT_FILENAME, $PATH_INFO;
-	$session->trace (TC_Db1, 'dbCheckSession: ' . "REQEST_URI: $REQUEST_URI SCRIPT_NAME: $SCRIPT_NAME");
-	if (empty ($session_user))
-		$fields = null;
-	else
+	global $PATH_INFO;
+	$rc = null;
+	$session->trace (TC_Db1, 'dbCheckSession');
+	if (! empty ($session_user)){
 		$fields = dbSingleRecord ($session,
 			'select name,locked,theme,width,height,maxhits,postingsperpage,'
 			. 'threadsperpage,startpage from '
 				. dbTable ($session, "user") . " where id=$session_user;");
-	if ($fields == null)
-		$rc = 'Unbekannter Benutzer: ' . $session_user;
-	else {
-		if (false && dbStringToBool ($session, $fields[1]))
-			$rc = "Benutzer $session_user ist gesperrt";
+		if ($fields == null)
+			$rc = 'Unbekannter Benutzer' . (empty ($session_user) ? '!' : ':' . $session_user);
 		else {
-		# function setUserData ($id, $name, $theme, $width, $height,
-		#	$maxhits, $postingsperpage, $threadsperpage, $startpage) {
-			$session->setUserData ($session_user, $fields[0],
-				$fields[2], $fields[3], $fields[4], $fields[5], $fields[6],
-				$fields[7], $fields [8]);
-			$uri = substr ($REQUEST_URI, strlen ($SCRIPT_NAME) + 1);
-			while (strpos ($uri, "index") == 0 && strpos ($uri, '/') > 0)
-				$uri = substr ($uri, strpos ($uri, "/") + 1);
-			$session->setScriptBase ($REQUEST_URI, $SCRIPT_NAME, $SCRIPT_FILENAME);
-			$session->setPageName (substr ($PATH_INFO, 1));
-			$session->setMacros ();
-			$rc = false;
+			if (false && dbStringToBool ($session, $fields[1]))
+				$rc = "Benutzer $session_user ist gesperrt";
+			else {
+			# function setUserData ($id, $name, $theme, $width, $height,
+			#	$maxhits, $postingsperpage, $threadsperpage, $startpage) {
+				$session->setUserData ($session_user, $fields[0],
+					$fields[2], $fields[3], $fields[4], $fields[5], $fields[6],
+					$fields[7], $fields [8]);
+				$session->setPageName (substr ($PATH_INFO, 1));
+				$session->setMacros ();
+				$rc = null;
+			}
 		}
 	}
 	return $rc;

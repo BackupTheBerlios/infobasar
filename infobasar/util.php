@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.6 2004/09/22 23:30:13 hamatoma Exp $
+// $Id: util.php,v 1.7 2004/10/07 14:27:58 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -379,27 +379,37 @@ function decrypt (&$session, $value, $salt){
 	return strrev (substr ($value, 6, strlen ($value) - 10));
 }
 function setLoginCookie (&$session, $user, $code) {
-	$session->trace (TC_Util2, 'setLoginCookie');
-	$value = encrypt ($session, $user . " " . $code, COOKIE_NAME);
-	$session->trace (TC_Util2, 'setLoginCookie: ' . $value);
-	setCookie (COOKIE_NAME, $value, time() + 60*60*24*365);
+	global $session_no;
+	$session->trace (TC_Init, 'setLoginCookie');
+	if (isset ($session_no) && $session_no > 0){
+		$session->trace (TC_Init, 'setLoginCookie-2');
+		$value = encrypt ($session, $user . " " . $code, COOKIE_NAME);
+		$session->trace (TC_Init, 'setLoginCookie: ' . COOKIE_NAME . ": ". $user . "/" . $value);
+		setCookie (COOKIE_NAME, $value, time() + 60*60*24*365);
+	}
 }
 function getLoginCookie (&$session, &$user, &$code){
-	$session->trace (TC_Util2, 'getLoginCookie');
-	if ($rc = ! empty ($_COOKIE[COOKIE_NAME])){
-		$session->trace (TC_Util2, 'getLoginCookie-2: ' . $_COOKIE[COOKIE_NAME]);
+	global $session_no;
+	$session->trace (TC_Init, 'getLoginCookie');
+	$user = null;
+	$code = null;
+	if (! isset ($session_no) || $session_no < 0)
+		$rc = false;
+	elseif ($rc = ! empty ($_COOKIE[COOKIE_NAME])){
+		$session->trace (TC_Init, 'getLoginCookie-2: ' . $_COOKIE[COOKIE_NAME]);
 		$value = decrypt ($session, $_COOKIE[COOKIE_NAME], COOKIE_NAME);
-		$session->trace (TC_Util2, 'getLoginCookie-3: ' . $value);
+		$session->trace (TC_Init, 'getLoginCookie-3: ' . $value);
 		if ( ($pos = strpos ($value, " ")) > 0){
 			$user = substr ($value, 0, $pos);
 			$code = substr ($value, $pos + 1);
+			$session->trace (TC_Init, 'getLoginCookie-4: ' . COOKIE_NAME . ": ". $user . "/" . $code);
 		}
 	}
-	$session->trace (TC_Util2, 'getLoginCookie-4: ' . $user);
+	$session->trace (TC_Init, 'getLoginCookie-4: ' . $user);
 	return $rc;
 }
 function clearLoginCookie (&$session){
-	$session->trace (TC_Util2, 'clearLoginCookie');
+	$session->trace (TC_Init, 'clearLoginCookie');
 	setCookie (COOKIE_NAME, null);
 }
 function getMicroTime(&$session, $time = null){ 

@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.6 2004/09/22 23:30:13 hamatoma Exp $
+// $Id: classes.php,v 1.7 2004/10/07 14:27:58 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -214,7 +214,8 @@ class Session {
 	var $fFormExists; // true: Es gab schon ein <form> im Text.
 
 	var $fLocation; // null oder effektive URL (ab Script). Bsp: StartSeite
-	var $fScriptURL; // Ohne / am Ende
+	var $fScriptURL; // Ohne / am Ende. Bsp: //localhost/index.php
+	var $fPageURL; // ab ScriptURL Bsp: !home
 	var $fScriptBase; // ohne *.php
 	var $fScriptFile; // Relativ zu DocumentRoot
 	var $fFileSystemBase; // Absolutpfad im Filesystem des Servers
@@ -232,9 +233,10 @@ class Session {
 
 	var $fModules; // array: module_names => Plugin-Klasse (Module<Name>)
 	var $fLogPageId; // Id der Seite SystemLog
-	
+
+	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.	
 	function Session ($start_time){
-		global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
+		global $_SERVER;
 		global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
 		$this->fTraceFlags = 0;
 		$this->fStartTime = getMicroTime ($this, $start_time);
@@ -248,28 +250,48 @@ class Session {
 		$this->fPreformated = false;
 		$this->fLocation = "";
 		$this->fFormExists = false;
-		$this->fPageName = "";
 		$this->fPageChangedAt = "";
 		$this->fPageChangedBy = "";
 		$this->fPageTitle = "";
 		$this->fUserTheme = Theme_Standard;
 		$this->fLogPageId = null;
 		// Basisverzeichnis relativ zu html_root
-		$this->setScriptBase ("http://$HTTP_HOST$PHP_SELF", $SCRIPT_FILENAME);
+		$uri = $_SERVER['REQUEST_URI'];
+		$this->fScriptURL = $uri;
+		$pos = strpos ($uri, ".php");
+		if ($pos <= 0){
+			$this->fScriptURL = $uri;
+			$this->fPageURL = '';
+		} else {
+			$this->fScriptURL = substr ($uri, 0, $pos + 4);
+			if ($pos + 5 < strlen ($uri)){
+				$this->fPageURL = substr ($uri, $pos + 5);
+				if ( ($pos = strpos ($this->fPageURL, '/', 1)) > 0)
+					$this->fScriptURL = substr ($this->fPageURL, 0, $pos);
+			}
+		}
+		$this->fPageName = $this->fPageURL;
+		$this->traceInFile ("Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" . $this->fPageURL
+			. "' ($pos) <== '" . $uri . "'");
+		$this->fScriptFile = $_SERVER['SCRIPT_FILENAME'];
+		$this->fScriptBase = $_SERVER['PHP_SELF'];
+		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $this->fScriptFile);
 	
 		// MySQL
 		if ($db_type == 'MySQL') {
 			// MySQL server host:
 			$this->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 		} // mysql
+		$this->fTraceFile = "/tmp/trace.log";
+		$this->fTraceFile = null;
 		$this->fTraceFlags
-			= 0 * (0 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
-			+ 0 * (1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3)
-			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
+			= 0 * (1 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
+			+ 1 * (1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3)
+			+ 1 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
 			+ 0 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
 			+ 0 * TC_Layout1
-			+ 1 * (1 * TC_Update + 1 * TC_Insert + 1 * TC_Query)
-			+ 0 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
+			+ 0 * (1 * TC_Update + 1 * TC_Insert + 1 * TC_Query)
+			+ 1 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
@@ -278,6 +300,12 @@ class Session {
 	function trace($class, $msg){
 		if (($class & $this->fTraceFlags) != 0)
 			$this->WriteLine (htmlentities ($msg));
+	}
+	function dumpVars($header){
+		$this->Write ("HTTP_POST_VARS: $header");
+		foreach ($HTTP_POST_VARS as $name => $val){
+			$this->Write ($name . ": " . textToHtml ($val) . "<br>");
+		}
 	}
 	function Write ($line){
 		if ($this->fHasBody)
@@ -295,6 +323,7 @@ class Session {
 		$this->fHasBody = true;
 	}
 	function SetLocation($location){
+		$this->trace (TC_Session1, 'setLocation: ' . $location);
 		$this->fLocation = $location;
 	}
 	function getLogPageId(){
@@ -310,11 +339,19 @@ class Session {
 		}
 		return $this->fLogPageId;
 	}
+	function traceInFile($msg){
+		if ($this->fTraceFile != null && ($file = fopen ($this->fTraceFile, "a")) != null){
+			fwrite ($file, $msg . "\n");
+			fclose ($file);
+		}
+	}
 	function PutHeader(){
 		global $_SERVER;
 		if (!$this->fHasHeader){
 			if ($this->fLocation){
 				$uri = $this->fScriptURL . "/" . $this->fLocation;
+				$this->traceInFile ("PutHeader: Location: " . $this->fLocation
+					. " uri: " . $uri . " REQ_URI: " . $_SERVER['REQUEST_URI']);
 				if ($uri != $_SERVER['REQUEST_URI'])
 					header ('Location: http://' . $_SERVER['HTTP_HOST'] . $uri);
 			}
@@ -380,13 +417,6 @@ class Session {
 		$this->fUserStartPage = $startpage;
 	}
 	function setFormExists($value){ $this->fFormExists = $value; }
-	function setScriptBase ($script_url, $script_file, $fs_filename = '') {
-		$this->trace (TC_Init, "setScriptBase: $script_url | $script_file");
-		$script_url = preg_replace ('/\.php.*$/', '.php', $script_url);
-		$this->fScriptURL = $script_url; $this->fScriptFile = $script_file;
-		$this->fScriptBase = preg_replace ('/\/\w+\.php.*$/', '', $script_url);
-		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $fs_filename);
-	}
 	function setPageName ($uri){
 		global $last_pagename;
 		$this->trace (TC_Init, 'setPageName: ' . $uri
@@ -494,7 +524,7 @@ class Session {
 		}
 		return $text;
 	}
-};
+}
 class LayoutStatus {
 	var $fSession;
 	var $fEmphasisStack;	// String: [ubi]* ; underline bold italic

@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.5 2004/09/22 23:30:12 hamatoma Exp $
+// $Id: index.php,v 1.6 2004/10/07 14:27:57 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -21,6 +21,7 @@ session_start();
  if (!session_is_registered("session_user")) {
 	session_register("session_user");
 	session_register("session_start");
+	session_register("session_no");
 	$start = time();
  }
  $session_id = session_id();
@@ -39,6 +40,7 @@ define ('A_Diff', 'diff');
 define ('A_Show', 'show');
 // Predefined pages
 define ('P_Login', '!login');
+define ('P_Logout', '!logout');
 define ('P_Account', '!account');
 define ('P_Home', '!home');
 define ('P_NewPage', '!newpage');
@@ -85,29 +87,33 @@ $session = new Session ($start_time);
 
 	// All requests require the database
 dbOpen($session);
-
-//p ('User,Id,Login: ' . $session_user . "," . $session_id . "/" . $login_user);
+if (isset ($session_no) && $session_no > 0){
+	$session_no++;
+	$session->trace (TC_Init, "session_no: $session_no");
+}
 if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	&& dbCheckUser ($session, $user, $code) == ''){
 	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
+	$session->trace (TC_X, 'index.php: Cookie erfolgreich gelesen. User: ' . $session_user);
 }
 $rc = dbCheckSession ($session);
 $do_login = false;
-if (! empty ($rc)) {
-	// p ("Keine Session gefunden: $session_id / $session_user ($rc)");
-	if (! empty ($login_user))
-		baseLoginAnswer ($session);
-	else 
-		$do_login = true;
+#$session->dumpVars ("Init");
+if ($rc != null) {
+	$session->trace (TC_Init, 'keine Session gefunden: ' . $rc . ' ' 
+		. (empty($login_user) ? "-" : '>' . $login_user));
+	$do_login = true;
 } else {
+		$session->trace (TC_Init, 'login_user: ' . (isset ($login_user) ? $login_user : '-')); 
 		if (isset ($login_user))
-			baseLoginAnswer ($session);
+			$do_login = baseLoginAnswer ($session, $rc);
 		else
-			$do_login = $session->fPageName == P_Login;
+			$do_login = $session->fPageName == P_Login || ! isset ($session_user) || $session_user <= 0;
 }
+$session->trace (TC_Init, "session_no: do_login: " . ($do_login ? "t" : "f"));
 if ($do_login){
 		clearLoginCookie ($session);
-		baseLogin ($session, '');
+		baseLogin ($session, $rc);
 } else {
 		$session->trace (TC_Init, 'index.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($action)) {
@@ -159,9 +165,7 @@ if ($do_login){
 		elseif ( ($page_id = dbPageId ($session, $session->fPageName)) > 0)
 			guiShowPageById ($session, $page_id, null);
 		else {
-			$session->trace (TC_Warning, PREFIX_Warning . 'index.php: Nichts gefunden');
-			$session->SetLocation (P_Home);
-			baseHome ($session);
+			baseLogin ($session, null);;
 		}
 	}
 }
@@ -179,6 +183,7 @@ function baseStandardLinkString (&$session, $page) {
 	case P_LastChanges: $header = 'Letzte Änderungen'; break;
 	case P_Start: $header = 'Persönliche Startseite'; break;
 	case P_Login: $header = 'Neu anmelden'; break;
+	case P_Logout: $header = 'Abmelden'; break;
 	case P_Info: $header = 'Über'; break;
 	case P_NewWiki: $header = 'Neue Wiki-Seite'; break;
 	case P_NewPage: $header = 'Neue Seite'; break;
@@ -332,12 +337,13 @@ function baseLogin (&$session, $message) {
 	guiStandardBodyEnd ($session, Th_LoginBodyEnd);
 	return 1;
 }
-function baseLoginAnswer (&$session) {
+function baseLoginAnswer (&$session, &$message) {
+	global $login_user, $login_code, $session_user, $but_forget, $login_email, $session_no;
+	$session->trace (TC_Gui1, 'baseLoginAnswer; login_user: ' . $login_user . " but_forget: $but_forget");
 	$login_again = true;
-	$session->trace (TC_Gui1, 'baseLoginAnswer');
-	global $login_user, $login_code, $session_user, $but_forget, $login_email;
+	$message = null;
+	$login_again = false;
 	if (isset ($but_forget)) {
-		$message = null;
 		if (empty ($login_user))
 			$message = "+kein Benutzername angegeben";
 		elseif (empty ($login_email))
@@ -356,19 +362,33 @@ function baseLoginAnswer (&$session) {
 				$message = 'Das Passwort wurde an ' . $login_email . ' verschickt';
 			}
 		}
-		baseLogin ($session, $message);
+		$login_again = true;
 	} else {
-		$rc = dbCheckUser ($session, $login_user, $login_code);
-		if (! empty ($rc))
-			baseLogin ($session, $rc);
+		$message = dbCheckUser ($session, $login_user, $login_code);
+		if (! empty ($message))
+			$login_again = true;
 		else {
 			setLoginCookie ($session, $login_user, $login_code);
 			$session->setPageName (P_Start);
-			$login_again = false;
+			$session_no = 1;
 		}
 	}
 	return $login_again;
 }	
+function baseLogout (&$session){
+	global $last_page, $session_user, $session_start, $session_no;
+	clearLoginCookie ($session);
+	setLoginCookie ($session, '?', '?');
+	$last_page = $session_user = $session_start = null;
+	$session->fUserId = null;
+	$name = $session->fUserName;
+	$session->fUserName = null;
+	$session_no = -99999;
+	
+	baseLogin ($session, 'Daten für automatische Anmeldung wurden gelöscht: ' . $name);
+		
+}
+
 function baseSplitRights (&$session, &$account_right_user, &$account_right_rights, 
 	&$account_rights_posting, &$account_rights_pages){
 	$rights = $session->fUserRights;
@@ -553,8 +573,10 @@ function baseHome (&$session) {
 		echo '</td><td>Benutzerspezifische Einstellungen f&uuml;r ';
 		echo $session->fUserName;
 		echo "</td></tr>\n<tr><td>";
+		baseStandardLink ($session, P_Logout);
+		echo "</td><td>Abmelden</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_Login);
-		echo "</td><td>Abmelden (oder neu anmelden)</td></tr>\n<tr><td>";
+		echo "</td><td>Neu anmelden</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_Start);
 		echo "</td><td>Startseite, wie sie in den benutzerspezifischen Einstellungen festgelegt ist</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_Info);
@@ -743,12 +765,13 @@ function baseSearch (&$session, $message){
 	$session->trace (TC_Gui1, 'baseSearch');
 	if (! isset ($last_pagename))
 		$last_pagename = $session->fPageName;
+	if (! isset ($search_bodytext) && isset ($search_titletext))
+		$search_bodytext = $search_titletext;
 	getUserParam ($session, U_MaxHits, $search_maxhits);
 	guiStandardHeader ($session, 'Suchen auf den Wiki-Seiten',
 		Th_SearchHeader, Th_SearchBodyStart);
 	if (isset ($search_title) || isset ($search_body))
 		baseSearchResults ($session);
-	guiParagraph ($session, 'Hinweis: vorl&auml;ufig nur ein Suchbegriff m&ouml;glich', false);
 	guiStartForm ($session, 'search', P_Search);
 	guiHiddenField ('last_pagename', $last_pagename);
 	echo "<table border=\"0\">\n<tr><td>Titel:</td><td>";
@@ -761,6 +784,12 @@ function baseSearch (&$session, $message){
 	guiTextField ("search_maxhits", $search_maxhits, 10, 10);
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session, $session);
+	guiParagraph ($session, 
+		'<strong>Hinweis:</strong><br>Vorl&auml;ufig nur ein Suchbegriff m&ouml;glich.<br>'
+		. 'Joker (Wildcards) sind % (beliebig) und _ (1 Zeichen).<br>'
+		. 'Bsp:<br> <i>a_t</i> findet "Kin<b>ast</b>" und "<b>Amt</b>sperson", aber nicht "h<b>a</b>s<b>st</b>".<br>'
+		. ' <i>Hilfe%format</i> findet <b>Hilfe</b>Bei<b>Format</b>ierung und "<b>Hilfe</b> f&uuml;r ein Datei<b>format</b>"".',
+		false);
 	guiStandardBodyEnd ($session, Th_SearchBodyEnd);
 }
 function baseSearchResults (&$session){
@@ -830,6 +859,7 @@ function baseCallStandardPage (&$session) {
 	$found = true;
 	switch ($session->fPageName) {
 	case P_Login:	baseLogin ($session, ''); break;
+	case P_Logout:	baseLogout ($session); break;
 	case P_Account: baseAccount ($session, ''); break;
 	case P_Home: 	baseHome ($session); break;
 	case P_NewPage:	baseAlterPage ($session, C_New, '', ''); break;
