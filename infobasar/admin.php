@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.13 2005/01/11 22:50:15 hamatoma Exp $
+// $Id: admin.php,v 1.14 2005/01/12 00:59:52 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -85,6 +85,8 @@ if (successfullLogin ($session)){
 			admParamAnswerChange ($session, C_Change);
 		elseif (isset ($_POST ['macro_load']))
 			admMacroAnswerLoad ($session);
+		elseif (isset ($_POST ['opt_save']))
+			admOptionsAnswer ($session);
 		elseif (isset ($_POST ['macro_insert']))
 			admMacroAnswerChange ($session, C_New);
 		elseif (isset ($_POST ['macro_change']))
@@ -914,6 +916,18 @@ function admOptions (&$session, $message){
 	guiHeadline ($session, 2, 'Dateien:');
 	guiUploadFile ($session, 'Logo:', P_Options);
 	guiFinishBody ($session, null);
+}
+function admOptionsAnswer(&$session){
+	$session->trace (TC_Gui1, 'admOptionsAnswer');
+	
+	$message = null;
+	if (isset ($_POST ['opt_save'])){
+		$id = dbSingleValue($session, 'select id from ' . dbTable ($session, T_Param)
+			. ' where theme=' . Theme_All . ' and pos=' .Param_BasarName);
+		dbUpdateRaw ($session, T_Param, $id, 'text=' 
+			. dbSqlString ($session, $_POST ['opt_basarname']));
+	}
+	admOptions ($session, $message);
 }
 function admRename (&$session, $message){
 	$session->trace (TC_Gui1, 'admRename');
