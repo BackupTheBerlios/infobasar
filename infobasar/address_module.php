@@ -1,5 +1,5 @@
 <?php
-// $Id: address_module.php,v 1.3 2005/01/13 03:33:55 hamatoma Exp $
+// $Id: address_module.php,v 1.4 2005/01/14 03:00:01 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -71,7 +71,7 @@ if (successfullLogin ($session)){
 			addressShowCards ($session);
 		else {
 			#$session->trace (TC_X, 'address_init: fPageName: "' . $session->fPageName . '"');
-			switch ($session->fPageName){
+			switch ($session->fPageURL){
 			case P_ShowBooks: addressShowBooks ($session); break;
 			case P_EditBook: addressEditBook ($session); break;
 			case P_EditCard: addressEditCard ($session); break;
@@ -99,7 +99,7 @@ function addressEditBook (&$session, $message = null){
 		Th_AddressHeader, Th_AddressBodyStart);
 	if ($message <> null)
 		guiParagraph($session, $message, false);
-	guiStartForm ($session, 'search', P_EditBook);
+	guiStartForm ($session);
 	outHiddenField ($session, 'book_id', $book_id);
 	echo "<table border=\"0\">\n<tr><td>Name:</td><td>";
 	outTextField ($session, 'book_name', $name, 32, 64);
@@ -207,7 +207,7 @@ function addressEditCard (&$session, $message = null, $card_id = null){
 		baseSearchResults ($session);
 	if ($message <> null)
 		guiParagraph($session, $message, false);
-	guiStartForm ($session, 'search', P_EditCard);
+	guiStartForm ($session);
 	outHiddenField ($session, 'card_id', $card_id);
 	outTable (0);
 	outTableRecordCells ('Id:', $card_id);
@@ -380,7 +380,7 @@ function addressShowCards (&$session, $message = null){
 		Th_AddressHeader, Th_AddressBodyStart);
 	if ($message <> null)
 		guiParagraph($session, $message, false);
-	guiStartForm ($session, 'search', P_ShowCards);
+	guiStartForm ($session);
 	guiHeadline ($session, 2, 'Suchkriterien:');
 	$books = dbColumnList($session, Tab_Book, 'name', '1');
 	if (! isset ($_POST ['show_book']))
