@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.5 2004/10/07 14:27:57 hamatoma Exp $
+// $Id: gui.php,v 1.6 2004/10/14 02:47:52 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -274,7 +274,7 @@ function guiBacklinks ($session, $page_name) {
 		$condition .= ' or text like '
 			. dbSqlString ($session, '%' . $name . '%');
 	$condition .= ') and replacedby is NULL';
-	if (! ($ids = dbIdList2 ($session, T_Text, 'distinct page',
+	if (! ($ids = dbColumnList ($session, T_Text, 'distinct page',
 		$condition)))
 		guiParagraph ($session, 'keine Verweise auf ' . $page_name
 			. ' gefunden', false);

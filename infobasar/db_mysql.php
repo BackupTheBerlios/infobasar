@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.6 2004/10/07 14:27:57 hamatoma Exp $
+// $Id: db_mysql.php,v 1.7 2004/10/14 02:47:18 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -326,11 +326,11 @@ function dbGetText (&$session, $pos) {
 function dbIdList (&$session, $table, $where)
 {
 	$session->trace (TC_Db2 + TC_Query, "dbIdList: $table, $where");
-	return dbIdList2 ($session, $table, 'id', $where);
+	return dbColumnList ($session, $table, 'id', $where);
 }
-function dbIdList2 (&$session, $table, $what, $where)
+function dbColumnList (&$session, $table, $what, $where)
 {
-	$session->trace (TC_Db2 + TC_Query, "dbIdList2: $table, $what, $where");
+	$session->trace (TC_Db2 + TC_Query, "dbColumnList: $table, $what, $where");
 	$rc = array ();
 	$query = 'select ' . $what . ' from ' . dbTable ($session, $table)
 		. " where $where";
