@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.8 2004/10/22 09:09:23 hamatoma Exp $
+// $Id: index.php,v 1.9 2004/10/27 22:48:14 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -17,8 +17,8 @@ error_reporting(E_ALL);
 
 session_start();
 
- // If this is a new session, then the variable $user_id
- if (!session_is_registered("session_user")) {
+// If this is a new session, then the variable $user_id
+if (!session_is_registered("session_user")) {
 	session_register("session_user");
 	session_register("session_start");
 	session_register("session_no");
@@ -156,7 +156,7 @@ if ($do_login){
 			baseSearch ($session, null);
 		elseif (isset ($edit_preview))
 			baseEditPage ($session, null);
-		elseif (isset ($edit_save) || isset ($edit_previewandsave))
+		elseif (isset ($edit_save) || isset ($edit_previewandsave) || isset ($edit_upload))
 			baseEditPageAnswerSave ($session);
 		elseif (isset ($edit_cancel))
 			guiShowPageById ($session, $edit_pageid, null);
@@ -271,6 +271,10 @@ function baseEditPage (&$session, $message) {
 	guiTextField ("textarea_height", $textarea_height, 3, 3);
 	echo "</td></tr>\n</table>\n</td></tr></table>\n";
 	guiFinishForm ($session, $session);
+	echo '<br/>';
+	guiUploadFile ($session, 'Einfügen eines Bildes:', null,
+		'edit_content', $edit_content, 'Hochladen', 'edit_upload', 
+		'edit_upload_file', 500000);
 	guiStandardBodyEnd ($session,
 		$edit_texttype == TT_Wiki ? Th_EditEndWiki : Th_EditEndHTML);
 }
@@ -278,31 +282,40 @@ function baseEditPageAnswerSave (&$session)
 {
 	global $edit_pageid, $edit_textid, $edit_textidpred, $edit_content,
 		$edit_changedat, $edit_changedby, $edit_texttype,
-		$edit_previewandsave, $last_pagename;
+		$edit_previewandsave, $last_pagename, 
+		$edit_upload, $edit_upload_file, $_FILE;
 
 	$session->trace (TC_Gui1, 'baseEditPageAnswerSave');
-	$edit_content = textAreaToWiki ($session, $edit_content);
-	$new_textid = dbGetLastText ($session, $edit_pageid);
-	$message = '';
-	if ($new_textid > $edit_textidpred 
-		&& (! isset ($edit_textid) || $new_textid > $edit_textid))
-		$message = "+++ Warnung: Seite wurde inzwischen geändert! "
-			. "Bitte Differenz ermitteln und erneut eintragen! "
-			. $new_textid . " /  " . $edit_textidpred;
-	$date = dbSqlDateTime ($session, time ());
-	if (empty ($edit_textid)){
-		$edit_textid = dbInsert ($session, T_Text,
-			'page,type,createdat,changedat,createdby,text',
-			$edit_pageid . ',' . dbSqlString ($session, $edit_texttype)
-				. ",$date,$date," . dbSqlString ($session, $session->fUserName)
-				. ',' . dbSqlString ($session, $edit_content));
-		dbUpdate ($session, T_Text, $new_textid, 'replacedby=' . $edit_textid . ',');
+	if (isset ($edit_upload)){
+		$session->trace (TC_X, "guiEditPageSaveAnswer: $edit_upload");
+		$message = guiUploadFileAnswer ($session,  "/pic/",
+			null, 'edit_upload', 'edit_upload_file');
+		$name = substr ($edit_upload_file, strrpos ($edit_upload_file, "/") + 1); 
+		$edit_content .= "\n\n[http:pic/$name $name]\n\n";
 	} else {
-		dbUpdate ($session, T_Text, $edit_textid, "text=" . dbSqlString ($session, $edit_content) . ",");
+		$edit_content = textAreaToWiki ($session, $edit_content);
+		$new_textid = dbGetLastText ($session, $edit_pageid);
+		$message = '';
+		if ($new_textid > $edit_textidpred 
+			&& (! isset ($edit_textid) || $new_textid > $edit_textid))
+			$message = "+++ Warnung: Seite wurde inzwischen geändert! "
+				. "Bitte Differenz ermitteln und erneut eintragen! "
+				. $new_textid . " /  " . $edit_textidpred;
+		$date = dbSqlDateTime ($session, time ());
+		if (empty ($edit_textid)){
+			$edit_textid = dbInsert ($session, T_Text,
+				'page,type,createdat,changedat,createdby,text',
+				$edit_pageid . ',' . dbSqlString ($session, $edit_texttype)
+					. ",$date,$date," . dbSqlString ($session, $session->fUserName)
+					. ',' . dbSqlString ($session, $edit_content));
+			dbUpdate ($session, T_Text, $new_textid, 'replacedby=' . $edit_textid . ',');
+		} else {
+			dbUpdate ($session, T_Text, $edit_textid, "text=" . dbSqlString ($session, $edit_content) . ",");
+		}
 	}
 	unset ($edit_save);
-	if (empty ($message) && ! isset ($edit_previewandsave)){
-		guiShowPageById ($session, $edit_pageid, null);
+	if (empty ($message) && ! isset ($edit_previewandsave) && ! isset ($edit_upload)){
+		guiShowPageById ($session, $edit_pageid, $x);
 	} else {
 		baseEditPage ($session, $message, $message);
 	}
