@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.12 2005/01/07 21:10:51 hamatoma Exp $
+// $Id: admin.php,v 1.13 2005/01/11 22:50:15 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.5.3 (2004.10.28)');
+define ('PHP_ModuleVersion', '0.7.1 (2005.01.11)');
 
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
@@ -515,8 +515,10 @@ function wiki06To07 ($text){
 		array ("'''", "''", '%%%'), $text); 
 	$lines = explode ("\n", $text);
 	foreach ($lines as $ii => $line) {
+		// Bilder: Klammern entfernen
+		$text = preg_replace ('!\[(http:pic/[^/]+)\]!', '$1', $line);
 		// Andere Verweise ohne Text (in Klammern):
-		$text = preg_replace ('/\[([^\]:]+:[^\] ]+)\]/', '%!%lEft%?%%!%lEft%?%$1%!%rIght%?%%!%rIght%?%', $line);
+		$text = preg_replace ('/\[([^\]:]+:[^\] ]+)\]/', '%!%lEft%?%%!%lEft%?%$1%!%rIght%?%%!%rIght%?%', $text);
 		// Wikinamen und Text (in Klammern):
 		$text = preg_replace ('/\[([^\]: ]+) ([^\]]+)\]/', '%!%lEft%?%"$1"|$2%!%rIght%?%', $text);
 		// Andere Verweise und Text (in Klammern):
