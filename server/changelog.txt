@@ -1,7 +1,13 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.6 2004/06/08 11:38:59 hamatoma Exp $
+$Id: changelog.txt,v 1.7 2004/06/10 19:47:28 hamatoma Exp $
 
 Legende: F(ehler) N(eu)
+
+Version 0.5.5 vom 2004.06.10
+- F: Entpacken hma-Archiv: Erzeugen überflüssiger Ordner
+- N: Anpassungen an PHP 4.0
+- N: Grundstruktur User-Rechte
+
 Version 0.5.4 vom 2004.06.08
 - F: Doppelte Überschrift in Info
 - F: Erzeugungsdatum bei Text in Seitenneuanlage
