@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.22 2005/01/04 23:32:46 hamatoma Exp $
+// $Id: classes.php,v 1.23 2005/01/06 11:47:10 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -121,11 +121,11 @@ define ('TM_StandardMacroPrefix', 'S');
 define ('TM_ThemeMacroPrefix', 'T');
 
 // Benutzerspezifische Einstellungen:
-define ('U_TextAreaWidth', 'TextAreaWidth');
-define ('U_TextAreaHeight', 'TextAreaHeight');
-define ('U_MaxHits', 'MaxHits');
-define ('U_PostingsPerPage', 'PostingsPerPage');
-define ('U_Theme', 'Theme');
+define ('U_TextAreaWidth', 'textarea_width');
+define ('U_TextAreaHeight', 'textarea_height');
+define ('U_MaxHits', 'search_maxhits');
+define ('U_PostingsPerPage', 'posting_perpage');
+define ('U_Theme', 'user_theme');
 
 // Trace-Klassen
 define ('TC_Util1', 0x1);
@@ -310,6 +310,11 @@ class Session {
 	var $fDbTablePrefix; // Vorspann bei Tabellennamen
 	var $fDbResult; // MySQL: Handle für Abfragen über mehrere Datensätze
 
+	var $fSessionId;
+	var $fSessionUser;
+	var $fSessionStart;
+	var $fSessionNo;
+	
 	var $fUserId; // in Datenbank
 	var $fUserName;
 	var $fUserRights; // mit : getrennte Liste
@@ -368,11 +373,14 @@ class Session {
 	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.
 	var $fTraceDirect; // true: sofortiges echo	
 	var $fAdmins; // mit ':' getrennte Usernamen der Admins
-	function Session ($start_time){
-		global $_SERVER;
-		global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
+	function Session ($start_time, $session_id, $session_user, $session_start, $session_no,
+		$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix){
 		$this->fTraceFlags = 0;
 		$this->fStartTime = getMicroTime ($this, $start_time);
+		$this->fSessionId = $session_id;
+		$this->fSessionUser = $session_user;
+		$this->fSessionStart = $session_start == null ? $start_time : $session_start;
+		$this->fSessionNo = $session_no == null ? 1 : $session_no + 1;
 		$this->fHasHeader = false;
 		$this->fHasBody = false; // wird in guiHeader() gesetzt.
 		$this->fOutputState = 'Init';
@@ -437,8 +445,27 @@ class Session {
 		#$this->fTraceInFile = true;
 		$this->trace (TC_Init, "TC: " . $this->fTraceFlags . " InFile: " . ($this->fTraceInFile ? 'f' : 'f'));
 		$this->fTraceFile = "/tmp/trace.log";
-		$this->trace (TC_Init, "Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
+		$this->trace (TC_Init, "Session.Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
 			. $this->fPageURL . "' ($pos) <== '" . $uri . "'");
+		$this->trace (TC_Init, "Session.Session: Id: $session_id User: $session_user No: $session_no");
+	}
+	function storeSession (){
+		global $session_user, $session_start, $session_no;
+		$_SESSION ['session_user'] = $this->fSessionUser;
+		$_SESSION ['session_start'] = $this->fSessionStart;
+		$_SESSION ['session_no'] = $this->fSessionNo;
+	}
+	function setSessionNo ($no){
+		$this->fSessionNo = $no;
+	}
+	function clearSessionData(){
+		$this->fSessionUser = null;
+		$this->fSessionStart = null;
+		$this->fSessionNo = -99999;
+		$this->fSessionId = null;
+	}
+	function setSessionUser ($user){
+		$this->fSessionUser = $user;
 	}
 	function traceInFile($msg){
 		if ($this->fTraceFile != null && ($file = fopen ($this->fTraceFile, "a")) != null){
@@ -505,7 +532,6 @@ class Session {
 		return $this->fLogPageId;
 	}
 	function PutHeader(){
-		global $_SERVER;
 		if (!$this->fHasHeader){
 			if ($this->fLocation){
 				$uri = $this->fScriptURL . "/" . $this->fLocation;
@@ -559,16 +585,14 @@ class Session {
 	}
 	function setFormExists($value){ $this->fFormExists = $value; }
 	function setPageName ($uri){
-		global $last_pagename;
-		$this->trace (TC_Init, 'setPageName: ' . $uri
-			. " last_pagename: ($last_pagename)");
+		$last = getPostVar ('last_pagename');
+		$this->trace (TC_Init, 'setPageName: ' . $uri . ' last_pagename: (' . $last . ')');
 		$this->fPageName = decodeWikiName ($this,
 			preg_replace ('/\?.*$/', '', $uri));
 		if (strpos ($this->fPageName, '.php') > 0){
-			$this->fPageName = empty ($last_pagename)
-				? P_Undef : $last_pagename;
-			if (! empty ($last_pagename))
-				$this->setLocation (encodeWikiName ($this, $last_pagename));
+			$this->fPageName = empty ($last) ? P_Undef : $last;
+			if (! empty ($last))
+				$this->setLocation (encodeWikiName ($this, $last));
 		}
 		$this->fPageTitle = $this->fPageName;
 		$this->trace (TC_Init, 'setPageName: PageName: ' . $this->fPageName . TAG_NEWLINE);
