@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.9 2004/06/17 22:57:18 hamatoma Exp $
+// $Id: index.php,v 1.10 2004/06/28 22:13:12 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.0 (2004.06.13)');
+define ('PHP_ModuleVersion', '0.6.1 (2004.06.28)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -24,10 +24,6 @@ session_start();
 	$start = time();
  }
  $session_id = session_id();
- ob_start (); // ob_flush() --> index.php + guiLoginAnswer()
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<?php
 define ('C_ScriptName', 'index.php');
 
 include "config.php";
@@ -36,7 +32,6 @@ include "classes.php";
 // Actions:
 define ('A_Edit', 'edit');
 define ('A_Search', 'search');
-define ('A_Answer', 'answer');
 define ('A_PageInfo', 'pageinfo');
 define ('A_ShowText', 'showtext');
 define ('A_Diff', 'diff');
@@ -111,18 +106,14 @@ if (! empty ($rc)) {
 }
 if ($do_login){
 		clearLoginCookie ($session);
-		ObFlush ($session);
 		baseLogin ($session, '');
 } else {
-		ob_flush ();
 		$session->trace (TC_Init, 'index.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($action)) {
 		$session->trace (TC_Init, "index.php: action: $action");
 		switch ($action){
 		case A_Edit: baseEditPage ($session, null); break;
 		case A_Search:	baseSearch ($session, ''); break;
-		case A_NewThread: basePosting ($session, '', C_New); break;
-		case A_Answer: basePosting ($session, '', C_New); break;
 		case A_PageInfo: basePageInfo ($session); break;
 		case A_ShowText: guiShowPageById ($session, $page_id, $text_id); break;
 		case A_Diff: baseDiff ($session); break;
@@ -168,6 +159,7 @@ if ($do_login){
 			guiShowPageById ($session, $page_id, null);
 		else {
 			$session->trace (TC_Warning, PREFIX_Warning . 'index.php: Nichts gefunden');
+			$session->SetLocation (P_Home);
 			baseHome ($session);
 		}
 	}
@@ -366,7 +358,6 @@ function baseLoginAnswer (&$session) {
 			guiLogin ($session, $rc);
 		else {
 			setLoginCookie ($session, $login_user, $login_code);
-			ObFlush ($session); // ob_start() -->  index.php
 			$session->setPageName (P_Start);
 			$login_again = false;
 		}
@@ -856,10 +847,13 @@ function baseCustomStart (&$session) {
 		$session->fUserStartPage = P_Home;
 	$session->setPageName ($session->fUserStartPage);
 	if (! baseCallStandardPage ($session))
-		if (($page_id = dbPageId ($session, $session->fUserStartPage)) > 0)
+		if (($page_id = dbPageId ($session, $session->fUserStartPage)) > 0){
+			$session->SetLocation ($session->fUserStartPage);
 			guiShowPageById ($session, $page_id, null);
-		else
+		} else {
+			$session->SetLocation (P_Home);
 			guiHome ($session);
+		}
 }
 function basePageInfo (&$session) {
 	$pagename = $session->fPageName;
