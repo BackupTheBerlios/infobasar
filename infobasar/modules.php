@@ -127,7 +127,6 @@ function modUserGetData(&$session){
 function modOverview(&$session){
 	InitModules($session);
 	foreach ($session->fModules as $name => $module){
-		$session->trace (TC_X, 'modOverview: ' . $name);
 		$module->overview ($session);
 	}
 }
