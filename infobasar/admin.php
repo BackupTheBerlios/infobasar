@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.3 2004/09/22 07:13:30 hamatoma Exp $
+// $Id: admin.php,v 1.4 2004/09/22 23:30:13 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -396,6 +396,7 @@ function admMacroAnswerChange (&$session, $mode){
 	$session->trace(TC_Gui1, 'admMacroAnswerChange');
 	$id = null;
 	$macro_text = textAreaToWiki ($session, $macro_text);
+	$count = 0;
 	if (! isInt ($macro_theme))
 		$message = 'Theme nicht gültig: ' . $macro_theme;
 	elseif (empty ($macro_name))
@@ -407,7 +408,7 @@ function admMacroAnswerChange (&$session, $mode){
 		$message = 'Eintrag nicht möglich, da (Theme,Name) schon existiert';
 	elseif ($mode == C_Change
 		&& ($id = dbSingleValue ($session, 'select id from ' . dbTable ($session, T_Macro)
-		. " where theme=$macro_theme and name=$macro_name")) <= 0)
+		. " where theme=$macro_theme and name=" . dbSqlString ($session, $macro_name))) <= 0)
 		$message = 'Ändern nicht möglich, da (Theme, Name) nicht existiert';
 	else {
 		$session->trace(TC_X, 'admMacroAnswerChange-2: ' . $count . " / " . $mode);

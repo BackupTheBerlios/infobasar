@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.4 2004/09/21 09:59:05 hamatoma Exp $
+// $Id: index.php,v 1.5 2004/09/22 23:30:12 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -855,7 +855,7 @@ function baseCustomStart (&$session) {
 	$session->setPageName ($session->fUserStartPage);
 	if (! baseCallStandardPage ($session))
 		if (($page_id = dbPageId ($session, $session->fUserStartPage)) > 0){
-			$session->SetLocation (encodeWikiName ($session->fUserStartPage));
+			$session->SetLocation (encodeWikiName ($session, $session->fUserStartPage));
 			guiShowPageById ($session, $page_id, null);
 		} else {
 			$session->SetLocation (P_Home);

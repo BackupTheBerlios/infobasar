@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.5 2004/09/21 19:45:51 hamatoma Exp $
+// $Id: util.php,v 1.6 2004/09/22 23:30:13 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -255,8 +255,7 @@ function writeTable ($line, &$status) {
 }
 function writeTableHeader ($line, &$status) {
 	$status->trace (TC_Util3, "writeTableHeader: $line");
-	if ($status->fOpenTable)
-		$status->finishTable ();
+	$status->stopTable ();
 	$status->startTable ();
 	$cols = explode ('|', substr ($line, 2));
 	echo '<tr>';

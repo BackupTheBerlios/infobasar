@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.5 2004/09/22 07:13:30 hamatoma Exp $
+// $Id: classes.php,v 1.6 2004/09/22 23:30:13 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -584,14 +584,17 @@ class LayoutStatus {
 		$this->fSession->trace (TC_Layout2 + TC_Formating, "changeOrderedListLevel");
 		$this->changeListLevel ($val, $this->fOrderedListLevel, 'ol');
 	}
-	function stopParagraph () {
-		$this->fSession->trace (TC_Layout1 + TC_Formating, "stopParagraph");
-		$this->changeUListLevel (0);
-		$this->changeOrderedListLevel (0);
+	function stopTable () {
 		if ($this->fOpenTable){
 			$this->fOpenTable = false;
 			echo "</table>\n";
 		}
+	}
+	function stopParagraph () {
+		$this->fSession->trace (TC_Layout1 + TC_Formating, "stopParagraph");
+		$this->changeUListLevel (0);
+		$this->changeOrderedListLevel (0);
+		$this->stopTable();
 		if ($this->fOpenParagraph) {
 			$this->fOpenParagraph = false;
 			echo "</p>\n";
