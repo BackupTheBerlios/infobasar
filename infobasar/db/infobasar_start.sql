@@ -1,18 +1,26 @@
-# $Id: infobasar_start.sql,v 1.10 2005/01/13 03:29:38 hamatoma Exp $
+# $Id: infobasar_start.sql,v 1.11 2005/01/17 02:21:49 hamatoma Exp $
 # Initialisierung der InfoBasar-Datenbank
 #
-# phpMyAdmin SQL Dump
-# version 2.5.5-rc1
-# http://www.phpmyadmin.net
+# DB-Scheme-Version: 1.0 (vom 2004.04.01)
+# DB-Base-Content-Version: 1.3 vom (2005.01.14)
 #
-# Host: localhost
-# Erstellungszeit: 24. April 2004 um 00:31
-# Server Version: 4.0.17
-# PHP-Version: 4.3.3
+# Reservierte Makro-Praefix: base:
+#
+# Hinweis: Die Skin-Daten (Oberflaeche) sind in base_skin.sql
 # 
-# Datenbank: infobasar
-# 
-#CREATE DATABASE infobasar;
+# Aenderungen:
+#
+# DB-Content-Version: 1.3 (vom 2005.01.14)
+# design_start.sql in base_skin.sql umbenannt
+# Aus skin_start.sql (zurueck-)verlagert: (Makros):
+#     base:BaseModule forum:ForumModule base:ScriptBase base:BasarName 
+#     base:Webmaster base:DBSchemaVersion base:DBBaseContentVersion base:DBExtensions
+#
+# DB-Content-Version: 1.2 (vom 2005.01.11)
+# Skin-Daten ausgelagert in design_start.sql (jetzt base_skin.sql).
+#
+
+# Irrelevant fuer install.php:
 USE InfoBasar;
 
 
@@ -116,6 +124,16 @@ CREATE TABLE infobasar_macro (
   description varchar(255) default NULL,
   PRIMARY KEY  (id)
 ) TYPE=MyISAM AUTO_INCREMENT=10;
+# Hinweis: Die Design-spezifischen Daten stehen in design_start.sql
+
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'base:BaseModule', 'PHP-Datei Basismodul', '/index.php/');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'forum:ForumModule', 'PHP-Datei Forumsmodul', '/forum.php/');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'base:ScriptBase', 'Pfad zur PHP-Datei', '/');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'base:BasarName', 'Wird in Titelzeile angezeigt', 'InfoBasar');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'base:Webmaster', 'EMail-Adresse des Webmasters', 'hamatoma (AT) berlios (DOT) de');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'base:DBSchemaVersion', 'Version der DB-Struktur', '1.0 (2004.04.15)');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'base:DBBaseContentVersion', 'DB-Basisinhalt-Version', '1.1 (2005.01.13)');
+INSERT INTO infobasar_macro (theme,name,description,value) VALUES (1, 'base:DBExtensions', 'DB-Erweiterungen, mit ; getrennt', ';minimal.skin;PHPWiki.skin;');
 
 # --------------------------------------------------------
 
