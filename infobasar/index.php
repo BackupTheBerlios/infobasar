@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.7 2004/10/13 22:22:36 hamatoma Exp $
+// $Id: index.php,v 1.8 2004/10/22 09:09:23 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.5 (2004.09.20)');
+define ('PHP_ModuleVersion', '0.6.5.2 (2004.10.23)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -94,7 +94,6 @@ if (isset ($session_no) && $session_no > 0){
 if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	&& dbCheckUser ($session, $user, $code) == ''){
 	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
-	$session->trace (TC_X, 'index.php: Cookie erfolgreich gelesen. User: ' . $session_user);
 }
 $rc = dbCheckSession ($session);
 $do_login = false;
@@ -140,7 +139,9 @@ if ($do_login){
 			baseNewPageReference ($session);
 		else if (isset ($last_refresh))
 			baseLastChanges ($session);
-		else if (isset ($alterpage_insert))
+		else if (isset ($alterpage_insert) 
+			|| isset ($alterpage_appendtemplate)
+			|| isset ($alterpage_cancel))
 			baseAlterPageAnswer ($session, C_New);
 		elseif (isset ($alterpage_changecontent))
 			baseAlterPageAnswer ($session, C_Change);
@@ -221,8 +222,7 @@ function baseEditPage (&$session, $message) {
 	if (! isset ($edit_pageid)) {
 		list ($edit_pageid, $edit_texttype) = dbGetRecordByClause ($session, T_Page,
 			'id,type', 'name=' . dbSqlString ($session, $session->fPageName));
-		$edit_textidpred = dbGetValueByClause ($session, T_Text,
-			'max(id)', 'page=' . (0+$edit_pageid));
+		$edit_textidpred = dbGetLastText ($session,$edit_pageid);
 		list ($edit_content, $edit_changedat, $edit_changedby)
 			= dbGetRecordById ($session, T_Text, $edit_textidpred,
 				'text,createdat,createdby');
@@ -282,8 +282,7 @@ function baseEditPageAnswerSave (&$session)
 
 	$session->trace (TC_Gui1, 'baseEditPageAnswerSave');
 	$edit_content = textAreaToWiki ($session, $edit_content);
-	$new_textid = dbGetValueByClause ($session, T_Text,
-		'max(id)', 'page=' . $edit_pageid);
+	$new_textid = dbGetLastText ($session, $edit_pageid);
 	$message = '';
 	if ($new_textid > $edit_textidpred 
 		&& (! isset ($edit_textid) || $new_textid > $edit_textid))
@@ -581,7 +580,7 @@ function baseHome (&$session) {
 		echo "</td><td>Startseite, wie sie in den benutzerspezifischen Einstellungen festgelegt ist</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_Info);
 		echo '</td><td>Information &uuml;ber den InfoBasar</td></tr>';
-		echo "\n<td><strong>Wiki- und HTML-Seiten:</strong></td></tr><tr><td>";
+		echo "\n<td><br><strong>Wiki- und HTML-Seiten:</strong></td></tr><tr><td>";
 		guiInternLink ($session, encodeWikiName ($session, 'StartSeite'), 'StartSeite');
 		echo "</td><td>Wiki-Startseite</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_LastChanges);
@@ -600,7 +599,8 @@ function baseHome (&$session) {
 function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 	global $alterpage_name, $alterpage_content, $textarea_width,
 		$textarea_height, $alterpage_content, $alterpage_mime,
-		$alterpage_lastmode, $alterpage_preview;
+		$alterpage_lastmode, $alterpage_preview, 
+		$alterpage_template, $alterpage_appendtemplate;
 	$session->trace (TC_Gui1, 'baseAlterPage');
 	if ($type != M_Undef)
 		$alterpage_mime = $type;
@@ -625,21 +625,34 @@ function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 		guiFormatPage ($session, $alterpage_mime, $alterpage_content);
 		guiLine (1);
 	}
-
+	if (isset ($alterpage_appendtemplate)){
+		$page_id = dbPageId ($session,  $alterpage_template);
+		if ($page_id > 0){
+			$id = dbGetLastText ($session, $page_id);
+			$alterpage_content .= dbSingleValue ($session, 'select text from '
+				. dbTable ($session, T_Text) . ' where id=' . (0+$id)); 
+		}
+	}
 	guiStartForm ($session, 'alterpage');
 	guiHiddenField ('alterpage_lastmode', $mode);
 	echo "<table border=\"0\">\n<tr><td>Name:</td><td>";
 	guiTextField ('alterpage_name', $alterpage_name, 64, 64);
 	if ($mode == C_Change)
 		guiButton ('alterpage_changepage', 'Seite laden');
-	if ($type == M_Wiki)
-		;
 	echo "</td></tr>\n<tr><td>Typ:</td><td>";
 	if ($mode == C_New && $type == M_Undef)
 		guiComboBox ('alterpage_mime', array (M_Wiki, M_HTML), null);
 	else {
 		echo $alterpage_mime;
 		guiHiddenField ($session, 'alterpage_mime', $alterpage_mime);
+	}
+	if ($mode == C_New){
+		echo "</td></tr>\n<tr><td>Seitenvorlage:</td><td>";
+		$templates = dbColumnList ($session, T_Page, 'name', 
+			'name like ' . dbSqlString ($session, 'Vorlage%'));
+		guiComboBox('alterpage_template', $templates, null);
+		echo (' ');
+		guiButton ('alterpage_appendtemplate', 'Vorlage einkopieren');
 	}
 	echo "</td></tr>\n<tr><td>Inhalt:</td><td>";
 	guiTextArea ("alterpage_content", $alterpage_content,
@@ -665,7 +678,8 @@ function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 }
 function baseNewPageReference (&$session) {
 	global $alterpage_name, $alterpage_content, $textarea_width, $alterpage_mime,
-		 $textarea_height, $alterpage_content, $alterpage_insert;
+		 $textarea_height, $alterpage_content, $alterpage_insert, 
+		 $alterpage_appendtemplate;
 	$session->trace (TC_Gui1, 'baseNewPageReference');
 	$alterpage_name = substr ($session->fPageName, 1);
 	if ( ($page = dbPageId ($session, $alterpage_name)) > 0)
@@ -681,43 +695,53 @@ function baseNewPageReference (&$session) {
 function baseAlterPageAnswer (&$session, $mode){
 	global $alterpage_name, $alterpage_content, $textarea_width,
 		 $textarea_height, $alterpage_content, $alterpage_insert,
-		 $alterpage_preview, $alterpage_lastmode, $alterpage_mime;
+		 $alterpage_preview, $alterpage_lastmode, $alterpage_mime,
+		 $alterpage_appendtemplate, $alterpage_cancel;
 	$session->trace (TC_Gui1, 'baseAlterPageAnswer');
-	$alterpage_name = normalizeWikiName ($session, $alterpage_name);
-	if ($mode == C_LastMode)
-		$mode = $alterpage_lastmode;
-	$len = strlen ($alterpage_content);
-	$message = null;
-	$alterpage_content = textAreaToWiki ($session, $alterpage_content);
-	$alterpage_content = extractHtmlBody ($alterpage_content);
-	if (isset ($alterpage_preview))
-		;
-	elseif (empty ($alterpage_name))
-		$message = '+++ kein Seitenname angegeben';
-	elseif (dbSingleValue ($session,
-			'select count(*) from ' . dbTable ($session, T_Page)
-			. ' where name=' . dbSqlString ($session, $alterpage_name)) > 0)
-		$message = '+++ Seite existiert schon: ' . $alterpage_name;
-	else {
-		$read_group = 0;
-		$write_group = 0;
-		if (empty ($alterpage_mime))
-			$alterpage_mime = TT_Wiki;
-		$page = dbInsert ($session, T_Page,
-			'name,type,createdat,changedat,readgroup,writegroup',
-			dbSqlString ($session, $alterpage_name) .',' . dbSqlString ($session, $alterpage_mime)
-			. ',now(),now(),' . $read_group . ',' . $write_group);
-		dbInsert ($session, T_Text, 'page,type,text,createdby,createdat,changedat',
-			$page
-			. "," . dbSqlString ($session, $alterpage_mime)
-			. ',' . dbSqlString ($session, $alterpage_content)
-			. ',' . dbSqlString ($session, $session->fUserName)
-			. ',now(),now()');
-	}
-	$message2 = $len == strlen ($alterpage_content)
-		? '' : 'Es wurde der Rumpf (body) extrahiert.';
-	$session->SetLocation (encodeWikiName ($session, $alterpage_name));
-	if ($message != null || isset ($alterpage_preview))
+	if (! isset ($alterpage_cancel)) {
+		$alterpage_name = normalizeWikiName ($session, $alterpage_name);
+		if ($mode == C_LastMode)
+			$mode = $alterpage_lastmode;
+		$len = strlen ($alterpage_content);
+		$message = null;
+		$alterpage_content = textAreaToWiki ($session, $alterpage_content);
+		$alterpage_content = extractHtmlBody ($alterpage_content);
+		if (isset ($alterpage_preview) || isset ($alterpage_appendtemplate))
+			;
+		elseif (empty ($alterpage_name))
+			$message = '+++ kein Seitenname angegeben';
+		elseif (dbSingleValue ($session,
+				'select count(*) from ' . dbTable ($session, T_Page)
+				. ' where name=' . dbSqlString ($session, $alterpage_name)) > 0)
+			$message = '+++ Seite existiert schon: ' . $alterpage_name;
+		else {
+			$read_group = 0;
+			$write_group = 0;
+			if (empty ($alterpage_mime))
+				$alterpage_mime = TT_Wiki;
+			$page = dbInsert ($session, T_Page,
+				'name,type,createdat,changedat,readgroup,writegroup',
+				dbSqlString ($session, $alterpage_name) .',' . dbSqlString ($session, $alterpage_mime)
+				. ',now(),now(),' . $read_group . ',' . $write_group);
+			dbInsert ($session, T_Text, 'page,type,text,createdby,createdat,changedat',
+				$page
+				. "," . dbSqlString ($session, $alterpage_mime)
+				. ',' . dbSqlString ($session, $alterpage_content)
+				. ',' . dbSqlString ($session, $session->fUserName)
+				. ',now(),now()');
+		}
+		$message2 = $len == strlen ($alterpage_content)
+			? '' : 'Es wurde der Rumpf (body) extrahiert.';
+		# $session->SetLocation (encodeWikiName ($session, $alterpage_name));
+	} // ! isset ($alterpage_cancel)
+	if (isset ($alterpage_cancel)){
+		if (! empty ($alterpage_name) && dbPageId ($session, $alterpage_name) > 0)
+			guiShowPage ($session, $alterpage_mime, $alterpage_name,
+				$alterpage_name);
+		else
+			baseHome ($session);
+	} elseif ($message != null || isset ($alterpage_preview)
+		|| isset ($alterpage_appendtemplate))
 		baseAlterPage ($session, $mode, $message, $message2, $alterpage_mime);
 	else
 		guiShowPage ($session, $alterpage_mime, $alterpage_name,
