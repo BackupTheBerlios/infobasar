@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.3 2004/05/31 23:14:34 hamatoma Exp $
+// $Id: admin.php,v 1.4 2004/06/02 00:03:25 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -28,7 +28,8 @@ define ('A_Param', '!admparam');
 define ('A_Forum', '!admforum');
 define ('A_Backup', '!admbackup');
 define ('A_ExportPages', '!exportpages');
-define ('A_PhpInfo', '!adminfo');
+define ('A_Options', '!admoptions');
+define ('A_PHPInfo', '!adminfo');
 // Dateinamen
 define ('FN_PageExport', 'exp_pages.sql');
 
@@ -72,7 +73,8 @@ if (! empty ($rc)) {
 		case A_Forum: admForum($session, '', C_New); break;
 		case A_Backup: admBackup ($session, true, null); break;
 		case A_ExportPages: admExportPages ($session, null); break;
-		case A_PhpInfo: admInfo ($session); break;
+		case A_Options: admOptions ($session, null); break;
+		case A_PHPInfo: admInfo ($session); break;
 		default:
 			if (substr ($session->fPageName, 0, 1) == ".")
 				guiNewPageReference ($session);
@@ -108,7 +110,7 @@ function init (&$session, $dbType) {
 		+ 0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2
 		+ TC_Error + TC_Warning + TC_X;
 	$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
-	#$session->fTraceFlags = TC_All;
+	# $session->fTraceFlags = TC_All;
 
 	// MySQL
 	if ($dbType == 'MySQL') {
@@ -129,6 +131,7 @@ function admHome (&$session){
 	echo '<p>';	guiInternLink ($session, A_Forum, "Forumsverwaltung"); echo '</p>';
 	echo '<p>';	guiInternLink ($session, A_ExportPages, "Seitenexport"); echo '</p>';
 	echo '<p>';	guiInternLink ($session, A_Backup, "Datensicherung"); echo '</p>';
+	echo '<p>';	guiInternLink ($session, A_Options, "Einstellungen"); echo '</p>';
 	echo '<p>';	guiInternLink ($session, A_PHPInfo, "PHP-Info"); echo '</p>';
 	// echo 'Session-Id: ' . $session_id . ' User: ' . $session_user . '<br>';
 	guiFinishBody ($session, null);
@@ -159,7 +162,7 @@ function admParam (&$session, $message){
 	echo '</table>' . "\n";
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
-	guiStartForm ($session, "param");
+	guiStartForm ($session, "param", A_Param);
 	echo "<table border=\"0\">\n<tr><td>Id:</td><td>";
 	echo $param_id;
 	guiHiddenField ("param_id", $param_id);
@@ -243,7 +246,7 @@ function admForum (&$session, $message, $mode){
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiHeadLine ($session, 1, 'Forumsverwaltung');;
-	guiStartForm ($session, "forum");
+	guiStartForm ($session, "forum", A_Forum);
 	guiHiddenField ('forum_id', $forum_id);
 	guiShowTable ($session, "<h2>Existierende Foren</h2>\n",
 		array ('Id', 'Name', 'Beschreibung'),
@@ -355,7 +358,7 @@ function admExportPages (&$session, $message) {
 	if (isset ($export_exists))
 		guiParagraph ($session, 'Exportdatei: '
 			. guiInternLinkString ($session, $export_exists, null), false);
-	guiStartForm ($session, "export");
+	guiStartForm ($session, "export", A_ExportPages);
 	guiHiddenField ('export_exists', $export_exists);
 	echo '<table border="0">';
 	echo '<tr><td>Namensmuster:</td><td>';
@@ -494,7 +497,7 @@ function admBackup (&$session, $with_header, $message){
 		$backup_file = $session->fDbPrefix
 			. strftime ("_%Y_%m_%d") . '.sql';
 	guiHeadLine ($session, 1, 'Backup');;
-	guiStartForm ($session, "backup");
+	guiStartForm ($session, "backup", A_Backup);
 	// guiHiddenField ('forum_id', $forum_id);
 	echo "<table border=\"0\">\n";
 	echo "<tr><td>Dateiname:</td><td>";
@@ -577,6 +580,36 @@ function admBackupAnswer (&$session){
 	}
 	admBackup ($session, false, $message);
 }
+function admOptions (&$session, $message){
+	global $opt_basarname, $opt_save, $upload_go, $upload_file;
+	$session->trace (TC_Init, 'admOptions');
+	guiHeader ($session, 'Einstellungen');
+	guiHeadline ($session, 1, 'Allgemeine Einstellungen');
+	if (isset ($upload_go))
+		$message = guiUploadFileAnswer ($session, PATH_DELIM . 'pic' . PATH_DELIM, 
+			'logo.png');
+	if (! empty ($message))
+		guiParagraph ($session, $message, false);
+
+	guiHeadline ($session, 2, 'Texte:');
+	if (empty ($opt_basarname))
+		$opt_basarname = $session->fMacroBasarName;
+	if (empty ($opt_css))
+		$opt_css = dbGetText ($session, Th_CSSFile);
+	guiStartForm ($session, 'Form', A_Options);
+	echo '<table border="0">';
+	echo '<tr><td>Basarname:</td><td>';
+	guiTextField ('opt_basarname', $opt_basarname, 32, 128);
+	echo '</td></tr>' . "\n";
+	echo '<tr><td></td><td>';
+	guiButton ('opt_save', '&Auml;ndern');
+	echo '</td></tr></table>' . "\n";
+	guiFinishForm ($session);
+	guiHeadline ($session, 2, 'Dateien:');
+	guiUploadFile ($session, 'Logo:', A_Options);
+	guiFinishBody ($session, null);
+}
+
 function admInfo (&$session) {
 	$session->trace (TC_Gui1, 'admInfo');
 	phpinfo ();
