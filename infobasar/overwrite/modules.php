@@ -41,12 +41,14 @@ class ModuleForum {
 	}
 	function overview(&$session){
 		$session->trace (TC_Gui3, 'forum.overview');
-		echo "<tr><td><br><strong>Modul Foren:</strong></td>\n<td> </td></tr><tr><td>";
-		guiInternLink ($session, 'forumhome', 'Forenübersicht', 'forum');
-		echo "</td><td>Auflistung der existierenden Foren</td></tr>\n";
-		echo '<tr><td>';
-		guiInternLink ($session, 'forumsearch', 'Forensuche', 'forum');
-		echo "</td><td>Suche in den Foren</td></tr>\n";
+		outTableRecord();
+		outTableCell (' ');
+		outTableCellStrong(tagNewline () . 'Modul Foren');
+		outTableRecordEnd();
+		outTableRecordInternLink ($session, 'Auflistung der existierenden Foren.',
+			'forumhome', 'Forenübersicht', 'forum');
+		outTableRecordInternLink ($session, 'Suche in den Foren.',
+			'forumsearch', 'Forensuche', 'forum');
 	}
 } // class module_forum
 // EndOfClasses
