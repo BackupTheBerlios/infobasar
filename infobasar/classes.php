@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.33 2005/01/17 02:26:29 hamatoma Exp $
+// $Id: classes.php,v 1.34 2005/03/14 20:25:48 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -671,6 +671,10 @@ class Session {
 		$again = ($pos = strpos ($text, Macro_Char)) >= 0 && is_int ($pos);
 			
 		// Mehrfache Durchlaeufe, da Macros selber Macros enthalten koennen:
+		if (strpos ($text, "<div>Titel:") > 0){
+			$this->trace (TC_Session3, "replaceMacrosNoHTML-1:" . $this->fMacroPattern);
+		}
+		
 		while ($again) {
 			$again = false;
 			if (getPos ($text, Macro_Char) >= 0) {
@@ -678,15 +682,27 @@ class Session {
 				$old_text = $text;
 				$text = '';
 				// $this->fMacroPattern = '/^((\s|.)*?)\[(macro1|...macroX)\]/';
+				$no_found = 0;
+				$time = microtime();
 				while (strlen ($old_text) > 2 
 						&& preg_match ($this->fMacroPattern, $old_text, $match)){
+					if (microtime() - $time > 0.2)
+						$this->trace (TC_Session3, 'replaceMacrosNoHTML-X2: ' . $this->fMacroPattern . " OldText: " . $old_text);
+					$time = microtime();
 					$this->trace (TC_Session3, 'replaceMacrosNoHTML-3: ' . dumpArray ($match, 'match', 1));
 					$again = true;
 					$text .= $match [1] . $this->getMacro ($match [3]);
-					$this->trace (TC_Session3, 'replaceMacrosNoHTML-4: ');
+					$this->trace (TC_Session3, 'replaceMacrosNoHTML-4: ' . $old_text);
 					$old_text = substr ($old_text, strlen ($match [1]) + strlen ($match [3]) + 2);
-				}
-				$this->trace (TC_Session3, 'replaceMacrosNoHTML-5: ');
+					if (++$no_found > 20){
+						$this->trace (TC_WARNING, "mehr als 20 Makros");
+						$again = false;
+						break;
+					}
+				} // while strlen() > 2...
+				if (microtime() - $time > 0.2)
+					$this->trace (TC_Session3, 'replaceMacrosNoHTML-X3: ' . $this->fMacroPattern . " OldText: " . $old_text);
+				$this->trace (TC_Session3, 'replaceMacrosNoHTML-5: ' . $no_found . " #: " . count ($match));
 				$text .= $old_text;
 				if (++$count > 6) {
 					$this->trace (TC_Session3, 'replaceMacrosNoHTML-6: ');
@@ -695,9 +711,9 @@ class Session {
 					break;
 				}
 				$this->trace (TC_Session3, 'replaceMacrosNoHTML-7: ');
-			}
+			} // getPos (MACRO_CHAR) > 0
 			$this->trace (TC_Session3, 'replaceMacrosNoHTML-8: ');
-		}
+		} // while $again
 		$this->trace (TC_Session2, 'replaceMacrosNoHTML-e: ' . $text);
 		return $text;
 	}
