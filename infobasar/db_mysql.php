@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.13 2004/12/31 01:32:01 hamatoma Exp $
+// $Id: db_mysql.php,v 1.14 2005/01/05 05:25:56 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -103,7 +103,7 @@ function dbFirstRecord (&$session, $query) {
 		$session->trace (TC_Query, "Erster Wert: $row[0]");
 	}
 	return $row;
-} // dbFirstRow
+}
 function dbGetTableInfo (&$session, $table,
 		&$names, &$types, &$is_string, &$max_lengths, &$ix_primary) {
 	$ok = true;
