@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.11 2004/12/22 18:55:42 hamatoma Exp $
+// $Id: install.php,v 1.12 2005/01/06 12:01:34 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -138,7 +138,7 @@ class Session {
 		$this->fPageChangedAt = dbSqlDateToText ($this, $date);
 		$this->fPageChangedBy = $by;
 	}
-};
+}
 $session = new Session ($start_time);
 
 $session->fTraceFlags
@@ -161,17 +161,17 @@ elseif (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/
 		. "<br>\nScriptBase: " . $session->fScriptBase . "<br>\nVerzeichnis: "
 		. substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8));
 else {
-	if (! isset ($inst_step))
-		$inst_step = 0;
-	if (isset ($inst_next))
-		$inst_step++;
-	elseif (isset ($inst_last))
-		$inst_step--;
-	if ($inst_step > 1)
+	if (! isset ($_REQUEST['inst_step']))
+		$_REQUEST ['inst_step'] = 0;
+	if (isset ($_REQUEST ['inst_next']))
+		$_REQUEST ['inst_step']++;
+	elseif (isset ($_REQUEST ['inst_last']))
+		$_REQUEST ['inst_step']--;
+	if ($_REQUEST ['inst_step'] > 1)
 		include ('..' . PATH_DELIM . 'config.php');
-	switch ($inst_step){
+	switch ($_REQUEST ['inst_step']){
 	case 2: 
-		if (isset ($inst_populate))
+		if (isset ($_REQUEST ['inst_populate']))
 			instDBAnswer ($session);
 		else
 			instDB ($session); 
@@ -183,7 +183,8 @@ else {
 		instExit ($session);
 		break;
 	case 1:
-		if (isset ($config_save) || isset ($config_access) || isset ($config_createdb))
+		if (isset ($_REQUEST ['config_save']) || isset ($_REQUEST ['config_access']) 
+				|| isset ($_REQUEST ['config_createdb']))
 			instConfigFileAnswer ($session);
 		else
 			instConfigFile ($session, null);
@@ -221,7 +222,6 @@ function getPos ($haystock, $needle){
 	return is_int ($rc) ? $rc : -1;
 }
 function instArchive (&$session, $message =  null) {
-	global $archive_dir;
 	$session->trace (TC_Init, 'instArchive');
 	guiHeader ($session, 'Schritt 0');
 	guiHeadline ($session, 1, 'Datei- und Archivverwaltung');
@@ -248,10 +248,10 @@ function instArchive (&$session, $message =  null) {
 		
 	guiStartForm ($session, 'Form');
 	guiHiddenField ('inst_step', 0);
-	guiHiddenField ('archive_name', $archive_name);
+	guiHiddenField ('archive_name', null);
 	
 	$path = $session->fFileSystemBase . PATH_DELIM;
-	if ($archive_dir == CHECKBOX_TRUE){
+	if ($_POST ['archive_dir'] == CHECKBOX_TRUE){
 		$dir = opendir ($path);
 		guiHeadline ($session, 3, "Verzeichnis auf dem Server");
 		echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
@@ -295,7 +295,7 @@ function instArchive (&$session, $message =  null) {
 	}
 	echo '</table>' . "\n";
 	guiHeadline ($session, 2, 'Optionen');
-	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen', $archive_dir);
+	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen', $_POST ['archive_dir']);
 	echo ' ';
 	guiButton ('archive_show', 'Aktualisieren');
 	outNewline();
@@ -307,11 +307,9 @@ function instArchive (&$session, $message =  null) {
 	guiFinishBody ($session);
 }
 function instArchiveAnswer (&$session){
-	global $archive_dir, $archive_name, $HTTP_POST_VARS, 
-		$archive_uploadfile, $archive_upload, $archive_strip;
 	$session->trace (TC_Init, "instArchiveAnswer");
 	$message = null;
-	if (isset ($archive_upload)){
+	if (isset ($_POST ['archive_upload'])){
 		$name =  $_FILES['archive_uploadfile']['name'];
 		if (move_uploaded_file($_FILES['archive_uploadfile']['tmp_name'],
 			$session->fFileSystemBase . PATH_DELIM . $name)) {
@@ -320,7 +318,7 @@ function instArchiveAnswer (&$session){
 			$message = 'Problem beim Hochladen von ' . $name . ': ' 
 				. $_FILES['archive_uploadfile']['error'];
 		}
-	} elseif (isset ($archive_strip)){
+	} elseif (isset ($_POST ['archive_strip'])){
 		$dir_name = preg_replace ('|/[^/]+$|', '', $session->fFileSystemBase);
 		$dir = opendir ($dir_name);
 		while ($file = readdir ($dir)) {
@@ -336,9 +334,9 @@ function instArchiveAnswer (&$session){
 			global $$ref;
 			if (isset ($$ref)){
 				$ref = 'archive_file' . $no;
-				$archive_name = $HTTP_POST_VARS[$ref];
-				if (! ($message = extractFromArchive ($session, $archive_name, false, "*")))
-					$message = "Archiv $archive_name wurde entpackt";
+				$name = $_POST[$ref];
+				if (! ($message = extractFromArchive ($session, $name, false, "*")))
+					$message = "Archiv $name wurde entpackt";
 				break;
 			}
 		}
@@ -424,7 +422,7 @@ function instConfigFileAnswer (&$session){
 		}
 	} elseif (isset ($config_access)) {
 		checkDB ($session, $message);
-	} elseif (isset ($config_save)) {
+	} elseif (isset ($_REQUEST ['config_save'])) {
 		if (empty ($db_server))
 			$message = '+++ Kein Server angegeben. Vielleicht "localhost"?';
 		elseif (empty ($db_user))
@@ -464,7 +462,7 @@ function instConfigFileAnswer (&$session){
 				"$name wurde gespeichert.");
 			
 		}
-	} // config_save
+	}
 	instConfigFile ($session, $message);
 }
 function instDB (&$session, $message =  null) {
@@ -494,17 +492,14 @@ function instDB (&$session, $message =  null) {
 	guiFinishBody ($session);
 }
 function instDBAnswer (&$session){
-	global $inst_populate;
-	
 	$session->trace (TC_Init, 'instDBAnswer');
 	$message = '';
-	if (isset ($inst_populate)) {
+	if (isset ($_POST ['inst_populate'])) {
 		$message = populate ($session, instGetSqlFile ($session));
 	}
 	instDB ($session, $message);
 }
 function instFinish (&$session, $message = null){
-	global $inst_populate;
 	$session->trace (TC_Init, 'instFinish');
 	guiHeader ($session, 'Schritt 3');
 	guiHeadline ($session, 2, 'Installation beenden');
