@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.20 2005/01/14 03:09:58 hamatoma Exp $
+// $Id: db_mysql.php,v 1.21 2005/01/17 02:27:26 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -508,13 +508,40 @@ function dbGetAndStoreMacroPattern (&$session){
 	if (empty ($pattern)){
 		$row = dbFirstRecord ($session,
 				'select name from ' . dbTable ($session, T_Macro)
-				. ' where theme=' . Theme_All . ' or theme=' . ($theme+0));
+				. ' where theme=' . Theme_All . ' or theme=' . ($theme+0) . ' order by name');
+		$last_var = null;
+		$open_parenthesis = false;			
 		while ($row) {
-			$new = '|' . $row [0];
+			$pos = strpos ($row [0], ':');
+			if ($pos <= 0 ){
+				$val = $row [0];
+				$var = null;
+			} else {
+				$var = substr ($row [0], 0, $pos + 1);
+				$val = substr ($row [0], $pos + 1);
+			}
+			$session->trace (TC_Db3, 'dbGetAndStoreMacroPattern-2: ' . $pos . ' ' . $var . ' / ' . $val);
+			if ($var != $last_var) {
+				$session->trace (TC_Db2, 'dbGetAndStoreMacroPattern-3: ');
+				if ($open_parenthesis){
+					$session->trace (TC_Db2, 'dbGetAndStoreMacroPattern-4: ');
+					$pattern .= ')';
+					$open_parenthesis = false;
+				}
+				$last_var = $var;
+				if (! empty ($var)){
+					$session->trace (TC_Db2, 'dbGetAndStoreMacroPattern-5: ' . $pattern);
+					$val = $var . '(' . $val;
+					$open_parenthesis = true;
+				}
+			}
+			$new = '|' . $val;
 			if (getPos ($pattern, $new . '|') < 0)
 				$pattern .= $new;
 			$row = dbNextRecord ($session);
 		}
+		if ($open_parenthesis)
+			$pattern .= ')';
 		$id = dbSingleValue ($session, 'select id from ' . dbTable ($session, T_Param)
 			. ' where theme=' . (0+$theme) . ' and pos=' . Th_MacroPattern);
 		if ($id > 0){
