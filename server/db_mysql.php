@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.2 2004/05/23 22:06:58 hamatoma Exp $
+// $Id: db_mysql.php,v 1.3 2004/05/26 22:17:43 hamatoma Exp $
 
 function dbOpen (&$session) {
 	$session->trace (TC_Db1, 'dbOpen');
@@ -209,7 +209,7 @@ function dbCheckUser (&$session, $user, $code) {
 		elseif ($fields [1] == '')
 			$rc = 0;
 		else {
-			$code = strrev (crypt ($code, $user));
+			$code = encryptPassword ($session, $user, $code);
 			$rc = strcmp ($code, $fields [1]) == 0 ? 0 : 2;
 		}
 	} // $count != 0
@@ -230,7 +230,7 @@ function dbCheckUser (&$session, $user, $code) {
 }
 function dbUserAdd (&$session, $user, $code, $rights, $locked,
 	$theme, $width, $height,$maxhits, $postingsperpage, $threadsperpage,
-	$startpage) {
+	$startpage, $email) {
 	$session->trace (TC_Db1, 'dbUserAdd');
 	$theme = 10; $width = max ($width, 10); $height = max ($height, 1);
 	$maxhits = max ($maxhits, 1); $postingsperpage = max ($postingsperpage, 2);
@@ -238,11 +238,11 @@ function dbUserAdd (&$session, $user, $code, $rights, $locked,
 	if (empty ($postingsperpage)) $postingsperpage = 10;
 	return dbInsert ($session, T_User,
 		'name,createdat,code,rights,locked,theme,width,height,maxhits,'
-			. 'postingsperpage,threadsperpage,startpage',
+			. 'postingsperpage,threadsperpage,startpage,email',
 		dbSqlString ($session, $user) . ',now(),' . dbSqlString ($session, $code)
 		. ',' . dbSqlString ($session, $rights) . ',' . dbSqlBool ($session, $locked)
 		. ",$theme,$width,$height,$maxhits,$postingsperpage,$threadsperpage,"
-		. dbSqlString ($session, $startpage));
+		. dbSqlString ($session, $startpage) . ',' . dbSqlString ($session, $email));
 }
 function dbCheckSession (&$session) {
 	global $session_id, $session_user, $REQUEST_URI, $SCRIPT_NAME, $SCRIPT_FILENAME;

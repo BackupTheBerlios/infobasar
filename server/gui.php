@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.2 2004/05/23 22:10:22 hamatoma Exp $
+// $Id: gui.php,v 1.3 2004/05/26 22:19:21 hamatoma Exp $
 // --- Allgemeine Funktionen --------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
 	echo "<input type=\"$type\" name=\"$name\"";
@@ -471,14 +471,14 @@ function guiEditPageAnswerSave (&$session)
 }
 
 function guiLogin (&$session, $message) {
-	global $login_user;
+	global $login_user, $login_email;
 
 	guiStandardHeader ($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader,
 		null);
 	guiStartForm ($session, "login");
-	if ($message != "") {
-		echo '<p><b>+++ Fehler: '; echo $message;
-		echo "</b></p>\n";
+	if (! empty ($message)) {
+		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
+		guiParagraph ($session, $message, false);
 	}
 	echo "<table border=\"0\">\n<tr><td>Benutzername:</td><td>";
 	guiTextField ("login_user", $login_user, 32, 32);
@@ -486,8 +486,14 @@ function guiLogin (&$session, $message) {
 	guiPasswordField ("login_code", "", 32, 32);
 	echo "</td></tr>\n<tr><td></td><td>";
 	guiButton ("but_login", "Anmelden");
-	echo ' ';
-	guiButton ("but_forget", "Neues Passwort");
+	echo "</td></tr>\n</table>\n";
+	guiLine ($session, 2);
+	guiParagraph ($session, "Passwort vergessen? ", false);
+	echo "<table border=\"0\">\n<tr><td>EMail-Adresse:</td><td>";
+	guiTextField ('login_email', $login_email, 32, 0);
+	echo "</td></tr>\n<tr><td></td><td>";
+	guiButton ('but_forget', 'Passwort ändern');
+	echo '<br/>(Das neue Passwort wird dann zugeschickt)';
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_LoginBodyEnd);
@@ -495,10 +501,28 @@ function guiLogin (&$session, $message) {
 }
 function guiLoginAnswer (&$session) {
 	$session->trace (TC_Gui1, 'guiLoginAnswer');
-	global $login_user, $login_code, $session_user, $but_forget;
+	global $login_user, $login_code, $session_user, $but_forget, $login_email;
 	if (isset ($but_forget)) {
-		sendPassword ($session, $login_user);
-		guiLogin ($session, null);
+		$message = null;
+		if (empty ($login_user))
+			$message = "+kein Benutzername angegeben";
+		elseif (empty ($login_email))
+			$message = "+keine EMail-Adresse angegeben";
+		else {
+			$row = dbSingleRecord ($session, 'select id,email from ' . dbTable ($session, T_User)
+				. ' where name=' . dbSqlString ($session, $login_user));
+			if (! $row)
+				$message = "+unbekannter Benutzer";
+			elseif (empty ($row [1]))
+				$message = "+keine EMail-Adresse eingetragen";
+			elseif (strcasecmp ($row [1], $login_email) != 0)
+				$message = "+EMail-Adresse ist nicht bekannt";
+			else {
+				sendPassword ($session, $row [0], $login_user, $login_email);
+				$message = 'Das Passwort wurde an ' . $login_email . ' verschickt';
+			}
+		}
+		guiLogin ($session, $message);
 	} else {
 		$rc = dbCheckUser ($session, $login_user, $login_code);
 		if (! empty ($rc))
@@ -509,6 +533,7 @@ function guiLoginAnswer (&$session) {
 }	
 function guiAccount (&$session, $message) {
 	global $account_user, $account_code, $account_code2, $account_rights,
+		$account_email,
 		$account_locked, $account_user2, $account_theme, $account_width,
 		$account_height, $account_maxhits, $account_postingsperpage,
 		$account_startpage, $account_startpageoffer, $account_threadsperpage;
@@ -526,9 +551,10 @@ function guiAccount (&$session, $message) {
 	if ($reload){
 		list ($id, $account_rights, $account_locked, $account_width,
 			$account_height, $account_maxhits, $account_postingsperpage,
-			$account_theme, $account_threadsperpage, $account_startpage)
+			$account_theme, $account_threadsperpage, $account_startpage,
+			$account_email)
 			= dbGetRecordByClause ($session, T_User,
-			'id,rights,locked,width,height,maxhits,postingsperpage,theme,threadsperpage,startpage',
+			'id,rights,locked,width,height,maxhits,postingsperpage,theme,threadsperpage,startpage,email',
 			'name=' . dbSqlString ($session, $account_user));
 	}
 	guiStandardHeader ($session, 'Einstellungen f&uuml;r ' . $account_user,
@@ -543,6 +569,8 @@ function guiAccount (&$session, $message) {
 	guiPasswordField ("account_code", "", 64, 32);
 	echo "</td></tr>\n<tr><td>Wiederholung:</td><td>";
 	guiPasswordField ("account_code2", "", 64, 32);
+	echo "</td></tr>\n<tr><td>EMail:</td><td>";
+	guiTextField ("account_email", $account_email, 64, 64);
 	echo "</td></tr>\n<tr><td>Rechte:</td><td>";
 	guiTextField ("account_rights", $account_rights, 64, 64);
 	echo "</td></tr>\n<tr><td>Gesperrt:</td><td>";
@@ -590,7 +618,7 @@ function guiAccount (&$session, $message) {
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
 function guiAccountAnswer(&$session, $user) {
-	global $account_user, $account_code, $account_code2, $account_rights,
+	global $account_user, $account_code, $account_code2, $account_email, $account_rights,
 		$account_locked, $account_new, $account_change, $account_name,
 		$account_other, $account_user2,  $account_theme,
 		$account_width, $account_height, $account_maxhits,
@@ -599,7 +627,7 @@ function guiAccountAnswer(&$session, $user) {
 
 	$session->trace (TC_Gui1, 'guiAccountAnswer');
 	$message = '';
-	$code = strrev (crypt ($account_code, $account_user));
+	$code = encryptPassword ($session, $account_user, $account_code);
 	$locked = dbSqlString ($session, ! empty ($account_locked));
 	if (! empty ($account_startpageoffer))
 		$account_startpage = $account_startpageoffer;
@@ -613,7 +641,7 @@ function guiAccountAnswer(&$session, $user) {
 			dbUserAdd ($session, $account_user2, $code, $session->fUserRights,
 				dbSqlString ($session, false), $account_theme, $account_width, $account_height,
 				$account_maxhits, $account_postingsperpage,
-				$account_threadsperpage, $account_startpage);
+				$account_threadsperpage, $account_startpage, $account_email);
 			$message = "Benutzer $account_user2 wurde angelegt";
 		}
 	} elseif (isset ($account_change)) {
@@ -633,7 +661,9 @@ function guiAccountAnswer(&$session, $user) {
 			. ',maxhits=' . (0 + $account_maxhits)
 			. ',postingsperpage=' . (0 + $account_postingsperpage)
 			. ',threadsperpage=' . (0 + $account_threadsperpage)
-			. ',startpage=' . dbSqlString ($session, $account_startpage) . ',';
+			. ',startpage=' . dbSqlString ($session, $account_startpage)
+			. ',email=' . dbSqlString ($session, $account_email)
+			 . ',';
 			dbUpdate ($session, T_User, $uid, $what);
 			$message = 'Daten für ' . $account_user . ' (' . $uid
 				. ') wurden geändert';
