@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.7 2004/10/14 02:47:18 hamatoma Exp $
+// $Id: db_mysql.php,v 1.8 2004/10/22 09:04:53 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -155,6 +155,9 @@ function dbInsert (&$session, $table, $idlist, $values){
 	$query = 'insert into ' . dbTable ($session, $table) 
 		. "($idlist) values ($values);";
 	$session->trace (TC_Db1 + TC_Insert, "dbInsert: $query");
+	#if (preg_match ('/TraceInsert/', $values)){
+	#	$session->backtrace ("dbInsert");
+	#}
 	$rc = null;
 	if (!mysql_query ($query, $session->fDbInfo))
 		error ('dbInsert: ' . mysql_error () . ": $table ($idlist) ($values)");
@@ -307,6 +310,10 @@ function dbPageId (&$session, $name){
 	$session->trace (TC_Db2 + TC_Query, "dbPageId: $name");
 	return dbSingleValue ($session, 'select id from ' . dbTable ($session, T_Page)
 		. ' where name=' . dbSqlString ($session, $name));
+}
+function dbGetLastText (&$session, $pageid){
+	return dbGetValueByClause ($session, T_Text,
+			'max(id)', 'page=' . (0+$pageid));
 }
 function dbGetParam (&$session, $theme, $pos){
 	$session->trace (TC_Db2 + TC_Query, "dbGetParam: $theme $pos");
