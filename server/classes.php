@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.5 2004/06/08 11:20:53 hamatoma Exp $
+// $Id: classes.php,v 1.6 2004/06/10 19:34:48 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 
-define ('PHP_Version', '0.5.4 (2004.06.07)');
+define ('PHP_Version', '0.5.5 (2004.06.10)');
 
 define ('PATH_DELIM', '/');
 define ('COOKIE_NAME', 'infobasar');
@@ -195,6 +195,17 @@ define ('TC_All', 0x7fffffff);
 define ('PREFIX_Warning', 'InfoBasar: Warnung: ');
 define ('PREFIX_Error', 'InfoBasar: Fehler: ');
 
+define ('R_None', '/');
+define ('R_New', '+');
+define ('R_Put', '=');
+define ('R_Get', '?');
+define ('R_Del', '-');
+define ('R_KindSequence', '[-+=?]*');
+define ('R_Post', 'Post');
+define ('R_Thread', 'Thread');
+define ('R_Wiki', 'Wiki');
+define ('R_User', 'User');
+define ('R_Rights', 'Right');
 class Session {
 	var $fDbType; // MySQL
 	var $fDbServer;
@@ -244,10 +255,13 @@ class Session {
 	var $fPreformated;
 
 	var $fGroups; // array: gid => ",uid1,uid2,...uidX,";
+	var $fVersion; // php-Version
 
 	function Config (){
 		$this->fDbServer = 'localhost';
 		$this->fOutputState = 'Init';
+		$this->fTraceFlags = 0;
+		$this->fVersion = 400;
 	}
 	function trace($class, $msg){
 		if (($class & $this->fTraceFlags) != 0){
@@ -359,11 +373,11 @@ class Session {
 			$this->trace (TC_Session3, $this->fMacroReplacementKeys [$ii] . ' -> ' . ($this->fMacroReplacementValues [$ii]));
 	}
 	function setDbResult ($result) { $this->fDbResult = $result; }
-	function hasRight ($right) {
-		$rc = ($rc = getPos ($this->fUserRights, ':all:')) >= 0 && is_int ($rc)
-			|| ($rc = getPos ($this->fUserRights, ":$right:")) >= 0 && is_int ($rc);
-		// p ("hasRight: $this->fUserRights, $right, $rc ");
-		return $rc >= 0;
+	function hasRight ($area, $kind){
+		$rc = $this->fUserRights == ':all:'
+			|| preg_match ('/' . $area . R_KindSequence . '[' . $kind . ']/', $this->fUserRights);
+		$session->trace (TC_Session2, 'hasRight: ' . $area . $kind . ': ' . $rc);
+		return $rc;
 	}
 	function isMember ($group, $user) {
 		return ($rc = strpos ($this->fGroups[$group], ',' . $user . ',')) >= 0
