@@ -1,0 +1,10 @@
+# Dateien Infobasar
+# $Id: ib_update.lst,v 1.1 2004/06/08 12:33:52 hamatoma Exp $
+./db_mysql.php
+./gui.php
+./index.php
+./util.php
+./classes.php
+./admin.php
+./changelog.txt
+./release-notes.txt

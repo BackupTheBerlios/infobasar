@@ -1,6 +1,52 @@
 Installation von Infobasar
-$Id: install.txt,v 1.1 2004/05/24 00:13:03 hamatoma Exp $
+$Id: install.txt,v 1.2 2004/06/08 12:29:04 hamatoma Exp $
 
-1) Kopieren der Dateien *.php und *.sql und der Verzeichnisse css und pic auf den Webserver, z.B. mittels FTP
-2) Starten des Scriptes install.php mit einem Browser
-3) Der Rest der Installation läuft interaktiv ab: Konfiguration der DB, Einspielen der Initialdaten und Löschen der Installationsdateien.
+Es wird zwischen Installation und Update unterschieden:
+
+============
+Installation
+============
+
+1) Kopieren der Datei install.php auf den Server
+2) Aufruf von install.php, z.B. http://meinedomain.de/install.php
+3) Der Rest der Installation läuft interaktiv ab:
+ a) Upload des Archivs infobasar-<VERSION>.hma.gz und entpacken.
+ b) Konfiguration der DB (Name, User, Passwort...)
+ c) Einspielen der Initialdaten in die DB
+ d) Bestimmen des Administrator-Passwortes
+4) Starten des Infobasars zur Administration: admin.php, z.B. http://meinedomain.de/admin.php
+5) Einloggen und Administrieren
+6) Benutzen des Infobasars: index.php, z.B. http://meinedomain.de/index.php
+
+Je nach Rechte auf dem Server können einzelne Aktionen
+evt. nicht ausgeführt werden, dann ist manuelle Installation angesagt.
+
+Kopieren der Dateien *.php, *.css *.html auf den Server.
+Ebenso die Unterverzeichnisse:
+css docu pic
+
+Erzeugen der config.php:
+-- Anfang Beispiel
+<?php
+$db_server="localhost";
+$db_name="DB3177";
+$db_user="USR3177";
+$db_prefix="infobasar_";
+$db_passw="geheim";
+?>
+-- Ende Beispiel
+Die mit -- anfangenden Zeilen gehören nicht dazu!
+
+Einspielen der Datei infobasar_start.sql in die MySQL-Datenbank
+z.B. mittels phpmyadmin.
+
+Aufruf von install.php, solange auf Weiter klicken, bis das 
+Adminstratorpasswort eingestellt werden kann.
+
+
+======
+Update
+======
+
+noch Baustelle.
+
