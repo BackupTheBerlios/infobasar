@@ -1,6 +1,7 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.1 2004/05/20 20:55:01 hamatoma Exp $
+// $Id: db_mysql.php,v 1.2 2004/05/23 22:06:58 hamatoma Exp $
+
 function dbOpen (&$session) {
 	$session->trace (TC_Db1, 'dbOpen');
 	if (!($dbc = mysql_pconnect ($session->fDbServer,

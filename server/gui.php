@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.1 2004/05/20 20:55:05 hamatoma Exp $
+// $Id: gui.php,v 1.2 2004/05/23 22:10:22 hamatoma Exp $
 // --- Allgemeine Funktionen --------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
 	echo "<input type=\"$type\" name=\"$name\"";
@@ -40,7 +40,7 @@ function guiRadioButton ($name, $text, $checked){
 		isset ($checked) && $checked ? "checked" : "");
 }
 function guiCheckBox ($name, $text, $checked){
-	guiField ($name, "checkbox", 'J', 0, 0,
+	guiField ($name, "checkbox", C_CHECKBOX_TRUE, 0, 0,
 		isset ($checked) && $checked ? "checked" : "");
 	echo htmlentities ($text) . " ";
 }
