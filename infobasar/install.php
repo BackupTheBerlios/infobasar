@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.3 2004/09/21 09:59:05 hamatoma Exp $
+// $Id: install.php,v 1.4 2004/09/26 23:00:02 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -113,8 +113,9 @@ class Session {
 	}
 	function setScriptBase () {
 		global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
+
 		// Basisverzeichnis relativ zu html_root
-		$script_url = "http://$HTTP_HOST$PHP_SELF";
+		$script_url = "http://" . $HTTP_HOST . $PHP_SELF;
 		$script_file = $SCRIPT_FILENAME;
 		$this->trace (TC_Init, "setScriptBase: $script_url | $script_file");
 		$script_url = preg_replace ('/\.php.*$/', '.php', $script_url);
@@ -122,6 +123,7 @@ class Session {
 		$this->fScriptFile = $script_file;
 		$this->fScriptBase = preg_replace ('/'  . REXPR_PATH_DELIM . '\w+\.php.*$/', '', $script_url);
 		$this->fFileSystemBase =  preg_replace ('/' . REXPR_PATH_DELIM . '\w+\.php.*$/', '', $script_file);
+		return true;
 	}
 	function setDbResult ($result) { $this->fDbResult = $result; }
 	function setPageData ($name, $date, $by) {
@@ -143,16 +145,15 @@ $session->fTraceFlags
 $session->fTraceFlags = TC_Error + TC_Warning + TC_X;
 #$session->fTraceFlags = TC_All;
 
-
-$session->setScriptBase();
-if (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/install"){
-	echo '<html><body>install.php <strong>muss</strong> in einem Verzeichnis install liegen!';
-	echo '<br>';
-	echo $session->fScriptBase;
-	echo '<br>';
-	echo substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8);
-	echo '</body></html>';
-} else {
+if (empty ($HTTP_HOST))
+	fatalError ("Kein HTTP_HOST definiert<br>Vermutlich register_globals=Off.");
+elseif (! $session->setScriptBase())
+	fatalError ("kann BasisVerzeichnis nicht finden");
+elseif (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/install")
+	fatalError ('install.php <strong>muss</strong> in einem Verzeichnis install liegen!'
+		. "<br>\nScriptBase: " . $session->fScriptBase . "<br>\nVerzeichnis: "
+		. substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8));
+else {
 	if (! isset ($inst_step))
 		$inst_step = 0;
 	if (isset ($inst_next))
@@ -189,6 +190,12 @@ if (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/inst
 exit (0);
 
 // -----------------------------------
+function fatalError ($message){
+	echo '<html><head>Ernster Fehler</head><body>';
+	echo '<h1>Ernster Fehler:</h1>';
+	echo $message;
+	echo '</body></html>';
+}
 function getMicroTime(&$session, $time = null){ 
 	$session->trace (TC_Util1, 'getMicroTime');
 	if (empty ($time))
