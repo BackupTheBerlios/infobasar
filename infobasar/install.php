@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.12 2005/01/06 12:01:34 hamatoma Exp $
+// $Id: install.php,v 1.13 2005/01/08 23:54:44 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -61,6 +61,8 @@ define ('DB_MySQL', 'MySQL');
 define ('T_Page', 'page');
 define ('T_Text', 'text');
 
+define ('C_CHECKBOX_TRUE', 'J');
+
 // -----------------------------------
 class Session {
 	var $fDbType; // MySQL
@@ -82,14 +84,43 @@ class Session {
 	var $fFileSystemBase; // Absolutpfad im Filesystem des Servers
 
 	var $fTraceFlags;
+	var $fTraceFile;
 
 	function Session ($start_time){
 		$this->fDbServer = 'localhost';
 		$this->fOutputState = 'Init';
 		$this->fTraceFlags = 0;
+		# $this->fTraceFlags = TC_All;
+		$this->fTraceFile = null;
+		#$this->fTraceFile = '/tmp/inst.log';
+
 		$this->fStartTime = getMicroTime ($this, $start_time);
+		$uri = $_SERVER['REQUEST_URI'];
+		$this->fScriptURL = $uri;
+		$pos = strpos ($uri, ".php");
+		if ($pos <= 0){
+			if (strpos ($uri, ".php") > 0)
+				$this->fScriptURL = $uri;
+			else
+				$this->fScriptURL = $uri . "/install.php";
+			$this->fPageURL = '';
+		} else {
+			$this->fScriptURL = substr ($uri, 0, $pos + 4);
+			if ($pos + 5 < strlen ($uri)){
+				$pageURL = substr ($uri, $pos + 5);
+				if ( ($pos = strpos ($pageURL, '/', 1)) > 0)
+					$this->fScriptURL = substr ($pageURL, 0, $pos);
+			}
+		}
+		$this->fScriptFile = $_SERVER['SCRIPT_FILENAME'];
+		$this->fScriptBase = preg_replace ('/\/\w+\.php.*$/', '', $_SERVER['PHP_SELF']);
+		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $this->fScriptFile);
 	}
 	function trace($class, $msg){
+		if ($this->fTraceFile != null && ($file = fopen ($this->fTraceFile, "a")) != null){
+			fwrite ($file, $msg . "\n");
+			fclose ($file);
+		}
 		if (($class & $this->fTraceFlags) != 0){
 			if ($this->fOutputState == 'Init') {
 				echo "<head></head>\n<body>\n";
@@ -118,20 +149,6 @@ class Session {
 	function setDbConnectionInfo ($connection, $info) {
 		$this->fDbInfo = $info; $this->fDbConnection = $connection;
 	}
-	function setScriptBase () {
-		global $HTTP_HOST, $SCRIPT_FILENAME, $PHP_SELF;
-
-		// Basisverzeichnis relativ zu html_root
-		$script_url = "http://" . $HTTP_HOST . $PHP_SELF;
-		$script_file = $SCRIPT_FILENAME;
-		$this->trace (TC_Init, "setScriptBase: $script_url | $script_file");
-		$script_url = preg_replace ('/\.php.*$/', '.php', $script_url);
-		$this->fScriptURL = $script_url; 
-		$this->fScriptFile = $script_file;
-		$this->fScriptBase = preg_replace ('/'  . REXPR_PATH_DELIM . '\w+\.php.*$/', '', $script_url);
-		$this->fFileSystemBase =  preg_replace ('/' . REXPR_PATH_DELIM . '\w+\.php.*$/', '', $script_file);
-		return true;
-	}
 	function setDbResult ($result) { $this->fDbResult = $result; }
 	function setPageData ($name, $date, $by) {
 		$this->fPageName = $name;
@@ -152,11 +169,7 @@ $session->fTraceFlags
 $session->fTraceFlags = TC_Error + TC_Warning + TC_X;
 #$session->fTraceFlags = TC_All;
 
-if (empty ($HTTP_HOST))
-	fatalError ("Kein HTTP_HOST definiert<br>Vermutlich register_globals=Off.");
-elseif (! $session->setScriptBase())
-	fatalError ("kann BasisVerzeichnis nicht finden");
-elseif (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/install")
+if (substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8) != "/install")
 	fatalError ('install.php <strong>muss</strong> in einem Verzeichnis install liegen!'
 		. "<br>\nScriptBase: " . $session->fScriptBase . "<br>\nVerzeichnis: "
 		. substr ($session->fScriptBase, strlen ($session->fScriptBase) - 8));
@@ -221,6 +234,11 @@ function getPos ($haystock, $needle){
 	$rc = strpos ($haystock, $needle);
 	return is_int ($rc) ? $rc : -1;
 }
+function dumpPost (&$session){
+	echo 'Inhalt der Variable _POST:<br>';
+	foreach ($_POST as $name => $value)
+		echo $name . " = " . $value . "<br>";
+}
 function instArchive (&$session, $message =  null) {
 	$session->trace (TC_Init, 'instArchive');
 	guiHeader ($session, 'Schritt 0');
@@ -251,7 +269,7 @@ function instArchive (&$session, $message =  null) {
 	guiHiddenField ('archive_name', null);
 	
 	$path = $session->fFileSystemBase . PATH_DELIM;
-	if ($_POST ['archive_dir'] == CHECKBOX_TRUE){
+	if (guiChecked ($session, 'archive_dir')){
 		$dir = opendir ($path);
 		guiHeadline ($session, 3, "Verzeichnis auf dem Server");
 		echo '<table border="1" width="100%"><tr><td><b>Name:</b></td>';
@@ -295,7 +313,7 @@ function instArchive (&$session, $message =  null) {
 	}
 	echo '</table>' . "\n";
 	guiHeadline ($session, 2, 'Optionen');
-	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen', $_POST ['archive_dir']);
+	guiCheckBox ('archive_dir', 'Alle Dateien anzeigen');
 	echo ' ';
 	guiButton ('archive_show', 'Aktualisieren');
 	outNewline();
@@ -310,6 +328,7 @@ function instArchiveAnswer (&$session){
 	$session->trace (TC_Init, "instArchiveAnswer");
 	$message = null;
 	if (isset ($_POST ['archive_upload'])){
+		$session->trace ('instArchiveAnswer: archive_upload');
 		$name =  $_FILES['archive_uploadfile']['name'];
 		if (move_uploaded_file($_FILES['archive_uploadfile']['tmp_name'],
 			$session->fFileSystemBase . PATH_DELIM . $name)) {
@@ -319,6 +338,7 @@ function instArchiveAnswer (&$session){
 				. $_FILES['archive_uploadfile']['error'];
 		}
 	} elseif (isset ($_POST ['archive_strip'])){
+		$session->trace (TC_Init, 'instArchiveAnswer: archive_strip');
 		$dir_name = preg_replace ('|/[^/]+$|', '', $session->fFileSystemBase);
 		$dir = opendir ($dir_name);
 		while ($file = readdir ($dir)) {
@@ -329,12 +349,12 @@ function instArchiveAnswer (&$session){
 		}
 		closedir($dir); 
 	} else {
-		for ($no = 1; $no < 100; $no++){
-			$ref = 'archive_extract' . $no;
-			global $$ref;
-			if (isset ($$ref)){
-				$ref = 'archive_file' . $no;
-				$name = $_POST[$ref];
+		$session->trace (TC_Init, 'instArchiveAnswer: Button-Antworten');
+		foreach ($_POST as $name => $value){
+			if (preg_match ('/^archive_extract(\d+)/', $name, $match)){
+				$var = 'archive_file' . $match [1];
+				$name = $_POST [$var];
+				$session->trace (TC_Init, "instArchiveAnswer: $name");
 				if (! ($message = extractFromArchive ($session, $name, false, "*")))
 					$message = "Archiv $name wurde entpackt";
 				break;
@@ -524,12 +544,12 @@ function instExit (&$session){
 	$session->trace (TC_Init, 'instExit');
 	$error = null;
 	$message = null;
-	if (isset ($inst_setpassw) && $inst_setpassw == CHECKBOX_TRUE) {
-		if (empty ($inst_passw))
+	if (guiChecked ($session, 'inst_setpassw')) {
+		if (empty ($_POST ['inst_passw']))
 			$error = '+++ leeres Passwort ist nicht zulässig!';
 		else {
 			checkDB ($session, $message);
-			$passw = strrev (crypt ($inst_passw, 'admin'));
+			$passw = strrev (crypt ($_POST ['inst_passw'], 'admin'));
 			sqlStatement ($session, 'update ' . $db_prefix . "user set code='"
 				 . $passw . "' where name='admin'");
 			$message = 'Passwort wurde gesetzt';
@@ -751,7 +771,7 @@ function dbPageId (&$session, $name){
 
 // -----------------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
-	echo "<input type=\"$type\" name=\"$name\"";
+	echo "<input type=$type name=\"$name\"";
 	if (! empty ($text))
 		 echo " value=\"$text\"";
 	if ($size > 0)
@@ -763,15 +783,21 @@ function guiField ($name, $type, $text, $size, $maxlength, $special){
 	echo ">";
 }
 function guiHiddenField ($name, $text) {
-	guiField ($name, "hidden", $text, 0, 0, null);
+	if ($text == null)
+		$text = isset ($_POST [$name]) ? $_POST [$name] : "";
+	guiField ($name, '"hidden"', $text, 0, 0, null);
 }
 function guiTextField ($name, $text, $size, $maxlength){
-	guiField ($name, "text", $text, $size, $maxlength, null);
+	if ($text == null)
+		$text = isset ($_POST [$name]) ? $_POST [$name] : "";
+	guiField ($name, '"text"', $text, $size, $maxlength, null);
 }
 function guiPasswordField ($name, $text, $size, $maxlength){
-	guiField ($name, "password", $text, $size, $maxlength, null);
+	guiField ($name, '"password"', $text, $size, $maxlength, null);
 }
 function guiTextArea ($name, $content, $width, $height){
+	if ($content == null && isset ($_POST [$name]))
+		$content = $_POST [$name];
 	echo "<textarea name=\"$name\" cols=\"$width\" rows=\"$height\">\n";
 	echo $content;
 	echo "</textarea>\n";
@@ -780,13 +806,18 @@ function guiButton ($name, $text){
 	echo "<input class=\"wikiaction\" name=\"$name\" value=\"$text\" type=\"submit\">";
 }
 function guiRadioButton ($name, $text, $checked){
-	guiField ($name, "radio", $text, 0, 0,
+	guiField ($name, '"radio"', $text, 0, 0,
 		isset ($checked) && $checked ? "checked" : "");
 }
-function guiCheckBox ($name, $text, $checked){
-	guiField ($name, "checkbox", CHECKBOX_TRUE, 0, 0,
-		isset ($checked) && $checked ? "checked" : "");
+function guiCheckBox ($name, $text, $checked = null){
+	if ($checked == null)
+		$checked = isset ($_POST [$name]) && $_POST [$name] == C_CHECKBOX_TRUE;
+	guiField ($name, '"checkbox"', C_CHECKBOX_TRUE, 0, 0,
+		isset ($checked) && $checked ? 'checked' : '');
 	echo htmlentities ($text) . " ";
+}
+function guiChecked(&$session, $name){
+	return isset ($_POST [$name]) && $_POST [$name] == C_CHECKBOX_TRUE;
 }
 function guiComboBox ($name, $options, $values, $ix_selected = 0) {
 	echo '<select name="' . $name . '" size="1' // . count ($options)
