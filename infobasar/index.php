@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.17 2004/11/08 13:34:53 hamatoma Exp $
+// $Id: index.php,v 1.18 2004/11/10 00:45:37 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -201,7 +201,6 @@ function baseShowCurrentPage (&$session){
 	}
 }
 function baseLogin (&$session, $message) {
-	global $login_user, $login_email;
 	guiStandardHeader ($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader,
 		null);
 	guiStartForm ($session, 'login', P_Login);
@@ -209,17 +208,22 @@ function baseLogin (&$session, $message) {
 		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
 		guiParagraph ($session, $message, false);
 	}
+	if (! isset ($_POST ['login_user'])){
+		$_POST ['login_user'] = $session->fUserName;
+		$_POST ['login_email'] = '';
+	}
+	
 	outTableAndRecord ();
-	outTableTextField ('Benutzername:', 'login_user', $login_user, 32, 32);
+	outTableTextField ('Benutzername:', 'login_user', null, 32, 32);
 	outTableRecordDelim();
-	outTablePasswordField ('Passwort:', 'login_code', "", 32, 32);
+	outTablePasswordField ('Passwort:', 'login_code', '', 32, 32);
 	outTableRecordDelim();
 	outTableButton (' ', 'but_login', 'Anmelden');
 	outTableAndRecordEnd ();
 	guiLine ($session, 2);
 	guiParagraph ($session, 'Passwort vergessen?', false);
 	outTableAndRecord();
-	outTableTextField ('EMail-Adresse:', 'login_email', $login_email, 32, 0);
+	outTableTextField ('EMail-Adresse:', 'login_email', null, 32, 0);
 	outTableRecordDelim();
 	outTableButton (' ', 'but_forget', 'Passwort ändern');
 	outTableAndRecordEnd();
@@ -232,48 +236,51 @@ function baseLogin (&$session, $message) {
 	return 1;
 }
 function baseLoginAnswer (&$session, &$message) {
-	global $login_user, $login_code, $session_user, $but_forget, $login_email, $session_no;
-	$session->trace (TC_Gui1, 'baseLoginAnswer; login_user: ' . $login_user . " but_forget: $but_forget");
+	$session->trace (TC_Gui1, 'baseLoginAnswer; login_user: ' . $_POST ['login_user']);
 	$login_again = true;
 	$message = null;
-	$login_again = false;
-	if (isset ($but_forget)) {
-		if (empty ($login_user))
+	$again = false;
+	$user =$_POST ['login_user'];
+	$email = $_POST ['login_email'];
+	$code = $_POST ['login_code'];
+	if (isset ($_POST ['but_forget'])) {
+		if (empty ($user))
 			$message = "+kein Benutzername angegeben";
-		elseif (empty ($login_email))
+		elseif (empty ($email))
 			$message = "+keine EMail-Adresse angegeben";
 		else {
 			$row = dbSingleRecord ($session, 'select id,email from ' . dbTable ($session, T_User)
-				. ' where name=' . dbSqlString ($session, $login_user));
+				. ' where name=' . dbSqlString ($session, $user));
 			if (! $row)
 				$message = "+unbekannter Benutzer";
 			elseif (empty ($row [1]))
 				$message = "+keine EMail-Adresse eingetragen";
-			elseif (strcasecmp ($row [1], $login_email) != 0)
+			elseif (strcasecmp ($row [1], $email) != 0)
 				$message = "+EMail-Adresse ist nicht bekannt";
 			else {
-				sendPassword ($session, $row [0], $login_user, $login_email);
-				$message = 'Das Passwort wurde an ' . $login_email . ' verschickt';
+				sendPassword ($session, $row [0], $user, $email);
+				$message = 'Das Passwort wurde an ' . $email . ' verschickt';
 			}
 		}
-		$login_again = true;
+		$again = true;
 	} else {
-		$message = dbCheckUser ($session, $login_user, $login_code);
+		$message = dbCheckUser ($session, $user,$code);
 		if (! empty ($message))
-			$login_again = true;
+			$again = true;
 		else {
-			setLoginCookie ($session, $login_user, $login_code);
+			global $session_no;
+			setLoginCookie ($session, $user, $code);
 			$session->setPageName (P_Start);
 			$session_no = 1;
 		}
 	}
-	return $login_again;
+	return $again;
 }	
 function baseLogout (&$session){
-	global $last_page, $session_user, $session_start, $session_no;
+	global $session_user, $session_start, $session_no;
 	clearLoginCookie ($session);
 	setLoginCookie ($session, '?', '?');
-	$last_page = $session_user = $session_start = null;
+	$session_user = $session_start = null;
 	$session->fUserId = null;
 	$name = $session->fUserName;
 	$session->fUserName = null;
@@ -298,29 +305,33 @@ function baseSplitRights (&$session, &$account_right_user, &$account_right_right
 	
 
 function baseAccount (&$session, $message) {
-	global $account_user, $account_code, $account_code2, $account_rights,
-		$account_email,
-		$account_locked, $account_user2, $account_theme, $account_width,
-		$account_height, $account_maxhits,
-		$account_right_posting, $account_right_user, $account_right_pages, $account_right_rights,
-		$account_startpage, $account_startpageoffer;
-	global $login_user, $login_passw;
+	#global $account_user, $account_code, $account_code2, $account_rights,
+#		$account_email,
+#	$account_locked, $account_user2, $account_theme, $account_width,
+#	$account_height, $account_maxhits,
+#	$account_right_posting, $account_right_user, $account_right_pages, $account_right_rights,
+#	$account_startpage, $account_startpageoffer;
+#	global $login_user, $login_passw;
 	$session->trace (TC_Gui1, 'baseAccount');
 	$reload = false;
-	if (empty ($account_user)) {
+	if (isset ($_POST ['account_user']) && ! empty ($_POST ['account_user']))
+		$account_user = $_POST ['account_user']; 
+	else {
 		$account_user = $session->fUserName;
 		$reload = true;
 	}
-	if (! empty ($account_user2) && $account_user != $account_user2) {
-		$account_user = $account_user2;
+	if (! empty ($_POST ['account_user2']) 
+			&& $account_user != $_POST ['account_user2']) {
+		$account_user = $_POST ['account_user2'];
 		$reload = true;
 	}
 	if (! $reload)
 		$id = dbUserId ($session, $account_user);
 	else {
-		list ($id, $account_locked, $account_width,
-			$account_height, $account_maxhits,
-			$account_theme, $account_startpage, $account_email)
+		list ($id, $_POST ['account_locked'], $_POST ['account_width'],
+			$_POST ['account_height'], $_POST ['account_maxhits'],
+			$_POST ['account_theme'], $_POST ['account_startpage'],
+			$_POST ['account_email'])
 			= dbGetRecordByClause ($session, T_User,
 			'id,locked,width,height,maxhits,theme,startpage,email',
 			'name=' . dbSqlString ($session, $account_user));
@@ -330,47 +341,41 @@ function baseAccount (&$session, $message) {
 	if (! empty ($message))
 		guiParagraph ($session, $message, false);
 	guiStartForm ($session, 'account', P_Account);
-	outTableAndRecord();
-	outTableCell ('Benutzername');
-	outTableDelim();
 	guiHiddenField ('account_user', $account_user);
-	guiHeadline ($session, 2, $account_user);
-	outTableDelimEnd();
-	outTableRecordDelim();
+	outTable();
+	outTableRecordCells ('Benutzername', $account_user);
+	outTableRecord();
 	outTablePasswordField ('Passwort:', 'account_code', '', 64, 32);
 	outTableRecordDelim ();
 	outTablePasswordField ('Wiederholung:', 'account_code2', '', 64, 32);
 	outTableRecordDelim ();
-	outTableTextField ('EMail:', 'account_email', $account_email, 64, 64);
+	outTableTextField ('EMail:', 'account_email', null, 64, 64);
 	outTableRecordDelim ();
-	outTableCheckBox ('Gesperrt', 'account_locked', 'Gesperrt',
-		$account_locked == C_CHECKBOX_TRUE);
+	outTableCheckBox ('Gesperrt', 'account_locked', 'Gesperrt');
 	outTableRecordDelim ();
 	dbGetThemes ($session, $theme_names, $theme_numbers);
 	outTableComboBox ('Design:', 'account_theme', $theme_names, $theme_numbers, 
-		array_search ($account_theme, $theme_numbers));
+		array_search ($_POST ['account_theme'], $theme_numbers));
 	outTableRecordDelim ();
-	outTableTextField ('Eingabefeldbreite:', 'account_width', $account_width, 64, 3);
+	outTableTextField ('Eingabefeldbreite:', 'account_width', null, 64, 3);
 	outTableRecordDelim ();
-	outTableTextField ('Eingabefeldhöhe:', 'account_height',
-		$account_height, 64, 3);
+	outTableTextField ('Eingabefeldhöhe:', 'account_height', null, 64, 3);
 	outTableRecordDelim ();
-	outTableTextField ('Zahl Suchergebnisse:', 'account_maxhits', 
-		$account_maxhits, 64, 3);
+	outTableTextField ('Zahl Suchergebnisse:', 'account_maxhits', null, 64, 3);
 	outTableRecordDelim ();
 	$names = array ('WikiSeite:', 'Übersicht', 'Einstellungen',
 			'Wikisuche', 'Letze Änderungen', 'StartSeite', 'Hilfe');
 	$values = array ('', P_Home, P_Account, 
 			P_Search, P_LastChanges, 'StartSeite', 'Hilfe');
-	if ( ($pos = strpos ($account_startpage, '!')) == 0 && is_int ($pos))
-		$ix = array_search ($account_startpage, $values);
+	if ( ($pos = strpos ($_POST ['account_startpage'], '!')) == 0 && is_int ($pos))
+		$ix = array_search ($_POST ['account_startpage'], $values);
 	else
 		$ix = 0;
 	outTableCell ('Startseite:');
 	outTableDelim ();
 	guiComboBox ('account_startpageoffer', $names, $values, $ix);
 	echo ' ';
-	guiTextField ("account_startpage", $account_startpage, 45, 128);
+	guiTextField ("account_startpage", null, 45, 128);
 	outTableDelimAndRecordEnd ();
 	modUserTableData ($session, $id);
 	outTableEnd();
@@ -389,7 +394,7 @@ function baseAccount (&$session, $message) {
 		outTable ();
 		outTableRecord();
 		outTableRecordEnd();
-		outTableTextField ('Name:', "account_user2", $account_user2, 32, 32);
+		outTableTextField ('Name:', "account_user2", null, 32, 32);
 		outTableRecordDelim();
 		outTableCell ('');
 		outTableDelim();
