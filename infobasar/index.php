@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: index.php,v 1.2 2004/09/15 21:31:29 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -179,7 +179,7 @@ function baseStandardLinkString (&$session, $page) {
 	case P_LastChanges: $header = 'Letzte Änderungen'; break;
 	case P_Start: $header = 'Persönliche Startseite'; break;
 	case P_Login: $header = 'Neu anmelden'; break;
-	case P_Info: $header = 'Information'; break;
+	case P_Info: $header = 'Über'; break;
 	case P_NewWiki: $header = 'Neue Wiki-Seite'; break;
 	case P_NewPage: $header = 'Neue Seite'; break;
 	default: $header = null; break;
@@ -357,7 +357,7 @@ function baseLoginAnswer (&$session) {
 				$message = 'Das Passwort wurde an ' . $login_email . ' verschickt';
 			}
 		}
-		guiLogin ($session, $message);
+		baseLogin ($session, $message);
 	} else {
 		$rc = dbCheckUser ($session, $login_user, $login_code);
 		if (! empty ($rc))
@@ -554,26 +554,28 @@ function baseHome (&$session) {
 		guiHeadline ($session, 1, 'Willkommen ' . $session->fUserName);
 		echo '<table border="0"><tr><td>';
 		baseStandardLink ($session, P_Account);
-		echo '</td><td>Einstellungen</td></tr>' . "\n" . '<tr><td>';
+		echo '</td><td>Benutzerspezifische Einstellungen f&uuml;r ';
+		echo $session->fUserName;
+		echo "</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_Login);
-		echo '</td><td>Abmelden (oder neu anmelden)</td></tr>'  . "\n" . '<tr><td>';
-		# echo '<p>';	baseStandardLink ($session, P_NewPage); echo '</p>';
-		# echo '<p>';	baseStandardLink ($session, P_ModifyPage); echo '</p>';
-		baseStandardLink ($session, P_Search);
-		echo '</td></tr>'  . "\n" . '<tr><td>';
+		echo "</td><td>Abmelden (oder neu anmelden)</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_Start);
-		echo '</td><td>Pers&ouml;nliche Startseite</td></tr>'  . "\n" . '<tr><td>';
-		guiInternLink ($session, 'StartSeite', 'StartSeite');
-		echo '</td><td>Wiki-Startseite</td></tr>'  . "\n" . '<tr><td>';
-		baseStandardLink ($session, P_NewWiki);
-		echo '</td><td>Neue Wikiseite</td></tr>'  . "\n" . '<tr><td>';
-		baseStandardLink ($session, P_LastChanges);
-		echo '</td><td>Neueste &Auml;nderungen</td></tr>'  . "\n" . '<tr><td>';
+		echo "</td><td>Startseite, wie sie in den benutzerspezifischen Einstellungen festgelegt ist</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_Info);
 		echo '</td><td>Information &uuml;ber den InfoBasar</td></tr>';
+		echo "\n<td><strong>Wiki- und HTML-Seiten:</strong></td></tr><tr><td>";
+		guiInternLink ($session, 'StartSeite', 'StartSeite');
+		echo "</td><td>Wiki-Startseite</td></tr>\n<tr><td>";
+		baseStandardLink ($session, P_LastChanges);
+		echo "</td><td>Liste der in den letzten n Tagen ge&auml;nderten Wikiseiten</td></tr>\n<tr><td>";
+		baseStandardLink ($session, P_Search);
+		echo "</td><td>Titel- oder Volltextsuche im Wikibereich<td></tr>\n<tr><td>";
+		baseStandardLink ($session, P_NewWiki);
+		echo "</td><td>Anlegen einer neue Wikiseite</td></tr>\n<tr><td>";
+		baseStandardLink ($session, P_NewPage);
+		echo "</td><td>Anlegen einer neue Seite (Wiki oder HTML)</td></tr>\n";
 		modOverview ($session);
-		echo '</table>'  . "\n" ;
-		// echo 'Session-Id: ' . $session_id . ' User: ' . $session_user . '<br>';
+		echo "</table>\n" ;
 		guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 	}
 }
@@ -638,7 +640,10 @@ function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 	guiTextField ("alterpage_height", $textarea_height, 3, 3);
 	echo "</td></tr>\n</table>\n";
 	guiFinishForm ($session, $session);
-	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
+	if ($alterpage_mime == M_Wiki)
+		guiStandardBodyEnd ($session, Th_EditEndWiki);
+	else
+		guiStandardBodyEnd ($session, Th_EditEndHTML);
 }
 function baseNewPageReference (&$session) {
 	global $alterpage_name, $alterpage_content, $textarea_width, $alterpage_mime,
@@ -660,7 +665,7 @@ function baseAlterPageAnswer (&$session, $mode){
 		 $textarea_height, $alterpage_content, $alterpage_insert,
 		 $alterpage_preview, $alterpage_lastmode, $alterpage_mime;
 	$session->trace (TC_Gui1, 'baseAlterPageAnswer');
-	$alterpage_name = makePageName ($alterpage_name);
+	$alterpage_name = normalizeWikiName ($session, $alterpage_name);
 	if ($mode == C_LastMode)
 		$mode = $alterpage_lastmode;
 	$len = strlen ($alterpage_content);
@@ -707,7 +712,7 @@ function baseAlterPageAnswerChangePage (&$session){
 		 $alterpage_changepage, $alterpage_changecontent,
 		 $alterpage_previe;
 	$session->trace (TC_Gui1, 'baseAlterPageAnswerChangePage');
-	$alterpage_name = makePageName ($alterpage_name);
+	$alterpage_name = normalizeWikiName ($session, $alterpage_name);
 
 	$len = strlen ($alterpage_content);
 	$alterpage_content = extractHtmlBody ($alterpage_content);
@@ -780,7 +785,8 @@ function baseSearchResults (&$session){
 			echo '<table border="1"><tr><td>Seite:</td><td>Typ:</td></tr>';
 			while ($row) {
 				echo "\n<tr><td>"
-					. guiInternLinkString ($session, $row[0], $row[0])
+					. guiInternLinkString ($session, 
+						encodeWikiName ($session, $row[0]), $row[0])
 					. "</td><td>$row[1]</td></tr>";
 				$row = dbNextRecord ($session);
 			}
@@ -858,6 +864,7 @@ function baseCustomStart (&$session) {
 }
 function basePageInfo (&$session) {
 	$pagename = $session->fPageName;
+	$pagelink = encodeWikiName ($session, $pagename);
 	$headline = 'Info über ' . $pagename;
 	guiStandardHeader ($session, $headline, Th_InfoHeader, 0);
 	$page = dbGetRecordByClause ($session, T_Page,
@@ -885,19 +892,19 @@ function basePageInfo (&$session) {
 			$replacedby = $row [4];
 			echo '<tr><td>';
 			guiInternLink ($session,
-				$pagename . '?action=' . A_ShowText
+				$pagelink . '?action=' . A_ShowText
 				. '&page_id=' . $pageid . '&text_id=' . ($text_id+0), $text_id);
 			echo '</td><td>';
 			guiAuthorLink ($session, $row [1]);
 			echo '</td><td>' . dbSqlDateToText ($session, $row [2]);
 			echo '</td><td>';
 			if ($replacedby > 0) {
-				guiInternLink ($session, $pagename . '?action=' . A_Diff
+				guiInternLink ($session, $pagelink . '?action=' . A_Diff
 					. '&text_id=' . $replacedby . '&text_id2=' . $text_id,
 					' Unterschied zu ' . $replacedby);
 				if ($replacedby != $act_text_id){
 					echo '</td><td>';
-					guiInternLink ($session, $pagename . '?action=' . A_Diff
+					guiInternLink ($session, $pagelink . '?action=' . A_Diff
 						. '&text_id=' . $text_id . '&text_id2=' . $act_text_id,
 						' Unterschied zu jetzt');
 				}
@@ -925,13 +932,14 @@ function baseCompare (&$session, $pagename, $idnew, $idold){
 			. (0 + $version_new [0]) . ' / ' .  (0 + $version_old [0]), false);
 	else {
 		$page_id = $version_new[0];
+		$page_link = encodeWikiName ($session, $pagename);
 		guiParagraph ($session, 
-			guiInternLinkString ($session, $pagename, $pagename)
+			guiInternLinkString ($session, $page_link, $pagename)
 			. ': Änderungen von Version '
-			. guiInternLinkString ($session, $pagename . '?action=' . A_ShowText
+			. guiInternLinkString ($session, $page_link . '?action=' . A_ShowText
 				. '&page_id=' . $page_id . '&text_id=' . ($idold+0), $idold)
 			. ' zu Version ' 
-			. guiInternLinkString ($session, $pagename . '?action=' . A_ShowText
+			. guiInternLinkString ($session, $page_link . '?action=' . A_ShowText
 				. '&page_id=' . $page_id . '&text_id=' . ($idnew+0), $idnew)
 			. ' von ' . $version_new [2]
 			. ($version_new [2] != $version_old [2] ? ' / ' . $version_old [2] : '')
@@ -974,75 +982,36 @@ function baseLastChanges (&$session) {
 			echo $time_0;
 			echo '</b></td></tr>' . "\n";
 			do {
+				$text_id = $rec [0]+0;
+				$page_id = $rec [5]+0;
+				$page_name = $rec [1];
+				$page_link = encodeWikiName ($session, $page_name);
 				echo '<tr><td>';
 				echo dbSingleValue ($session, 'select min(id) from '
-					. dbTable ($session, T_Text) . ' where page=' . $rec[5])
-					== $rec [0] ? 'Neu' : 'Änderung';
+					. dbTable ($session, T_Text) . ' where page=' . $page_id)
+					== $text_id ? 'Neu' : 'Änderung';
 				echo '</td><td>';
-				echo $rec [0];
+				guiInternLink ($session, $page_link . '?action=' . A_ShowText
+					. '&page_id=' . $page_id . '&text_id=' . $text_id, $text_id);
 				echo '</td><td>';
-				echo guiInternLink ($session, $rec [1], $rec [1]);
+				guiInternLink ($session, $page_link, $page_name);
 				echo '</td><td>';
 				guiAuthorLink ($session, $rec [2]);
 				echo '</td><td>';
 				echo dbSqlDateToText ($session, $rec [3]);
 				$pred_rec = dbSingleValue ($session, 'select max(id) from '
-					. dbTable ($session, T_Text) . ' where page=' . $rec[5]
+					. dbTable ($session, T_Text) . ' where page=' . $page_id
 					. ' and createdat<'
 					. dbSqlDateTime ($session, $time_2));
 				if ($pred_rec > 0) {
 					echo '</td><td>';
-					guiInternLink ($session, $rec [5] . '?action=' . A_Diff
-						. '&text_id=' . $rec[0] . '&text_id2=' . $pred_rec,
+					guiInternLink ($session, $page_link . '?action=' . A_Diff
+						. '&text_id=' . $text_id . '&text_id2=' . $pred_rec,
 						'Unterschied zum Vortag (' . $pred_rec . ')');
 				}
 				echo '</td></tr>' . "\n";
 			} while ( ($rec = dbNextRecord ($session)) != null);
 		}
-
-/*		if (false){
-		$ids = dbIdList2 ($session, T_Text, 'distinct page', $condition);
-		if ($ids) {
-			echo '<tr><td><b>';
-			echo $time_0;
-			echo'</b></td></tr>' . "\n";
-			foreach ($ids as $ii => $pageid) {
-				$page = dbGetRecordById ($session, T_Page, $pageid, 'name');
-				$text = dbFirstRecord ($session,
-					'select id,createdby,createdat,replacedby from '
-				. dbTable ($session, T_Text) . ' where page=' . (0 + $pageid)
-				. ' and ' . $condition . ' order by id desc');
-				$count = 0;
-				while ($text) {
-					$pred_text = dbSingleValue ($session, 'select max(id) from '
-						. dbTable ($session, T_Text) . ' where page=' . $pageid
-						. ' and createdat<'
-						. dbSqlDateTime ($session, $time_2));
-					echo '<tr><td>';
-					echo dbSingleValue ($session, 'select min(id) from '
-						. dbTable ($session, T_Text) . ' where page=' . $pageid)
-						== $text [0] ? 'Neu' : 'Änderung';
-					echo '</td><td>';
-					echo $text [0];
-					echo '</td><td>';
-					echo $count++ > 0 ? htmlentities ($page [0])
-						: guiInternLink ($session, $page [0], $page [0]);
-					echo '</td><td>';
-					guiAuthorLink ($session, $text [1]);
-					echo '</td><td>';
-					echo dbSqlDateToText ($session, $text [2]);
-					if ($pred_text > 0) {
-						echo '</td><td>';
-						guiInternLink ($session, $page [0] . '?action=' . A_Diff
-							. '&text_id=' . $pred_text . '&text_id2=' . $text [0],
-							'Unterschied zum Vortag (' . $pred_text . ')');
-					}
-					echo '</td></tr>' . "\n";
-					$text = dbNextRecord ($session);
-				}
-			}
-		}
-		} */
 	}
 	echo '</table>';
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
