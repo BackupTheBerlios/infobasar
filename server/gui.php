@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.6 2004/06/02 00:06:26 hamatoma Exp $
+// $Id: gui.php,v 1.7 2004/06/06 23:56:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -426,7 +426,8 @@ function guiShowCurrentPage (&$session){
 }
 function guiEditPage (&$session, $message) {
 	global $edit_preview, $edit_pageid, $edit_textid, $edit_content,
-		$edit_changedat, $edit_changedby, $edit_texttype, $last_pagename;
+		$edit_changedat, $edit_changedby, $edit_texttype, $last_pagename,
+		$edit_textidpred;
 
 	$session->trace (TC_Gui1, 'guiEditPage');
 	if (! isset ($last_pagename)) {
@@ -438,11 +439,13 @@ function guiEditPage (&$session, $message) {
 	if (! isset ($edit_pageid)) {
 		list ($edit_pageid, $edit_texttype) = dbGetRecordByClause ($session, T_Page,
 			'id,type', 'name=' . dbSqlString ($session, $session->fPageName));
-		$edit_textid = dbGetValueByClause ($session, T_Text,
+		$edit_textidpred = dbGetValueByClause ($session, T_Text,
 			'max(id)', 'page=' . $edit_pageid);
 		list ($edit_content, $edit_changedat, $edit_changedby)
-			= dbGetRecordById ($session, T_Text, $edit_textid,
+			= dbGetRecordById ($session, T_Text, $edit_textidpred,
 				'text,createdat,createdby');
+		$edit_textid = null;
+		
 	}
 	$session->setPageData ($last_pagename, $edit_changedat,
 		$edit_changedby);
@@ -466,6 +469,7 @@ function guiEditPage (&$session, $message) {
 	guiHiddenField ('last_pagename', $last_pagename);
 	guiHiddenField ('edit_pageid', $edit_pageid);
 	guiHiddenField ('edit_textid', $edit_textid);
+	guiHiddenField ('edit_textidpred', $edit_textidpred);
 	guiHiddenField ('edit_changedat', $edit_changedat);
 	guiHiddenField ('edit_changedby', $edit_changedby);
 	echo "<table border=\"0\">\n";
@@ -475,9 +479,10 @@ function guiEditPage (&$session, $message) {
 	guiTextArea ("edit_content", $edit_content, $textarea_width,
 		$textarea_height);
 	echo '</td></tr>' . "\n" . '<tr><td><table border="0" width="100%"><tr><td>';
-	guiButton ('edit_preview', 'Vorschau');
-	echo ' | '; guiButton ('edit_save', 'Speichern');
+	guiButton ('edit_previewandsave', 'Zwischenspeichern');
+	echo ' | '; guiButton ('edit_save', 'Speichern (fertig)');
 	echo ' | '; guiButton ('edit_cancel', 'Verwerfen');
+	echo ' | '; guiButton ('edit_preview', 'Vorschau');
 	echo '</td><td style="text-align: right;">Breite: ';
 	guiTextField ("textarea_width", $textarea_width, 3, 3);
 	echo " H&ouml;he: ";
@@ -489,25 +494,33 @@ function guiEditPage (&$session, $message) {
 }
 function guiEditPageAnswerSave (&$session)
 {
-	global $edit_pageid, $edit_textid, $edit_content,
-		$edit_changedat, $edit_changedby, $edit_texttype;
+	global $edit_pageid, $edit_textid, $edit_textidpred, $edit_content,
+		$edit_changedat, $edit_changedby, $edit_texttype,
+		$edit_previewandsave;
 
 	$session->trace (TC_Gui1, 'guiEditPageAnswerSave');
 	$edit_content = textAreaToWiki ($session, $edit_content);
 	$new_textid = dbGetValueByClause ($session, T_Text,
 		'max(id)', 'page=' . $edit_pageid);
 	$message = '';
-	if ($new_textid > $edit_textid)
-		$message = "+++ Warnung: Seite wurde inzwischen geändert! Änderungen wurden überschrieben! $new_textid / $edit_textid";
+	if ($new_textid > $edit_textidpred 
+		&& (! isset ($edit_textid) || $new_textid > $edit_textid))
+		$message = "+++ Warnung: Seite wurde inzwischen geändert! "
+			. "Bitte Differenz ermitteln und erneut eintragen! "
+			. $new_textid . " /  " . $edit_textidpred;
 	$date = dbSqlDateTime ($session, time ());
-	$id = dbInsert ($session, T_Text,
-		'page,type,createdat,changedat,createdby,text',
-		$edit_pageid . ',' . dbSqlString ($session, $edit_texttype)
-			. ",$date,$date," . dbSqlString ($session, $session->fUserName)
-			. ',' . dbSqlString ($session, $edit_content));
-	dbUpdate ($session, T_Text, $new_textid, 'replacedby=' . $id . ',');
+	if (empty ($edit_textid)){
+		$edit_textid = dbInsert ($session, T_Text,
+			'page,type,createdat,changedat,createdby,text',
+			$edit_pageid . ',' . dbSqlString ($session, $edit_texttype)
+				. ",$date,$date," . dbSqlString ($session, $session->fUserName)
+				. ',' . dbSqlString ($session, $edit_content));
+		dbUpdate ($session, T_Text, $new_textid, 'replacedby=' . $edit_textid . ',');
+	} else {
+		dbUpdate ($session, T_Text, $edit_textid, "text=" . dbSqlString ($session, $edit_content) . ",");
+	}
 	unset ($edit_save);
-	if (empty ($message))
+	if (empty ($message) && ! isset ($edit_previewandsave))
 		guiShowPageById ($session, $edit_pageid, null);
 	else
 		guiEditPage ($session, $message, $message);
@@ -542,6 +555,7 @@ function guiLogin (&$session, $message) {
 	return 1;
 }
 function guiLoginAnswer (&$session) {
+	$login_again = true;
 	$session->trace (TC_Gui1, 'guiLoginAnswer');
 	global $login_user, $login_code, $session_user, $but_forget, $login_email;
 	if (isset ($but_forget)) {
@@ -572,9 +586,11 @@ function guiLoginAnswer (&$session) {
 		else {
 			setLoginCookie ($session, $login_user, $login_code);
 			ob_flush (); // ob_start() -->  index.php
-			guiCustomStart ($session);
+			$session->setPageName (P_Start);
+			$login_again = false;
 		}
 	}
+	return $login_again;
 }	
 function guiAccount (&$session, $message) {
 	global $account_user, $account_code, $account_code2, $account_rights,
@@ -619,7 +635,7 @@ function guiAccount (&$session, $message) {
 	echo "</td></tr>\n<tr><td>Rechte:</td><td>";
 	guiTextField ("account_rights", $account_rights, 64, 64);
 	echo "</td></tr>\n<tr><td>Gesperrt:</td><td>";
-	guiCheckBox ("account_locked", "Gesperrt", $account_locked == CHECKBOX_TRUE);
+	guiCheckBox ("account_locked", "Gesperrt", $account_locked == C_CHECKBOX_TRUE);
 	echo "</td></tr>\n<tr><td>Design:</td><td>";
 	dbGetThemes ($session, $theme_names, $theme_numbers);
 	guiComboBox ('account_theme', $theme_names, $theme_numbers, 
