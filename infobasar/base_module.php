@@ -1,5 +1,5 @@
 <?php
-// $Id: base_module.php,v 1.9 2005/01/14 03:04:58 hamatoma Exp $
+// $Id: base_module.php,v 1.10 2005/01/17 02:24:59 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -218,7 +218,7 @@ function baseAccount (&$session, $message) {
 	outTableCheckBox ($session, 'Gesperrt', 'account_locked', 'Gesperrt');
 	outTableRecordDelim ();
 	dbGetThemes ($session, $theme_names, $theme_numbers);
-	outTableComboBox ($session, 'Design:', 'account_theme', $theme_names, $theme_numbers, 
+	outTableComboBox ($session, 'Oberfläche (Skin):', 'account_theme', $theme_names, $theme_numbers, 
 		array_search ($_POST ['account_theme'], $theme_numbers));
 	outTableRecordDelim ();
 	outTableTextField ($session, 'Eingabefeldbreite:', 'account_width', null, 64, 3);
@@ -960,7 +960,7 @@ function baseLastChanges (&$session) {
 }
 function baseInfo (&$session) {
 	guiStandardHeader ($session, 'Infobasar-Info', Th_InfoHeader, null);
-	guiParagraph ($session, '(C) Hamatoma AT gmx DOT de 2004', 0);
+	guiParagraph ($session, '(C) Hamatoma AT berlios DOT de 2004-2005', 0);
 	outTable();
 	outTableRecord();
 	outTableCellStrong ('Gegenstand');
@@ -973,13 +973,15 @@ function baseInfo (&$session) {
 	outTableCell (PHP_ClassVersion);
 	outTableRecordDelim ();
 	outTableCell ('DB-Schema:');
-	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBScheme)));
+	outTableCell (htmlentities ($session->getMacro (TM_DBSchemeVersion)));
 	outTableRecordDelim ();
 	outTableCell ('DB-Basisinhalt:');
-	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBBaseContent)));
+	outTableCell (htmlentities ($session->getMacro (TM_DBBaseContentVersion)));
 	outTableRecordDelim ();
 	outTableCell ('DB-Erweiterungen:');
-	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBExtensions)));
+	$macro = $session->getMacro (TM_DBExtensions);
+	outTableCell (htmlentities (str_replace (';', ' | ', 
+		substr ($macro, 1, strlen ($macro) - 2))));
 	outTableRecordEnd ();
 	outTableEnd ();
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
