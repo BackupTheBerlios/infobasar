@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.6 2004/10/07 14:27:57 hamatoma Exp $
+// $Id: index.php,v 1.7 2004/10/13 22:22:36 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -52,7 +52,7 @@ define ('P_Info', '!info');
 define ('P_NewWiki', '!newwiki');
 define ('P_Undef', '!undef');
 
-define ('Th_HeaderHTML', 211); // von 111
+define ('Th_HeaderHTML', 211);
 define ('Th_BodyStartHTML', 212);
 define ('Th_BodyEndHTML', 213);
 define ('Th_EditHeaderHTML', 214);
@@ -60,17 +60,17 @@ define ('Th_EditStartHTML', 215);
 define ('Th_EditEndHTML', 216);
 
 
-define ('Th_LoginHeader', 221); // von 131
+define ('Th_LoginHeader', 221);
 define ('Th_LoginBodyEnd', 222);
 define ('Th_Overview', 223);
 define ('Th_InfoHeader', 224);
 define ('Th_InfoBodyEnd', 225);
 
-define ('Th_SearchHeader', 231); // von 151
+define ('Th_SearchHeader', 231);
 define ('Th_SearchBodyStart', 232);
 define ('Th_SearchBodyEnd', 233);
 
-define ('Th_HeaderWiki', 241); // von 161
+define ('Th_HeaderWiki', 241);
 define ('Th_BodyStartWiki', 242);
 define ('Th_BodyEndWiki', 243);
 define ('Th_EditHeaderWiki', 244);
