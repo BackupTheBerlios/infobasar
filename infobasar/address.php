@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.6 2004/10/22 09:02:47 hamatoma Exp $
+// $Id: address.php,v 1.7 2004/11/08 13:27:23 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.5 (2004.09.20)');
+define ('PHP_ModuleVersion', '0.6.5.0 (2004.11.07)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -63,7 +63,6 @@ if (isset ($session_no) && $session_no > 0){
 if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
 	&& dbCheckUser ($session, $user, $code) == ''){
 	$session->trace (TC_Init, 'address.php: Cookie erfolgreich gelesen');
-	$session->trace (TC_X, 'address.php: Cookie erfolgreich gelesen. User: ' . $session_user);
 }
 $rc = dbCheckSession ($session);
 #$session->dumpVars ("Init");
@@ -141,7 +140,6 @@ function addressEditBook (&$session, $message = null){
 }
 function addressEditBookAnswer (&$session){
 	$session->trace (TC_Gui1, 'addressEditBookAnswer');
-	$session->trace (TC_X, 'addressEditBookAnswer');
 	$message = null;
 	if (isset ($_POST ['book_change'])){
 		$session->trace (TC_Gui1, 'addressEditBook-change entdeckt');
@@ -177,7 +175,7 @@ function addressEditBookAnswer (&$session){
 function addressEditCard (&$session, $message = null){
 	$session->trace (TC_Gui1, 'addressEditCard');
 	if (! isset ($_POST ['card_id']) || empty ($_POST ['card_id'])){
-		$session->trace (T_X, 'addressEditCard-2');
+		$session->trace (TC_X, 'addressEditCard-2');
 		$card_id = dbGetValueByClause ($session, Tab_Card, 'min(id)', '1');
 		list ($books, $firstname, $lastname, $nickname,
 			$emailprivate, $emailprivate2, $phoneprivate, $phoneprivate2, $faxprivate, $mobileprivate,
@@ -191,7 +189,7 @@ function addressEditCard (&$session, $message = null){
 			. 'functions, notes'
 			);
 	} else {
-		$session->trace (TC_X, 'addressEditCard-3: ' . $_POST ['card_books']);
+		$session->trace (TC_Gui1, 'addressEditCard-3: ' . $_POST ['card_books']);
 		$books = $_POST ['card_books'];
 		$firstname = $_POST ['card_firstname']; 
 		$lastname = $_POST ['card_lastname'];
@@ -223,7 +221,7 @@ function addressEditCard (&$session, $message = null){
 	foreach ($ids as $ii => $id){
 		$books .= dbSingleValue ($session, 'select name from ' . dbTable ($session, Tab_Book)
 			. " where id=" . (0+$id)) . ($ii < count ($ids) - 1 ? ',' : '');
-		$session->trace (TC_X, 'addressEditCard-4: ' . $id . "/" . $books);
+		$session->trace (TC_Gui1, 'addressEditCard-4: ' . $id . "/" . $books);
 	}
 	if (isset ($search_title) || isset ($search_body))
 		baseSearchResults ($session);
@@ -231,61 +229,60 @@ function addressEditCard (&$session, $message = null){
 		guiParagraph($session, $message, false);
 	guiStartForm ($session, 'search', P_EditCard);
 	guiHiddenField ('card_id', $card_id);
-	echo "<table border=\"0\">\n";
-	echo "<tr><td>Id:</td><td>$card_id</td><tr>\n";
-	echo "<tr><td>Adressbücher:</td><td>";
-	guiTextField ('card_books', $books, 34, 0);
-	echo "<tr><td>Vor-, Nachname:</td><td>";
-	guiTextField ('card_firstname', $firstname, 16, 64);
-	echo ' ';
-	guiTextField ('card_lastname', $lastname, 16, 64);
-	echo "</td></tr><tr><td>Spitzname:</td><td>";
-	guiTextField ('card_nickname', $nickname, 16, 64);
-	echo "</td></tr>\n<tr><td>Privat:</td></tr>\n";
-	echo "<tr><td>EMail<br>EMail2:</td><td>";
-	guiTextField ('card_emailprivate', $emailprivate, 34, 128);
-	echo '<br>';
-	guiTextField ('card_emailprivate2', $emailprivate2, 34, 128);
-	echo "</td></tr>\n<tr><td>Telefon Telefon2</td><td>";
-	guiTextField ('card_phoneprivate', $phoneprivate, 16, 64);
-	echo ' ';
-	guiTextField ('card_phoneprivate2', $phoneprivate, 16, 64);
-	echo "</td></tr>\n<tr><td>Mobil Fax</td><td>";
-	guiTextField ('card_mobileprivate', $mobileprivate, 16, 64);
-	echo ' ';
-	guiTextField ('card_faxprivate', $faxprivate, 16, 64);
-	echo "</td></tr>\n<tr><td>Land PLZ Ort<br>Straße:</td><td>";
+	outTable (0);
+	outTableRecordCells ('Id:', $card_id);
+	outTableRecord();
+	outTableTextField ('Adressbücher:', 'card_books', $books, 34, 0);
+	outTableRecordDelim();
+	outTableTextField2 ('Vor-, Nachname:', 'card_firstname', $firstname,  16, 64,
+		' ', 'card_lastname', $lastname, 16, 64);
+	outTableRecordEnd();
+	outTableTextField ('Spitzname:', 'card_nickname', $nickname,  16, 64);
+	outTableRecordEnd();
+	outTableRecordCells ('Privat', ' ');
+	outTableRecord ();
+	outTableTextField2 ('EMail EMail2:',
+		'card_emailprivate', $emailprivate, 34, 128, ' ',
+		'card_emailprivate2', $emailprivate2, 34, 128);
+	outTableRecordDelim();
+	outTableTextField2 ('Telefon Telefon2:', 'card_phoneprivate', $phoneprivate, 34, 128,
+		' ', 'card_phoneprivate2', $phoneprivate2, 34, 128);
+	outTableRecordDelim();
+	outTableTextField2 ('Mobil Fax:', 'card_mobileprivate', $mobileprivate, 34, 128,
+		' ', 'card_faxprivate', $faxprivate, 34, 128);
+	outTableRecordDelim ();
+	outTableCell ('Land PLZ Ort Straße:');
+	outTableDelim();
 	guiTextField ('card_country', $country, 3, 64);
 	echo ' ';
 	guiTextField ('card_zip', $zip, 5, 12);
 	echo ' ';
 	guiTextField ('card_city', $city, 22, 64);
-	echo '<br>';
-	guiTextField ('card_street', $country, 34, 64);
-	echo "</td></tr>\n<tr><td>Geschäftlich:</td></tr>\n";
-	echo "<tr><td>EMail<br>EMail2:</td><td>";
-	guiTextField ('card_emailoffice', $emailoffice, 34, 128);
-	echo '<br>';
-	guiTextField ('card_emailoffice2', $emailoffice2, 34, 128);
-	echo "</td></tr>\n<tr><td>Telefon Telefon2</td><td>";
-	guiTextField ('card_phoneoffice', $phoneoffice, 16, 64);
 	echo ' ';
-	guiTextField ('card_phoneoffice2', $phoneoffice, 16, 64);
-	echo "</td></tr>\n<tr><td>Mobil Fax</td><td>";
-	guiTextField ('card_mobileoffice', $mobileoffice, 16, 64);
-	echo ' ';
-	guiTextField ('card_faxoffice', $faxoffice, 16, 64);
-	echo "</td></tr>\n<tr><td>Funktionen:</td><td>";
-	guiTextField ('card_functions', $functions, 34, 128);
-	echo "</td></tr>\n<tr><td>Notizen:</td><td>";
-	guiTextArea ('card_notes', $notes, 31, 4);
-	echo "</td></tr>\n<tr><td></td><td>";
-	guiButton ('card_change', 'Ändern');
-	echo ' ';
-	guiButton ('card_new', 'Neu');
-	echo "</td></tr>\n<tr><td>Nächster DS (Id):</td><td>";
-	guiTextField ('card_next', '', 8, 8);
-	echo "</td></tr>\n</table>\n";
+	guiTextField ('card_street', $street, 34, 128);
+	outTableDelimAndRecordEnd();
+	
+	outTableRecordCells ('Geschäftlich:', ' ');
+	outTableRecord ();
+	outTableTextField2 ('EMail: EMail2:',
+		'card_emailoffice', $emailoffice, 34, 128, ' ',
+		'card_emailoffice2', $emailoffice2, 34, 128);
+	outTableRecordDelim();
+	outTableTextField2 ('Telefon Telefon2:', 'card_phoneoffice', $phoneoffice, 34, 128,
+		' ', 'card_phoneoffice2', $phoneoffice2, 34, 128);
+	outTableRecordDelim();
+	outTableTextField2 ('Mobil Fax:', 'card_mobileoffice', $mobileoffice, 34, 128,
+		' ', 'card_faxoffice', $faxoffice, 34, 128);
+	outTableRecordDelim();
+	outTableTextField ('Funktionen', 'card_functions', $functions, 34, 128);
+	outTableRecordDelim();
+	outTableTextArea ('Bemerkungen:', 'card_notes', $notes, 31, 4);
+	outTableRecordDelim ();
+	outTableButton2 (' ', 'card_change', 'Ändern', ' ', 'card_new', 'Neu');
+	outTableRecordDelim();
+	outTableTextField ('Nächster DS (Id):', 'card_next', '', 8, 8);
+	outTableRecordEnd ();
+	outTableEnd ();
 	guiFinishForm ($session, $session);
 	guiStandardBodyEnd ($session, Th_AddressBodyEnd);
 }
@@ -307,7 +304,7 @@ function addressCheckBooks (&$session, $books, &$id_list){
 			}
 		}
 		$id_list .= $id . ($ii < count ($ids) - 1 ? ',' : '');
-	$session->trace (TC_X, 'addressCheckBooks: ' . $id_list);
+	$session->trace (TC_Gui2, 'addressCheckBooks: ' . $id_list);
 	}
 	return $error;
 }
@@ -360,41 +357,34 @@ function addressEditCardAnswer (&$session){
 	} elseif (isset ($_POST ['card_new'])){
 		$session->trace (TC_Gui1, 'addressEditCard-new entdeckt');
 		$name = $_POST ['card_lastname'];
-		if (empty ($name))
-			$message = 'Bitte Nachnamen angeben';
-		else if (dbSingleValue ($session, 'select count(id) from ' . dbTable ($session, Tab_Card) 
-			. ' where name=' . dbSqlString ($session, $name)) > 0)
-			$message = "Adresskarte mit Namen $name existiert schon!";
-		else {
-			dbInsert ($session, Tab_Card,
-				'firstname,lastname,nickname,'
-				. 'emailprivate,emailprivate2,phoneprivate,phoneprivate2,faxprivate,mobileprivate,'
-				. 'emailoffice,emailoffice2,phoneoffice,phoneoffice2,faxoffice,mobileoffice,'
-				. 'street,country,zip,city,functions,notes',
-				dbSqlString ($session, $_POST ['card_firstname'])
-				. ',' . dbSqlString ($session, $_POST ['card_lastname'])
-				. ',' . dbSqlString ($session, $_POST ['card_nickname'])
-				. ',' . dbSqlString ($session, $_POST ['card_emailprivate'])
-				. ',' . dbSqlString ($session, $_POST ['card_emailprivate2'])
-				. ',' . dbSqlString ($session, $_POST ['card_phoneprivate'])
-				. ',' . dbSqlString ($session, $_POST ['card_phoneprivate2'])
-				. ',' . dbSqlString ($session, $_POST ['card_faxprivate'])
-				. ',' . dbSqlString ($session, $_POST ['card_mobileprivate'])
-				. ',' . dbSqlString ($session, $_POST ['card_emailoffice'])
-				. ',' . dbSqlString ($session, $_POST ['card_emailoffice2'])
-				. ',' . dbSqlString ($session, $_POST ['card_phoneoffice'])
-				. ',' . dbSqlString ($session, $_POST ['card_phoneoffice2'])
-				. ',' . dbSqlString ($session, $_POST ['card_faxoffice'])
-				. ',' . dbSqlString ($session, $_POST ['card_mobileoffice'])
-				. ',' . dbSqlString ($session, $_POST ['card_street'])
-				. ',' . dbSqlString ($session, $_POST ['card_country'])
-				. ',' . dbSqlString ($session, $_POST ['card_zip'])
-				. ',' . dbSqlString ($session, $_POST ['card_city'])
-				. ',' . dbSqlString ($session, $_POST ['card_functions'])
-				. ',' . dbSqlString ($session, $_POST ['card_notes'])
-				);
-			$message = "Adresskarte $name wurde erstellt.";
-		}
+		dbInsert ($session, Tab_Card,
+			'firstname,lastname,nickname,'
+			. 'emailprivate,emailprivate2,phoneprivate,phoneprivate2,faxprivate,mobileprivate,'
+			. 'emailoffice,emailoffice2,phoneoffice,phoneoffice2,faxoffice,mobileoffice,'
+			. 'street,country,zip,city,functions,notes',
+			dbSqlString ($session, $_POST ['card_firstname'])
+			. ',' . dbSqlString ($session, $_POST ['card_lastname'])
+			. ',' . dbSqlString ($session, $_POST ['card_nickname'])
+			. ',' . dbSqlString ($session, $_POST ['card_emailprivate'])
+			. ',' . dbSqlString ($session, $_POST ['card_emailprivate2'])
+			. ',' . dbSqlString ($session, $_POST ['card_phoneprivate'])
+			. ',' . dbSqlString ($session, $_POST ['card_phoneprivate2'])
+			. ',' . dbSqlString ($session, $_POST ['card_faxprivate'])
+			. ',' . dbSqlString ($session, $_POST ['card_mobileprivate'])
+			. ',' . dbSqlString ($session, $_POST ['card_emailoffice'])
+			. ',' . dbSqlString ($session, $_POST ['card_emailoffice2'])
+			. ',' . dbSqlString ($session, $_POST ['card_phoneoffice'])
+			. ',' . dbSqlString ($session, $_POST ['card_phoneoffice2'])
+			. ',' . dbSqlString ($session, $_POST ['card_faxoffice'])
+			. ',' . dbSqlString ($session, $_POST ['card_mobileoffice'])
+			. ',' . dbSqlString ($session, $_POST ['card_street'])
+			. ',' . dbSqlString ($session, $_POST ['card_country'])
+			. ',' . dbSqlString ($session, $_POST ['card_zip'])
+			. ',' . dbSqlString ($session, $_POST ['card_city'])
+			. ',' . dbSqlString ($session, $_POST ['card_functions'])
+			. ',' . dbSqlString ($session, $_POST ['card_notes'])
+			);
+		$message = "Adresskarte $name wurde erstellt.";
 	}
 	addressEditcard ($session, $message);
 }
