@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.14 2004/11/05 17:45:54 hamatoma Exp $
+// $Id: classes.php,v 1.15 2004/11/08 13:28:16 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -250,7 +250,8 @@ class Session {
 	var $fFeatureList; // Bit-Liste der Eigenschaften (F_...)
 	
 	var $fTraceInFile; // true: trace() schreibt in Datei (statt in HTML-Ausgabe).
-	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.	
+	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.
+	var $fTraceDirect; // true: sofortiges echo	
 	function Session ($start_time){
 		global $_SERVER;
 		global $db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix;
@@ -302,20 +303,22 @@ class Session {
 		} // mysql
 		$this->fTraceFile = "/tmp/trace.log";
 		#$this->fTraceFile = null;
+		$this->fTraceDirect = false;
 		$this->fTraceFlags
 			= 0 * (1 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1)
 			+ 1 * (1 * TC_Gui1 + 2 * TC_Gui2 + 0 * TC_Gui3)
 			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
 			+ 0 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
 			+ 0 * TC_Layout1
-			+ 1 * (1 * TC_Update + 1 * TC_Insert + 0 * TC_Query)
+			+ 0 * (1 * TC_Update + 1 * TC_Insert + 0 * TC_Query)
 			+ 1 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
-		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
+		#$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
 		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 		$this->fTraceInFile = false;
 		$this->fTraceInFile = true;
+		$this->trace (TC_Init, "TC: " . $this->fTraceFlags . " InFile: " . ($this->fTraceInFile ? 'f' : 'f'));
 		$this->fTraceFile = "/tmp/trace.log";
 		$this->trace (TC_Init, "Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
 			. $this->fPageURL . "' ($pos) <== '" . $uri . "'");
@@ -346,7 +349,7 @@ class Session {
 		}
 	}
 	function Write ($line){
-		if ($this->fHasBody)
+		if ($this->fHasBody || $this->fTraceDirect)
 			echo $line;
 		else {
 			if (!$this->fBodyLines)
