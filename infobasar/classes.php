@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.12 2004/10/29 23:22:37 hamatoma Exp $
+// $Id: classes.php,v 1.13 2004/10/30 10:39:31 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -173,6 +173,14 @@ define ('R_Rights', 'right');
 // Features:
 define ('FEATURE_UPLOAD_ALLOWED', 1);
 
+// Alignments:
+define ('AL_None', null);
+define ('AL_Right', 'Right');
+define ('Al_Left', 'left');
+define ('AL_Justify', 'justify');
+define ('AL_Center', 'center');
+define ('AL_Top', 'top');
+define ('AL_Bottom', 'bottom');
 
 class Session {
 	// var, wenn protected nicht geht
