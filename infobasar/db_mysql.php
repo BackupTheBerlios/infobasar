@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.14 2005/01/05 05:25:56 hamatoma Exp $
+// $Id: db_mysql.php,v 1.15 2005/01/06 11:52:44 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -20,7 +20,7 @@ function dbOpen (&$session) {
 				. $session->fDbServer . ' (' . $session->fDbUser
 				. ') aufbauen, ich gebe auf.';
 	$session->fDbPassw = '\n\nDas stimmt sicher nicht!';
-	$msg .= "<BR>";
+	$msg .= TAG_NEWLINE;
 	$msg .= sprintf ("MySql error: %s", mysql_error ());
 	panicExit ($session, $msg);
 	}
@@ -28,11 +28,12 @@ function dbOpen (&$session) {
 
 		$msg =  sprintf ("Kann Datenbank nicht öffnen %s, ich gebe auf.",
 			 $session->fDbName);
-	 $msg .= "<BR>DB=" . $session->fDbName . "<BR>";
+	 $msg .= TAG_NEWLINE . 'DB=' . $session->fDbName . TAG_NEWLINE;
 	 $msg .= sprintf ("MySql error: %s", mysql_error ());
 	 panicExit ($session, $msg);
 	} else {
 		$session->setDbConnectionInfo ($dbc, $dbc);
+		$session->trace (TC_Db1, 'dbOpen: DB ' . $session->fDbName . ' geöffnet');
 	}
 } // dbOpen
 
@@ -213,7 +214,6 @@ function dbStringToBool (&$session, $value) {
 }
 
 function dbCheckUser (&$session, $user, $code) {
-	global $session_user;
 	$session->trace (TC_Db1, 'dbCheckUser');
 	$uid = dbUserId ($session, $user);
 	if (! $uid)
@@ -246,15 +246,16 @@ function dbCheckUser (&$session, $user, $code) {
 		break;
 	default:
 		$rc = '';
-		$session_user = $fields [0];
+		$session->setSessionUser ($fields [0]);
 	#function setUserData ($id, $name, $theme, $width, $height,
 	#	$maxhits, $postingsperpage, $threadsperpage, $startpage) {
-		$session->setUserData ($session_user, $user, $fields [3], $fields [4], $fields [5], 
+		$session->setUserData ($fields [0], $user, $fields [3], $fields [4], $fields [5], 
 			$fields [6], $fields [7], $fields [8],
 			$fields [9]);
 		$session->setMacros ();
 		break;
 	}
+	$session->trace (TC_Db1, 'dbCheckUser: rc="' . $rc . '"');
 	return $rc;
 }
 function dbUserAdd (&$session, $user, $code, $locked,
@@ -273,32 +274,33 @@ function dbUserAdd (&$session, $user, $code, $locked,
 		. dbSqlString ($session, $startpage) . ',' . dbSqlString ($session, $email));
 }
 function dbCheckSession (&$session) {
-	global $session_id, $session_user;
-	global $PATH_INFO;
 	$rc = null;
 	$session->trace (TC_Db1, 'dbCheckSession');
-	if (! empty ($session_user)){
+	if ($session->fSessionUser != null){
 		$fields = dbSingleRecord ($session,
 			'select name,locked,theme,width,height,maxhits,postingsperpage,'
 			. 'threadsperpage,startpage from '
-				. dbTable ($session, "user") . " where id=$session_user;");
+				. dbTable ($session, T_User) . ' where id=' . $session->fSessionUser);
 		if ($fields == null)
-			$rc = 'Unbekannter Benutzer' . (empty ($session_user) ? '!' : ':' . $session_user);
+			$rc = 'Unbekannter Benutzer' 
+				. ($session->fSessionUser == null ? '!' : ':' . $session->fSessionUser);
 		else {
 			if (false && dbStringToBool ($session, $fields[1]))
-				$rc = "Benutzer $session_user ist gesperrt";
+				$rc = 'Benutzer ' . $session->fSessionUser . ' ist gesperrt';
 			else {
 			# function setUserData ($id, $name, $theme, $width, $height,
 			#	$maxhits, $postingsperpage, $threadsperpage, $startpage) {
-				$session->setUserData ($session_user, $fields[0],
+				$session->setUserData ($session->fSessionUser, $fields[0],
 					$fields[2], $fields[3], $fields[4], $fields[5], $fields[6],
 					$fields[7], $fields [8]);
-				$session->setPageName (substr ($PATH_INFO, 1));
+				if (! empty ($_SERVER ['PATH_INFO']))
+					$session->setPageName (substr ($_SERVER ['PATH_INFO'], 1));
 				$session->setMacros ();
 				$rc = null;
 			}
 		}
 	}
+	$session->trace (TC_Db1, 'dbCheckSession: rc=' . ($rc == null ? 'null' : $rc));
 	return $rc;
 }
 function dbUserId (&$session, $name){
