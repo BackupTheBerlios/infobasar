@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.23 2005/01/06 12:00:01 hamatoma Exp $
+// $Id: index.php,v 1.24 2005/01/06 17:00:36 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -15,20 +15,14 @@ define ('PHP_ModuleVersion', '0.7.0 (2005.01.03)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
-session_start();
-
-if (!session_is_registered("session_user")) {
-	session_register("session_user");
-	session_register("session_start");
-	session_register("session_no");
-	$_SESSION ['session_user'] = $_SESSION ['session_start'] = $_SESSION ['session_no'] = null;
-	$start = time();
- }
- $session_id = session_id();
 define ('C_ScriptName', 'index.php');
 
 include "config.php";
 include "classes.php";
+
+$session_id = sessionStart ();
+
+
 include "modules.php";
 // ----------- Definitions
 // Actions:
@@ -39,8 +33,6 @@ define ('A_ShowText', 'showtext');
 define ('A_Diff', 'diff');
 define ('A_Show', 'show');
 // Predefined pages
-define ('P_Login', '!login');
-define ('P_Logout', '!logout');
 define ('P_Account', '!account');
 define ('P_Home', '!home');
 define ('P_NewPage', '!newpage');
@@ -79,44 +71,11 @@ define ('Th_EditEndWiki', 246);
 define ('Th_PreviewStart', 247);
 define ('Th_PreviewEnd', 248);
 
-
-
-// ------------Program
-
 $session = new Session ($start_time, $session_id, 
 	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
 	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
-
-	// All requests require the database
-dbOpen($session);
-
-if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
-	&& dbCheckUser ($session, $user, $code) == ''){
-	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
-}
-$rc = dbCheckSession ($session);
-$do_login = false;
-#$session->dumpVars ("Init");
-if ($rc != null) {
-	$session->trace (TC_Init, 'keine Session gefunden: ' . $rc . ' ' 
-		. (empty($_POST ['login_user']) ? "-" : '>' . $_POST ['login_user']));
-	$do_login = true;
-} else {
-		$session->trace (TC_Init, 'login_user: ' . getPostVar ('login_user')); 
-		if (isset ($_POST ['login_user']))
-			$do_login = baseLoginAnswer ($session, $rc);
-		else {
-			$known_user = $session->fSessionUser != null && $session->fSessionUser > 0; 
-			$do_login = $session->fPageName == P_Login || ! $known_user;
-			$session->trace (TC_Init, 'known_user: ' . ($known_user ? 't' : 'f'));
-		}
-}
-$session->trace (TC_Init, "session_no: do_login: " . ($do_login ? "t" : "f"));
-if ($do_login){
-		clearLoginCookie ($session);
-		baseLogin ($session, $rc);
-} else {
-		$session->trace (TC_Init, 'index.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
+if (successfullLogin ($session)){
+	$session->trace (TC_Init, 'index.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($_GET ['action'])) {
 		$session->trace (TC_Init, 'index.php: action: ' . $_GET ['action']);
 		switch ($_GET ['action']){
@@ -161,11 +120,10 @@ if ($do_login){
 		elseif ( ($page_id = dbPageId ($session, $session->fPageName)) > 0)
 			guiShowPageById ($session, $page_id, null);
 		else {
-			baseLogin ($session, null);;
+			guiLogin ($session, null);;
 		}
 	}
 }
-$session->storeSession ();
 exit (0);
 
 // ------------------------------------------------------
@@ -202,90 +160,6 @@ function baseShowCurrentPage (&$session){
 		$session->SetLocation (P_Home);
 		baseHome ($session);
 	}
-}
-function baseLogin (&$session, $message) {
-	guiStandardHeader ($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader,
-		null);
-	guiStartForm ($session, 'login', P_Login);
-	if (! empty ($message)) {
-		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
-		guiParagraph ($session, $message, false);
-	}
-	if (! isset ($_POST ['login_user'])){
-		$_POST ['login_user'] = $session->fUserName;
-		$_POST ['login_email'] = '';
-	}
-	
-	outTableAndRecord ();
-	outTableTextField ('Benutzername:', 'login_user', null, 32, 32);
-	outTableRecordDelim();
-	outTablePasswordField ('Passwort:', 'login_code', '', 32, 32);
-	outTableRecordDelim();
-	outTableButton (' ', 'but_login', 'Anmelden');
-	outTableAndRecordEnd ();
-	guiLine ($session, 2);
-	guiParagraph ($session, 'Passwort vergessen?', false);
-	outTableAndRecord();
-	outTableTextField ('EMail-Adresse:', 'login_email', null, 32, 0);
-	outTableRecordDelim();
-	outTableButton (' ', 'but_forget', 'Passwort ändern');
-	outTableAndRecordEnd();
-	echo '(Das neue Passwort wird dann zugeschickt.)';
-	outNewline();
-	outStrong('Achtung:');
-	echo 'Benutzername muss ausgefüllt sein!';
-	guiFinishForm ($session, $session);
-	guiStandardBodyEnd ($session, Th_LoginBodyEnd);
-	return 1;
-}
-function baseLoginAnswer (&$session, &$message) {
-	$session->trace (TC_Gui1, 'baseLoginAnswer; login_user: ' . $_POST ['login_user']);
-	$login_again = true;
-	$message = null;
-	$again = false;
-	$user =$_POST ['login_user'];
-	$email = $_POST ['login_email'];
-	$code = $_POST ['login_code'];
-	if (isset ($_POST ['but_forget'])) {
-		if (empty ($user))
-			$message = "+kein Benutzername angegeben";
-		elseif (empty ($email))
-			$message = "+keine EMail-Adresse angegeben";
-		else {
-			$row = dbSingleRecord ($session, 'select id,email from ' . dbTable ($session, T_User)
-				. ' where name=' . dbSqlString ($session, $user));
-			if (! $row)
-				$message = "+unbekannter Benutzer";
-			elseif (empty ($row [1]))
-				$message = "+keine EMail-Adresse eingetragen";
-			elseif (strcasecmp ($row [1], $email) != 0)
-				$message = "+EMail-Adresse ist nicht bekannt";
-			else {
-				sendPassword ($session, $row [0], $user, $email);
-				$message = 'Das Passwort wurde an ' . $email . ' verschickt';
-			}
-		}
-		$again = true;
-	} else {
-		$message = dbCheckUser ($session, $user,$code);
-		if (! empty ($message))
-			$again = true;
-		else {
-			setLoginCookie ($session, $user, $code);
-			$session->setPageName (P_Start);
-			$session->setSessionNo (1);
-		}
-	}
-	return $again;
-}	
-function baseLogout (&$session){
-	clearLoginCookie ($session);
-	setLoginCookie ($session, '?', '?');
-	$session->clearSessionData ();
-	$session->fUserId = null;
-	$name = $session->fUserName;
-	$session->fUserName = null;
-	baseLogin ($session, 'Daten für automatische Anmeldung wurden gelöscht: ' . $name);
 }
 
 function baseSplitRights (&$session, &$account_right_user, &$account_right_rights, 
@@ -895,8 +769,8 @@ function baseCallStandardPage (&$session) {
 	$session->trace (TC_Gui2, 'baseCallStandardPage: ' . $session->fPageName);
 	$found = true;
 	switch ($session->fPageName) {
-	case P_Login:	baseLogin ($session, ''); break;
-	case P_Logout:	baseLogout ($session); break;
+	case P_Login:	guiLogin ($session, ''); break;
+	case P_Logout:	guiLogout ($session); break;
 	case P_Account: baseAccount ($session, ''); break;
 	case P_Home: 	baseHome ($session); break;
 	case P_NewPage:	baseEditPage ($session, C_New); break;

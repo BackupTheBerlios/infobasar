@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.10 2005/01/06 11:44:33 hamatoma Exp $
+// $Id: admin.php,v 1.11 2005/01/06 16:56:59 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -15,15 +15,8 @@ define ('PHP_ModuleVersion', '0.6.5.3 (2004.10.28)');
 
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
-session_start();
 
- // If this is a new session, then the variable $user_id
- if (!session_is_registered("session_user")) {
-	session_register("session_user");
-	session_register("session_start");
-	$start = time();
- }
-$session_id = session_id();
+$session_id = sessionStart ();
 
 define ('ADMIN', true);
 define ('C_ScriptName', 'admin.php');
@@ -31,7 +24,6 @@ define ('C_ScriptName', 'admin.php');
 define ('M_Base', 'index.php');
 
 // Seitennamen: (Admin-Modus)
-define ('P_Login', 'login');
 define ('P_Home', 'home');
 define ('P_Param', 'param');
 define ('P_Macro', 'macro');
@@ -51,24 +43,16 @@ define ('FN_PageExport', 'exp_pages.wiki');
 include "config.php";
 include "classes.php";
 
-$session = new Session ($start_time);
-
-// All requests require the database
-dbOpen($session);
-
-$rc = dbCheckSession ($session);
-if (! empty ($rc)) {
-	// p ("Keine Session gefunden: $session_id / $session_user ($rc)");
-	if (! empty ($login_user))
-		admLoginAnswer ($session);
-	else
-		admLogin ($session, '');
-} else {
+$session = new Session ($start_time, $session_id, 
+	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
+	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
+if (successfullLogin ($session)){
 	switch ($session->fPageName) {
 	case P_Param: admParam ($session, ''); break;
 	case P_Macro: admMacro ($session, ''); break;
 	case P_Home: admHome($session, ''); break;
-	case P_Login: admLogin($session, ''); break;
+	case P_Login: guiLogin($session, ''); break;
+	case P_Logout: guiLogout($session); break;
 	case P_Forum: admForum($session, '', C_New); break;
 	case P_Backup: admBackup ($session, true, null); break;
 	case P_ExportPages: admExportPages ($session, null); break;
@@ -119,6 +103,8 @@ if (! empty ($rc)) {
 		else admHome ($session);
 	}
 }
+exit (0);
+
 // --------------------------------------------------------------------
 function admStandardLinkString(&$session, $page){
 	$session->trace (TC_Gui3, 'admStandardLink');
@@ -146,40 +132,6 @@ function admStandardLinkString(&$session, $page){
 function admStandardLink(&$session, $page){
 	echo admStandardLinkString ($session, $page);
 }
-function admLogin (&$session, $message) {
-	guiStandardHeader ($session, 'Anmeldung f&uuml;r den InfoBasar', Th_StandardHeader,
-		Th_StandardBodyStart);
-	guiStartForm ($session, 'login', P_Login);
-	if (! empty ($message)) {
-		$message = preg_replace ('/^\+/', '+++ Fehler: ', $message);
-		guiParagraph ($session, $message, false);
-	}
-	outTableAndRecord ();
-	outTableTextField ('Benutzername:', 'login_user', null, 32);
-	outTableRecordDelim ();
-	outTablePasswordField ('Passwort:', 'login_code', null, 32);
-	outTableRecordDelim ();
-	outTableRecordDelim ();
-	outTableButton (' ', 'but_login', 'Anmelden');
-	outTableAndRecordEnd ();
-	guiFinishForm ($session, $session);
-	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
-	return 1;
-}
-function admLoginAnswer (&$session) {
-	$again = true;
-	$session->trace (TC_Gui1, 'admLoginAnswer');
-	global $session_user;
-	$rc = dbCheckUser ($session, $_POST ['login_user'], $_POST ['login_code']);
-	if (! empty ($rc))
-		admLogin ($session, $rc);
-	else {
-		setLoginCookie ($session, $_POST ['login_user'], $_POST ['login_code']);
-		$session->setPageName (P_Home);
-		$again = false;
-	}
-	return $again;
-}	
 
 function admHome (&$session){
 	global $session_id, $session_user;

@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.5 2005/01/06 11:54:54 hamatoma Exp $
+// $Id: forum.php,v 1.6 2005/01/06 16:58:49 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -17,19 +17,10 @@ error_reporting(E_ALL);
 
 define ('PARAM_BASE', 300);
 
-session_start();
-
- if (!session_is_registered("session_user")) {
-	session_register("session_user");
-	session_register("session_start");
-	session_register("session_no");
-	$_SESSION ['session_user'] = $_SESSION ['session_start'] = $_SESSION ['session_no'] = null;
-	$start = time();
- }
- $session_id = session_id();
-
 include "config.php";
 include "classes.php";
+
+$session_id = sessionStart ();
 
 // ----------- Definitions
 // Alle Designs:
@@ -68,37 +59,10 @@ define ('P_Thread', 'thread');
 // Im Basismodul:
 define ('P_Home', '!home');
 
-// ----------- Program
-
-
 $session = new Session ($start_time, $session_id, 
 	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
 	$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix);
-
-	// All requests require the database
-dbOpen($session);
-
-if ((empty ($session_user)) && getLoginCookie ($session, $user, $code)
-	&& dbCheckUser ($session, $user, $code) == ''){
-	$session->trace (TC_Init, 'index.php: Cookie erfolgreich gelesen');
-}
-$rc = dbCheckSession ($session);
-
-$do_login = false;
-if (! empty ($rc)) {
-	// p ("Keine Session gefunden: $session_id / $session_user ($rc)");
-	if (! empty ($user))
-		baseLoginAnswer ($session);
-	else 
-		$do_login = true;
-} else {
-		if (isset ($_POST ['login_user']))
-			baseLoginAnswer ($session);
-}
-if ($do_login){
-		clearLoginCookie ($session);
-		baseLogin ($session, '');
-} else {
+if (successfullLogin ($session)){
 	$session->trace (TC_Init, 'forum.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($_GET ['action'])) {
 		$session->trace (TC_Init, 'index.php: action: ' . $_GET ['action']);
@@ -564,6 +528,8 @@ function baseCallStandardPage (&$session) {
 	$session->trace (TC_Gui2, 'baseCallStandardPage');
 	$found = true;
 	switch ($session->fPageName) {
+	case P_Login: guiLogin ($session, null); break;
+	case P_Logout: guiLogout ($session); null;
 	case P_ForumHome: baseForumHome ($session); break;
 	case P_Forum: baseForum ($session); break;
 	case P_Thread: baseThread ($session); break;
