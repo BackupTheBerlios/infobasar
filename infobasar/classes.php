@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.21 2004/12/31 20:56:42 hamatoma Exp $
+// $Id: classes.php,v 1.22 2005/01/04 23:32:46 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 
-define ('PHP_ClassVersion', '0.6.6.1 (2004.12.25)');
+define ('PHP_ClassVersion', '0.7.0 (2005.01.03)');
 
 define ('PATH_DELIM', '/');
 define ('COOKIE_NAME', 'infobasar');
@@ -662,10 +662,9 @@ class Session {
 		return $text;
 	}
 	function replaceMacrosHTML ($text){
-		if ( ($pos = strpos ($text, Macro_Char)) >= 0 && is_int ($pos)){
-			$text = str_replace (TM_Newline, TAG_NEWLINE, $text);
-			$text = preg_replace (TAG_REXPR_BIG_SMALL, TAG_REPLACEMENT_MATCH1, $text);
-		}
+		# if ( ($pos = strpos ($text, Macro_Char)) >= 0 && is_int ($pos)){
+		#	$text = str_replace (TM_Newline, TAG_NEWLINE, $text);
+		#}
 		return $text;
 	}
 }
