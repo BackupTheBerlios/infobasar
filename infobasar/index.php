@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.15 2004/11/05 17:58:17 hamatoma Exp $
+// $Id: index.php,v 1.16 2004/11/06 00:01:07 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -496,7 +496,7 @@ function baseHome (&$session) {
 		outTableCell (tagNewline() .tagStrong ('Wiki- und HTML-Seiten:'));
 		outTableCell (' ');
 		outTableRecordDelim();
-		outTableInternLink (null, $session, encodeWikiName ($session, 'StartSeite'), 
+		outTableInternLink ($session, null, encodeWikiName ($session, 'StartSeite'), 
 			'StartSeite'); 
 		outTableCell ('Wiki-Startseite');
 		baseOutStandardLink($session, P_LastChanges, 
@@ -645,7 +645,7 @@ function baseEditPage (&$session, $mode,
 		outTableCell ('Bild einf&uuml;gen:');
 		guiHiddenField ('MAX_FILE_SIZE', 500000);
 		outTableDelim(AL_Justify);
-		echo '<input name="edit_upload_file" type="file">';
+		guiFileField ('edit_upload_file');
 		outTableDelimEnd();
 		outTableButton (null, 'edit_upload', 'Hochladen');
 		outTableCell ('H&ouml;he:');
@@ -856,12 +856,12 @@ function baseSearchResults (&$session){
 		else {
 			outTable (1);
 			outTableRecord();
-			outTableCell ('Seite:');
-			outTableCell ('Typ:');
+			outTableCellStrong ('Seite:');
+			outTableCellStrong ('Typ:');
 			outTableRecordEnd();
 			while ($row) {
 				outTableRecord();
-				outTableInternLink(null, $session, 
+				outTableInternLink($session, null, $session, 
 						encodeWikiName ($session, $row[0]), $row[0]);
 				outTableCell (textTypeToMime($row[1]));
 				outTableRecordEnd();
@@ -882,26 +882,27 @@ function baseSearchResults (&$session){
 			if (! $row)
 				guiParagraph ($session, '+++ keine passende Seiten gefunden', false);
 			else {
-				echo '<table border="1"><tr><td>Seite:</td><td>Typ:</td>'
-				. '<td>von</td><td>Letzte &Auml;nderung</td><td>Fundstelle</td></tr>';
+				outTableAndRecord ($session, 1);
+				outTableCellStrong ('Seite:');
+				outTableCellStrong ('Typ:');
+				outTableCellStrong ('von:');
+				outTableCellStrong ('Letzte &Auml;nderung:');
+				outTableCellStrong ('Fundstelle:');
+				outTableRecordEnd();
 				while ($row) {
 					$pagerecord = dbGetRecordById ($session, T_Page, $row[0],
 						'name,type');
-					echo "\n<tr><td>";
-					guiInternLink ($session, 
+					outTableRecord ();
+					outTableInternLink ($session, null,
 						encodeWikiName ($session, $pagerecord[0]), $pagerecord[0]);
-					echo '</td><td>';
-					echo $pagerecord [1];
-					echo  '</td><td>';
-					echo $row [2];
-					echo '</td><td>';
-					echo htmlentities ($row [3]);
-					echo '</td><td>';
-					echo findTextInLine ($row [1], $search_bodytext, 3);
-					echo '</td><tr>' . "\n";
+					outTableCell ($pagerecord [1]);
+					outTableCell ($row [2]);
+					outTableCell (htmlentities ($row [3]));
+					outTableCell (findTextInLine ($row [1], $search_bodytext, 3));
+					outTableRecordEnd ();
 					$row = dbNextRecord ($session);
 				}
-				echo "\n</table>\n";
+				outTableEnd ();
 			}
 		}
 	}
@@ -962,41 +963,45 @@ function basePageInfo (&$session) {
 			encodeWikiName ($session, $pagename), "Aktuelle Version"), false);
 	} else {
 		guiHeadline ($session, 2, "Versionen ($count)");
-		echo '<table border="1"><tr><td><b>Id</b></td>'
-			. '<td><b>Autor</b></td><td><b>erzeugt</b></td>'
-			. '<td><b><b>Unterschied zum Nachfolger</b></td>'
-			. '<td><b>Unterschied zu jetzt</b></td></tr>' . "\n";
+		outTableAndRecord (1);
+		outTableCellStrong ('Id');
+		outTableCellStrong ('Autor');
+		outTableCellStrong ('erzeugt');
+		outTableCellStrong ('Unterschied zum Nachfolger');
+		outTableCellStrong ('Unterschied zu jetzt');
+		outTableRecordEnd ();
 		$row = dbFirstRecord ($session,
 			'select id,createdby,createdat,changedat,replacedby from '
 				. dbTable ($session, T_Text) . ' where page=' . (0 + $pageid)
 				. ' order by id desc');
 		$act_text_id = $row [0];
 		while ($row) {
+			outTableRecord ();
 			$text_id = $row [0];
 			$replacedby = $row [4];
-			echo '<tr><td>';
-			guiInternLink ($session,
+			outTableInternLink ($session, null,
 				$pagelink . '?action=' . A_ShowText
 				. '&page_id=' . $pageid . '&text_id=' . ($text_id+0), $text_id);
-			echo '</td><td>';
-			guiAuthorLink ($session, $row [1]);
-			echo '</td><td>' . dbSqlDateToText ($session, $row [2]);
-			echo '</td><td>';
+			outTableAuthorLink ($session, $row [1]);
+			outTableCell (dbSqlDateToText ($session, $row [2]));
 			if ($replacedby > 0) {
-				guiInternLink ($session, $pagelink . '?action=' . A_Diff
+				outTableInternLink ($session, null, $pagelink . '?action=' . A_Diff
 					. '&text_id=' . $replacedby . '&text_id2=' . $text_id,
 					' Unterschied zu ' . $replacedby);
-				if ($replacedby != $act_text_id){
-					echo '</td><td>';
-					guiInternLink ($session, $pagelink . '?action=' . A_Diff
+				if ($replacedby == $act_text_id)
+					outTableCell (' ');
+				else
+					outTableInternLink ($session, null, $pagelink . '?action=' . A_Diff
 						. '&text_id=' . $text_id . '&text_id2=' . $act_text_id,
 						' Unterschied zu jetzt');
-				}
+			} else {
+				outTableCell (' ');
+				outTableCell (' ');
 			}
-			echo '</td></tr>' . "\n";
+			outTableRecordEnd ();
 			$row = dbNextRecord ($session);
 		}
-		echo '</table>' . "\n";
+		outTableEnd ();
 	}
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
 }
@@ -1041,12 +1046,13 @@ function baseLastChanges (&$session) {
 	if (! isset ($last_days) || $last_days < 1)
 		$last_days = 7;
 	guiStartForm ($session);
-	echo '<p>Zeitraum: die letzten ';
+	outParagraph ();
+	echo 'Zeitraum: die letzten ';
 	guiTextField ('last_days', $last_days, 3, 4);
 	echo ' Tage ';
 	guiButton ('last_refresh', 'Aktualisieren');
-	echo '</p>' . "\n";
-	echo '<table border="0">' . "\n";
+	outParagraphEnd ();
+	outTable ();
 
 	for ($day = 0; $day <= $last_days; $day++) {
 		$date = localtime (time () - $day * 86400);
@@ -1062,60 +1068,60 @@ function baseLastChanges (&$session) {
 			. dbTable ($session, T_Page) . ' p where p.id=t.page and '
 			. $condition . ' order by createdat desc');
 		if ($rec){
-			echo '<tr><td><b>';
-			echo $time_0;
-			echo '</b></td></tr>' . "\n";
+			outTableRecord ();
+			outTableCellStrong ($time_0);
+			outTableRecordEnd ();
 			do {
 				$text_id = $rec [0]+0;
 				$page_id = $rec [5]+0;
 				$page_name = $rec [1];
 				$page_link = encodeWikiName ($session, $page_name);
-				echo '<tr><td>';
-				echo dbSingleValue ($session, 'select min(id) from '
+				outTableRecord ();
+				outTableCell (dbSingleValue ($session, 'select min(id) from '
 					. dbTable ($session, T_Text) . ' where page=' . $page_id)
-					== $text_id ? 'Neu' : 'Änderung';
-				echo '</td><td>';
-				guiInternLink ($session, $page_link . '?action=' . A_ShowText
+					== $text_id ? 'Neu' : 'Änderung');
+				outTableInternLink ($session, null, $page_link . '?action=' . A_ShowText
 					. '&page_id=' . $page_id . '&text_id=' . $text_id, $text_id);
-				echo '</td><td>';
-				guiInternLink ($session, $page_link, $page_name);
-				echo '</td><td>';
-				guiAuthorLink ($session, $rec [2]);
-				echo '</td><td>';
-				echo dbSqlDateToText ($session, $rec [3]);
+				outTableInternLink ($session, null, $page_link, $page_name);
+				outTableAuthorLink ($session, $rec [2]);
+				outTableCell (dbSqlDateToText ($session, $rec [3]));
 				$pred_rec = dbSingleValue ($session, 'select max(id) from '
 					. dbTable ($session, T_Text) . ' where page=' . $page_id
 					. ' and createdat<'
 					. dbSqlDateTime ($session, $time_2));
 				if ($pred_rec > 0) {
-					echo '</td><td>';
-					guiInternLink ($session, $page_link . '?action=' . A_Diff
+					outTableInternLink ($session, null, $page_link . '?action=' . A_Diff
 						. '&text_id=' . $text_id . '&text_id2=' . $pred_rec,
 						'Unterschied zum Vortag (' . $pred_rec . ')');
 				}
-				echo '</td></tr>' . "\n";
+				outTableRecordEnd ();
 			} while ( ($rec = dbNextRecord ($session)) != null);
 		}
 	}
-	echo '</table>';
+	outTableEnd();
 	guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 }
 function baseInfo (&$session) {
 	guiStandardHeader ($session, 'Infobasar-Info', Th_InfoHeader, null);
 	guiParagraph ($session, '(C) Hamatoma AT gmx DOT de 2004', 0);
-	echo '<table border="0"><tr><td><b>Gegenstand</b></td>';
-	echo '<td><b>Version</b></td></tr>' . "\n";
-	echo '<tr><td>PHP-Klasse:</td><td>';
-	echo PHP_ClassVersion;
-	echo '<tr><td>PHP-Basismodul:</td><td>';
-	echo PHP_ModuleVersion;
-	echo '</td></tr><tr><td>DB-Schema:</td><td>';
-	echo htmlentities (dbGetParam ($session, Theme_All, Param_DBScheme));
-	echo '<tr><td>DB-Basisinhalt:</td><td>';
-	echo htmlentities (dbGetParam ($session, Theme_All, Param_DBBaseContent));
-	echo '<tr><td>DB-Erweiterungen:</td><td>';
-	echo htmlentities (dbGetParam ($session, Theme_All, Param_DBExtensions));
-	echo '</td></tr></table>' . "\n";
+	outTable();
+	outTableRecord();
+	outTableCellStrong ('Gegenstand');
+	outTableCellStrong ('Version');
+	outTableRecordDelim ();
+	outTableCell ('PHP-Klasse:');
+	outTableCell ('PHP_ClassVersion');
+	outTableRecordDelim ();
+	outTableCell ('DB-Schema:');
+	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBScheme)));
+	outTableRecordDelim ();
+	outTableCell ('DB-Basisinhalt:');
+	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBBaseContent)));
+	outTableRecordDelim ();
+	outTableCell ('DB-Erweiterungen:');
+	outTableCell (htmlentities (dbGetParam ($session, Theme_All, Param_DBExtensions)));
+	outTableRecordEnd ();
+	outTable ();
 	guiStandardBodyEnd ($session, Th_InfoBodyEnd);
 }
 // --------------------
