@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.11 2004/06/17 22:57:18 hamatoma Exp $
+// $Id: gui.php,v 1.12 2004/06/28 22:10:39 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -133,6 +133,7 @@ function guiParagraph (&$session, $text, $convert){
 	echo "</p>\n";
 }
 function guiHeader (&$session, $title) {
+	$session->putHeader ();
 	$session->trace (TC_Gui1, 'guiHeader');
 	echo '<head>' . "\r\n";
 	$value = dbGetText ($session, Th_Header);
@@ -145,6 +146,8 @@ function guiHeader (&$session, $title) {
 		echo '<link rel="stylesheet" type="text/css" href="' . $value . '">' . "\n";
 	if (! empty ($title))
 		echo "<title>$title</title>\n</head>\n<body>\n";
+	if ($session->fBodyLines)
+		echo join ("\n", $session->fBodyLines);
 }
 function guiHeadline (&$session, $level, $text) {
 	$session->trace (TC_Gui2, 'guiHeadline');
