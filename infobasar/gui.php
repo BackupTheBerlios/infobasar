@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.23 2005/01/06 16:59:36 hamatoma Exp $
+// $Id: gui.php,v 1.24 2005/01/07 21:13:29 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -884,7 +884,7 @@ function guiLoginAnswer (&$session, &$message) {
 			$again = true;
 		else {
 			setLoginCookie ($session, $user, $code);
-			$session->setPageName (P_Start);
+			$session->setPageName (P_Home);
 			$session->setSessionNo (1);
 		}
 	}
