@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.29 2005/01/11 01:45:03 hamatoma Exp $
+// $Id: classes.php,v 1.30 2005/01/13 03:35:56 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -20,6 +20,8 @@ define ('C_Change', 'change');
 define ('C_Auto', 'auto');
 define ('C_LastMode', 'last');
 define ('C_Preview', 'preview');
+
+define ('MAX_UPLOAD_FILESIZE', 100000);
 
 define ('C_CHECKBOX_TRUE', 'J');
 
@@ -212,9 +214,10 @@ define ('TAG_BODY_HTML_END', "\n</body></html>");
 define ('TAG_BOLD_ITALIC', '<b><i>');
 define ('TAG_CITE', '<cite>');
 define ('TAG_CITE_END', '</cite>');
+define ('TAG_DIV', '<div>');
 define ('TAG_DIV_INDENT', '<div style="margin-left: 40px;">');
 define ('TAG_DIV_END', '</div>');
-define ('TAG_DOC_TYPE', '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">');
+define ('TAG_DOC_TYPE', '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">');
 define ('TAG_ENDPREFIX', '</'); 	
 define ('TAG_FORM_END', "</form>\n");
 define ('TAG_FORM_MULTIPART_POST_ACTION', '<form enctype="multipart/form-data" " method="post" action="');
@@ -241,7 +244,7 @@ define ('TAG_LINK_STYLESHEET', '<link rel="stylesheet" type="text/css" href="');
 define ('TAG_LISTITEM', '<li>');
 define ('TAG_LISTITEM_END', "</li>\n");
 define ('TAG_LISTITEM_END_LISTITEM', "</li>\n<li>");
-define ('TAG_META', "<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">\n");
+define ('TAG_META', '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">' . "\n");
 define ('TAG_NEWLINE', "<br/>\n");
 define ('TAG_OPTION', '<option');
 define ('TAG_PARAGRAPH_END', "</p>\n");
@@ -300,7 +303,7 @@ define ('TAGA_APO_WIDTH',  '" width="');
 define ('TAGA_BORDER_1', ' border="1"');		
 define ('TAGA_BORDER', ' border="');
 define ('TAGA_MAXSIZE', ' maxlength="');
-define ('TAGA_NAME', '" name="');
+define ('TAGA_NAME', ' name="');
 define ('TAGA_PX_END', "px;\">\n");
 define ('TAGA_SIZE', ' size="');
 define ('TAGA_SUBMIT_END', '" type="submit">');	
@@ -317,6 +320,9 @@ define ('TAGAV_RADIO', '"radio"');
 define ('TAGAV_SELECTED', ' selected');
 define ('TAGAV_TEXT', '"text"');
 
+// Standard-Widget-Namen:
+define ('BUTTON_UPLOAD', 'upload_go');
+define ('TEXTFIELD_UPLOAD', 'upload_file');
 class Session {
 	// var, wenn protected nicht geht
 	var $fDbType; // MySQL
@@ -392,6 +398,9 @@ class Session {
 	var $fTraceFile; // null oder Datei, in das der Ablauftrace geschrieben wird.
 	var $fTraceDirect; // true: sofortiges echo	
 	var $fAdmins; // mit ':' getrennte Usernamen der Admins
+	
+	var $fIsInParagraph; // true: ein Paragraph ist begonnen, nicht beendet.
+	
 	function Session ($start_time, $session_id, $session_user, $session_start, $session_no,
 		$db_type, $db_server, $db_user, $db_passw, $db_name, $db_prefix){
 		$this->fTraceFlags = 0;
@@ -414,6 +423,7 @@ class Session {
 		$this->fPageTitle = "";
 		$this->fUserTheme = Theme_Standard;
 		$this->fLogPageId = null;
+		$this->fIsInParagraph = false;
 		$this->fAdmins = ':wk:';
 		$this->fFeatureList = FEATURE_UPLOAD_ALLOWED;
 		; // FEATURE_UPLOAD_ALLOWED FEATURE_SIMPLE_USER_MANAGEMENT FEATURE_SECURE_LOGOUT 
@@ -461,7 +471,7 @@ class Session {
 		#$this->fTraceFlags = TC_All;
 		$this->fModules = null;
 		$this->fTraceInFile = false;
-		$this->fTraceInFile = true;
+		# $this->fTraceInFile = true;
 		$this->trace (TC_Init, "TC: " . $this->fTraceFlags . " InFile: " . ($this->fTraceInFile ? 'f' : 'f'));
 		$this->fTraceFile = "/tmp/trace.log";
 		$this->trace (TC_Init, "Session.Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
