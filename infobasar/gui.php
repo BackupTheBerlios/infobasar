@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.18 2004/12/31 01:33:35 hamatoma Exp $
+// $Id: gui.php,v 1.19 2004/12/31 20:57:58 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -666,9 +666,9 @@ function guiBacklinks (&$session, $page_name) {
 		echo TAG_ULIST;
 		foreach ($ids as $ii => $id) {
 			$page = dbGetRecordById ($session, T_Page, $id, 'name');
-			echo TAGN_LISTITEM;
+			echo TAG_LISTITEM;
 			guiInternLink ($session,  encodeWikiName ($session, $page [0]), $page [0]);
-			echo TAGN_LISTITEM_END;
+			echo TAG_LISTITEM_END;
 		}
 		echo TAG_ULIST_END;
 	}
