@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.5 2004/05/31 23:19:34 hamatoma Exp $
+// $Id: index.php,v 1.6 2004/06/08 11:30:25 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -95,6 +95,8 @@ if ($do_login){
 			guiTest ($session);
 		else if (substr ($session->fPageName, 0, 1) == '.')
 			guiNewPageReference ($session);
+		else if (isset ($last_refresh))
+			guiLastChanges ($session);
 		else if (isset ($alterpage_insert))
 			guiAlterPageAnswer ($session, C_New);
 		elseif (isset ($alterpage_changecontent))
@@ -107,12 +109,12 @@ if ($do_login){
 			|| isset ($account_other))
 			guiAccountAnswer ($session, $account_user);
 		elseif (isset ($search_title) || isset ($search_body))
-			guiSearchAnswer ($session, '');
+			guiSearch ($session, null);
 		elseif (isset ($forum_title) || isset ($forum_body))
 			guiForumSearchAnswer ($session, null);
 		elseif (isset ($edit_preview))
 			guiEditPage ($session, null);
-		elseif (isset ($edit_save))
+		elseif (isset ($edit_save) || isset ($edit_previewandsave))
 			guiEditPageAnswerSave ($session);
 		elseif (isset ($edit_cancel))
 			guiShowPageById ($session, $edit_pageid, null);
@@ -141,13 +143,13 @@ function init (&$session, $dbType) {
 		$session->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 	} // mysql
 	$session->fTraceFlags
-		= 1 * TC_Util1 + 1 * TC_Util2 + 0 * TC_Util1
+		= 0 * TC_Util1 + 0 * TC_Util2 + 0 * TC_Util1
 		+ 1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3
 		+ 0 * TC_Db1 + 0 * TC_Db2 + 0 * TC_Db3
 		+ 0 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
 		+ 0 * TC_Layout1
-		+ 1 * TC_Update + 1 * TC_Insert + 0 * TC_Query
-		+ 0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2
+		+ 1 * TC_Update + 1 * TC_Insert + 1 * TC_Query
+		+ 0 * TC_Convert + 0 * TC_Init + 0 * TC_Diff2
 		+ TC_Error + TC_Warning + TC_X;
 	$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
 	#$session->fTraceFlags = TC_All;
