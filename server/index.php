@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.6 2004/06/08 11:30:25 hamatoma Exp $
+// $Id: index.php,v 1.7 2004/06/10 19:41:21 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -63,7 +63,7 @@ if (! empty ($rc)) {
 }
 if ($do_login){
 		clearLoginCookie ($session);
-		ob_flush ();
+		ObFlush ($session);
 		guiLogin ($session, '');
 } else {
 		ob_flush ();
