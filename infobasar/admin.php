@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.11 2005/01/06 16:56:59 hamatoma Exp $
+// $Id: admin.php,v 1.12 2005/01/07 21:10:51 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -16,6 +16,10 @@ define ('PHP_ModuleVersion', '0.6.5.3 (2004.10.28)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
+
+include "config.php";
+include "classes.php";
+
 $session_id = sessionStart ();
 
 define ('ADMIN', true);
@@ -24,7 +28,6 @@ define ('C_ScriptName', 'admin.php');
 define ('M_Base', 'index.php');
 
 // Seitennamen: (Admin-Modus)
-define ('P_Home', 'home');
 define ('P_Param', 'param');
 define ('P_Macro', 'macro');
 define ('P_Forum', 'forum');
@@ -36,12 +39,10 @@ define ('P_Options', 'options');
 define ('P_PHPInfo', 'info');
 define ('P_Rename', 'rename');
 define ('P_ShowUsers', 'showusers');
+define ('P_Test', 'test');
 // Dateinamen
 define ('FN_PageExport', 'exp_pages.wiki');
 
-
-include "config.php";
-include "classes.php";
 
 $session = new Session ($start_time, $session_id, 
 	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
@@ -72,6 +73,7 @@ if (successfullLogin ($session)){
 	case P_Rename: admRename ($session, null); break;
 	case P_ShowUsers: admShowUsers ($session, null); break;
 	case P_PHPInfo: admInfo ($session); break;
+	case P_Test: admTest ($session); break;
 	default:
 		if (substr ($session->fPageName, 0, 1) == ".")
 			guiNewPageReference ($session);
@@ -508,11 +510,28 @@ function admConvertWiki (&$session, $message) {
 	guiFinishBody ($session, null);
 }
 function wiki06To07 ($text){
-	$text = str_replace (array ("'''", '[', ']'), array ('!%!Zitat!%!', '[[', ']]'), $text);
-	$text = str_replace (array ("''", '!%!Zitat!%!', '[[Newline]]', '[[code]]', '[[/code]]'), 
-		array ("'''", "''", '[newline]', '[code]', '[/code]'), $text); 
-	$text = preg_replace ('/(\[\S+) ([^\]]+\])/', '$1|$2', $text);
-	return $text;
+	$text = str_replace ("'''", '!%!Zitat!%!', $text);
+	$text = str_replace (array ("''", '!%!Zitat!%!', '[Newline]'), 
+		array ("'''", "''", '%%%'), $text); 
+	$lines = explode ("\n", $text);
+	foreach ($lines as $ii => $line) {
+		// Andere Verweise ohne Text (in Klammern):
+		$text = preg_replace ('/\[([^\]:]+:[^\] ]+)\]/', '%!%lEft%?%%!%lEft%?%$1%!%rIght%?%%!%rIght%?%', $line);
+		// Wikinamen und Text (in Klammern):
+		$text = preg_replace ('/\[([^\]: ]+) ([^\]]+)\]/', '%!%lEft%?%"$1"|$2%!%rIght%?%', $text);
+		// Andere Verweise und Text (in Klammern):
+		$text = preg_replace ('/\[([^\]: ]+:[^\] ]+) ([^\]]+)\]/', '%!%lEft%?%%!%lEft%?%$1|$2%!%rIght%?%%!%rIght%?%', $text);
+		// Wikinamen ohne Text (in Klammern):
+		$text = preg_replace ('/\[([^\]: ]{2,})\]/', '%!%lEft%?%"$1"%!%rIght%?%', $text);
+		// Entwerten eines Zeichens:
+		$text = preg_replace ('/(\[.\])/', '[$1]', $text);
+		if ($text != $line)
+			$lines [$ii] = $text;
+	}
+	$text = implode ("\n", $lines);
+	$text = str_replace (array ('%!%lEft%?%', '%!%rIght%?%'), array ('[', ']'), $text); 
+	$text = preg_replace ('/\["(\/?small|\/?big|\/?code)"\]/', '[$1]', $text);
+	return $text;	
 }
 function admConvertWikiAnswer (&$session){
 	$session->trace(TC_Gui1, 'admConvertWikiAnswer');
@@ -1052,6 +1071,7 @@ function admInfo (&$session) {
 	$session->trace (TC_Gui1, 'admInfo');
 	guiStandardHeader ($session, 'PHP-Info', Th_StandardHeader, Th_StandardBodyStart);
 	phpinfo ();
+	guiFinishBody ($session, null);
 }
 function modStandardLinks (&$session){
 	admStandardLink ($session, P_Home);
@@ -1066,5 +1086,25 @@ function modStandardLinks (&$session){
 	echo ' | ';
 	admStandardLink ($session, P_Options);
 }
-
+function admTest (&$session){
+	$wiki= ""
+		. "[StartSeite] und [StartSeite Fängt so an!]\n\n"
+		. "''fett''[Newline]und '''Zitat''' [small]klein[/small] und [_]_ kein Unterstrich!\n\n"
+		. "[http:pic/logo.png Logo] und [http:pic/logo.png] und [ftp://abc/def.de Meine Adresse]!\n\n"
+		;
+	guiStandardHeader ($session, 'Test', Th_StandardHeader, Th_StandardBodyStart);
+	guiHeadline ($session, 1, 'Orginal als Quelltext');
+	echo TAG_PRE;
+	echo htmlentities ($wiki);
+	echo TAG_PRE_END;	
+	$wiki = wiki06To07 ($wiki);
+	guiHeadline ($session, 1, 'Konvertiert als Quelltext');
+	echo TAG_PRE;
+	echo htmlentities ($wiki);
+	echo TAG_PRE_END;	
+	guiHeadline ($session, 1, 'Als Wiki');
+	echo wikiToHtml ($session, $wiki);	
+	guiFinishBody ($session, null);
+	 
+}
 ?>
