@@ -1,6 +1,6 @@
 <?php
 // db_mysql.php: DataBase functions implemented for MySQL
-// $Id: db_mysql.php,v 1.10 2004/11/05 17:46:51 hamatoma Exp $
+// $Id: db_mysql.php,v 1.11 2004/11/10 00:43:00 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -365,21 +365,24 @@ function dbPrintTable (&$session, $query, $headers, $max_lines){
 			$max_lines = 1000;
 		while ($row = mysql_fetch_row ($result)) {
 			if ($first){
-				echo '<table border="1"><tr><td>';
-				echo join ($headers, "</td><td>");
-				echo '</td></tr>';
+				outTable (1);
+				outTableRecord ();
+				foreach ($headers as $key => $value)
+					outTableCellStrong ($value);
+				outTableRecordEnd ();
 				$first = false;
 			}
 			if (++$no > $max_lines)
 				break;
-			echo "\n<tr><td>";
-			echo join ($row, "</td><td>");
-			echo "</td></tr>\n";
+			outTableRecord ();
+			foreach ($row as $key => $value)
+				outTableCell ($value);
+			outTableRecordEnd ();
 		}
 		if ($first)
 			echo "Die Anfrage ergab keine Ergebnisse<br>\n";
 		else {
-			echo "</table>\n";
+			outTableEnd();
 			if ($no > $max_lines)
 				guiParagraph ($session, "Es gibt noch weitere Ergebnisse!", false);
 		}
