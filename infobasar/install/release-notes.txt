@@ -1,7 +1,7 @@
 Release Notes (Hamatomas Infobasar)
-$Id: release-notes.txt,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+$Id: release-notes.txt,v 1.2 2004/12/22 18:54:30 hamatoma Exp $
 
 Installation: siehe installation.txt
 Dokumentation der Änderungen: siehe changelog.txt
 
-Version 0.5.4 vom 2004.06.08
+Version 0.6.6 vom 2004.12.22

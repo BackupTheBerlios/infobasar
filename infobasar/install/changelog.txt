@@ -1,7 +1,17 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+$Id: changelog.txt,v 1.2 2004/12/22 18:54:30 hamatoma Exp $
 
-Legende: F(ehler) N(eu)
+Legende: F(ehler) N(eu) A(enderung)
+
+Version 0.6.6 vom 2004.12.22
+ -N: Installation: Startseiten im Export-Format. SQL-Import wesentlich geringer.
+ -N: Installation: index.html in allen Unterverzeichnissen. Verzeichnis overwrite.
+ -N: Code-Bereinigung: tagX für HTML-Ausgabe, keine globalen POST-Variablen. Altlasten noch vorhanden.
+ -N: Einbindung von Bildern im Änderungsdialog.
+ -N: Einkopieren von Vorlagen.
+ -A: Zusammenfassung von "Neue Seite" und "Seitenänderung".
+ -F: Abmeldung, dann keine automatische Anmeldung.
+ -A: Wiki-Syntax für fett und kursiv vertauscht
 
 Version 0.6.1 vom 2004.06.28
 - N: Forum/Admin/Basis: Benutzen von Header-Info "Location": Session->PutHeader()
