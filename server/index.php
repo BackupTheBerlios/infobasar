@@ -1,6 +1,15 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.3 2004/05/26 22:20:11 hamatoma Exp $
+// $Id: index.php,v 1.4 2004/05/27 22:45:43 hamatoma Exp $
+/*
+Diese Datei ist Teil von InfoBasar.
+Copyright 2004 hamatoma@gmx.de München
+InfoBasar ist freie Software. Du kannst es weitergeben oder verändern
+unter den Bedingungen der GNU General Public Licence.
+Näheres siehe Datei LICENCE.
+InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
+der Funktionalität.
+*/
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -13,9 +22,9 @@ session_start();
 	$start = time();
  }
  $session_id = session_id();
+ ob_start (); // ob_flush() --> index.php + guiLoginAnswer()
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<!-- $Id: index.php,v 1.3 2004/05/26 22:20:11 hamatoma Exp $ -->
 <?php
 define ('C_ScriptName', 'index.php');
 
@@ -35,14 +44,30 @@ init ($session, $dbType);
 dbOpen($session);
 
 //p ('User,Id,Login: ' . $session_user . "," . $session_id . "/" . $login_user);
+if (empty ($session_user) && getLoginCookie ($session, $user, $code)
+	&& dbCheckUser ($session, $user, $code) == ''){
+	$session->trace ($TC_Init, 'index.php: Cookie erfolgreich gelesen');
+}
 $rc = dbCheckSession ($session);
+$do_login = false;
 if (! empty ($rc)) {
 	// p ("Keine Session gefunden: $session_id / $session_user ($rc)");
 	if (! empty ($login_user))
 		guiLoginAnswer ($session);
-	else
+	else 
+		$do_login = true;
+} else {
+		if (isset ($login_user))
+			guiLoginAnswer ($session);
+		else
+			$do_login = $session->fPageName == P_Login;
+}
+if ($do_login){
+		clearLoginCookie ($session);
+		ob_flush ();
 		guiLogin ($session, '');
 } else {
+		ob_flush ();
 		$session->trace (TC_Init, 'index.php: std_answer: ' . (empty ($std_answer) ? '' : "($std_answer)"));
 	if (isset ($action)) {
 		$session->trace (TC_Init, "index.php: action: $action");
@@ -82,8 +107,6 @@ if (! empty ($rc)) {
 		elseif (isset ($account_new) || isset ($account_change)
 			|| isset ($account_other))
 			guiAccountAnswer ($session, $account_user);
-		elseif (isset ($login_user))
-			guiLoginAnswer ($session);
 		elseif (isset ($search_title) || isset ($search_body))
 			guiSearchAnswer ($session, '');
 		elseif (isset ($forum_title) || isset ($forum_body))
@@ -119,7 +142,7 @@ function init (&$session, $dbType) {
 		$session->setDb ($db_type, $db_server, $db_name, $db_user, $db_passw, $db_prefix);
 	} // mysql
 	$session->fTraceFlags
-		= 0 * TC_Util1 + 1 * TC_Util2 + 0 * TC_Util1
+		= 1 * TC_Util1 + 1 * TC_Util2 + 0 * TC_Util1
 		+ 1 * TC_Gui1 + 0 * TC_Gui2 + 0 * TC_Gui3
 		+ 0 * TC_Db1 + 0 * TC_Db2 + 0 * TC_Db3
 		+ 0 * TC_Session1 + 0 * TC_Session2 + 0 * TC_Session3 
@@ -127,7 +150,7 @@ function init (&$session, $dbType) {
 		+ 1 * TC_Update + 1 * TC_Insert + 0 * TC_Query
 		+ 0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2
 		+ TC_Error + TC_Warning + TC_X;
-	$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
+	#$session->fTraceFlags = TC_Error + TC_Warning + TC_X;
 	#$session->fTraceFlags = TC_All;
 } // Config
 

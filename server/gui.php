@@ -1,6 +1,15 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.3 2004/05/26 22:19:21 hamatoma Exp $
+// $Id: gui.php,v 1.4 2004/05/27 22:44:32 hamatoma Exp $
+/*
+Diese Datei ist Teil von InfoBasar.
+Copyright 2004 hamatoma@gmx.de München
+InfoBasar ist freie Software. Du kannst es weitergeben oder verändern
+unter den Bedingungen der GNU General Public Licence.
+Näheres siehe Datei LICENCE.
+InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
+der Funktionalität.
+*/
 // --- Allgemeine Funktionen --------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
 	echo "<input type=\"$type\" name=\"$name\"";
@@ -472,7 +481,6 @@ function guiEditPageAnswerSave (&$session)
 
 function guiLogin (&$session, $message) {
 	global $login_user, $login_email;
-
 	guiStandardHeader ($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader,
 		null);
 	guiStartForm ($session, "login");
@@ -527,8 +535,11 @@ function guiLoginAnswer (&$session) {
 		$rc = dbCheckUser ($session, $login_user, $login_code);
 		if (! empty ($rc))
 			guiLogin ($session, $rc);
-		else
+		else {
+			setLoginCookie ($session, $login_user, $login_code);
+			ob_flush (); // ob_start() -->  index.php
 			guiCustomStart ($session);
+		}
 	}
 }	
 function guiAccount (&$session, $message) {
