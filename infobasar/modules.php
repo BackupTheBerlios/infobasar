@@ -71,12 +71,19 @@ class ModuleAddress {
 	}
 	function overview(&$session){
 		$session->trace (TC_Gui3, 'address.overview');
-		echo "<tr><td><br><strong>Modul Adressen:</strong></td>\n<td> </td></tr><tr><td>";
-		guiInternLink ($session, 'editbook', 'Adressbücher', 'address');
-		echo "</td><td>Adressbuch erstellen oder ändern</td></tr>\n";
-		echo '<tr><td>';
-		guiInternLink ($session, 'editcard', 'Adresskarte', 'address');
-		echo "</td><td>Adresse erstellen/ändern</td></tr>\n";
+		outTableRecord();
+		outNewLine();
+		outTableCellStrong('Modul Adressen');
+		outTableRecordDelim();
+		outTableInternLink ($session, 'Adressbuch erstellen/ändern:',
+			'editbook', 'Adressbücher', 'address');
+		outTableRecordDelim();
+		outTableInternLink ($session, 'Adresse erstellen/ändern:',
+			'editcard', 'Adresskarte', 'address');
+		outTableRecordDelim();
+		outTableInternLink ($session, 'Adressen suchen:',
+			'showcards', 'Suchen', 'address');
+		outTableRecordEnd();
 	}
 } // class module_forum
 // EndOfClasses
