@@ -1,5 +1,5 @@
 <?php
-// $Id: base_module.php,v 1.2 2005/01/10 19:34:01 hamatoma Exp $
+// $Id: base_module.php,v 1.3 2005/01/11 00:11:39 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -10,7 +10,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.7.0 (2005.01.03)');
+define ('PHP_ModuleVersion', '0.7.0 (2005.01.10)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
