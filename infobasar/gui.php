@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+// $Id: gui.php,v 1.2 2004/09/20 23:00:07 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -41,8 +41,8 @@ function guiButton ($name, $text){
 	echo "<input class=\"wikiaction\" name=\"$name\" value=\"$text\" type=\"submit\">";
 }
 function guiLinkAsButton (&$session, $command, $text){
-	guiInternLink ($session, $session->fPageName . '?action=' . $command,
-		$text);
+	guiInternLink ($session, encodeWikiName ($session, $session->fPageName) 
+		. '?action=' . $command, $text);
 }
 function guiRadioButton ($name, $text, $checked){
 	guiField ($name, "radio", $text, 0, 0,
@@ -219,7 +219,7 @@ function guiAuthorLink (&$session, $author) {
 }
 function guiPageReference (&$session, $name, $text) {
 	$session->trace (TC_Gui1, 'guiPageReference');
-	guiInternLink ($session, '.' . $name, '?' . $text);
+	guiInternLink ($session, '.' .  $name, '?' . $text);
 }
 function guiParam (&$session, $pos, $default) {
 	$rc = dbGetText ($session, $pos);
@@ -279,12 +279,12 @@ function guiBacklinks ($session, $page_name) {
 			. ' gefunden', false);
 	else {
 		echo '<p>Es gibt folgende Verweise auf ';
-		guiInternLink ($session, $name, $page_name);
+		guiInternLink ($session,  encodeWikiName ($session, $name), $page_name);
 		echo '</p>' . "\n" . '<ulist>';
 		foreach ($ids as $ii => $id) {
 			$page = dbGetRecordById ($session, T_Page, $id, 'name');
 			echo '<li>';
-			guiInternLink ($session, $page [0], null);
+			guiInternLink ($session,  encodeWikiName ($session, $page [0]), null);
 			echo '</li>';
 		}
 		echo '</ulist>' . "\n";

@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.2 2004/09/15 21:31:29 hamatoma Exp $
+// $Id: index.php,v 1.3 2004/09/20 23:01:26 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.2 (2004.09.01)');
+define ('PHP_ModuleVersion', '0.6.5 (2004.09.20)');
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
@@ -300,7 +300,6 @@ function baseEditPageAnswerSave (&$session)
 	if (empty ($message) && ! isset ($edit_previewandsave)){
 		guiShowPageById ($session, $edit_pageid, null);
 	} else {
-		# $session->SetLocation ($last_pagename);
 		baseEditPage ($session, $message, $message);
 	}
 }
@@ -361,7 +360,7 @@ function baseLoginAnswer (&$session) {
 	} else {
 		$rc = dbCheckUser ($session, $login_user, $login_code);
 		if (! empty ($rc))
-			guiLogin ($session, $rc);
+			baseLogin ($session, $rc);
 		else {
 			setLoginCookie ($session, $login_user, $login_code);
 			$session->setPageName (P_Start);
@@ -564,7 +563,7 @@ function baseHome (&$session) {
 		baseStandardLink ($session, P_Info);
 		echo '</td><td>Information &uuml;ber den InfoBasar</td></tr>';
 		echo "\n<td><strong>Wiki- und HTML-Seiten:</strong></td></tr><tr><td>";
-		guiInternLink ($session, 'StartSeite', 'StartSeite');
+		guiInternLink ($session, encodeWikiName ($session, 'StartSeite'), 'StartSeite');
 		echo "</td><td>Wiki-Startseite</td></tr>\n<tr><td>";
 		baseStandardLink ($session, P_LastChanges);
 		echo "</td><td>Liste der in den letzten n Tagen ge&auml;nderten Wikiseiten</td></tr>\n<tr><td>";
@@ -698,7 +697,7 @@ function baseAlterPageAnswer (&$session, $mode){
 	}
 	$message2 = $len == strlen ($alterpage_content)
 		? '' : 'Es wurde der Rumpf (body) extrahiert.';
-	$session->SetLocation ($alterpage_name);
+	$session->SetLocation (encodeWikiName ($session, $alterpage_name));
 	if ($message != null || isset ($alterpage_preview))
 		baseAlterPage ($session, $mode, $message, $message2, $alterpage_mime);
 	else
@@ -737,7 +736,7 @@ function baseAlterPageAnswerChangePage (&$session){
 	if ($message != null)
 		baseAlterPage ($session, C_Change, $message, $message2);
 	else{
-		$session->SetLocation ($alterpage_name);
+		$session->SetLocation (encodeWikiName ($session, $alterpage_name));
 		guiShowPage ($session, $alterpage_name);
 	}
 }
@@ -810,14 +809,18 @@ function baseSearchResults (&$session){
 				while ($row) {
 					$pagerecord = dbGetRecordById ($session, T_Page, $row[0],
 						'name,type');
-					echo "\n<tr><td>"
-						. guiInternLinkString ($session, $pagerecord[0],
-							$pagerecord[0]) . '</td><td>'
-						. $pagerecord [1] . '</td><td>'
-						. $row [2] . '</td><td>'
-						. htmlentities ($row [3]) . '</td><td>'
-						. findTextInLine ($row [1], $search_bodytext, 3)
-						. '</td><tr>' . "\n";
+					echo "\n<tr><td>";
+					guiInternLink ($session, 
+						encodeWikiName ($session, $pagerecord[0]), $pagerecord[0]);
+					echo '</td><td>';
+					echo $pagerecord [1];
+					echo  '</td><td>';
+					echo $row [2];
+					echo '</td><td>';
+					echo htmlentities ($row [3]);
+					echo '</td><td>';
+					echo findTextInLine ($row [1], $search_bodytext, 3);
+					echo '</td><tr>' . "\n";
 					$row = dbNextRecord ($session);
 				}
 				echo "\n</table>\n";
@@ -855,7 +858,7 @@ function baseCustomStart (&$session) {
 	$session->setPageName ($session->fUserStartPage);
 	if (! baseCallStandardPage ($session))
 		if (($page_id = dbPageId ($session, $session->fUserStartPage)) > 0){
-			$session->SetLocation ($session->fUserStartPage);
+			$session->SetLocation (encodeWikiName ($session->fUserStartPage));
 			guiShowPageById ($session, $page_id, null);
 		} else {
 			$session->SetLocation (P_Home);
@@ -874,9 +877,11 @@ function basePageInfo (&$session) {
 	guiParagraph ($session, 'Erzeugt: ' . dbSqlDateToText ($session, $page [1]), false);
 	$count = dbSingleValue ($session, 'select count(id) from '
 		. dbTable ($session, T_Text) . ' where page=' . (0 + $pageid));
-	if ($count <= 1)
+	if ($count <= 1){
 		guiParagraph ($session, 'Die Seite wurde nie geändert', false);
-	else {
+		guiParagraph ($session, guiInternLinkString ($session, 
+			encodeWikiName ($session, $pagename), "Aktuelle Version"), false);
+	} else {
 		guiHeadline ($session, 2, "Versionen ($count)");
 		echo '<table border="1"><tr><td><b>Id</b></td>'
 			. '<td><b>Autor</b></td><td><b>erzeugt</b></td>'
