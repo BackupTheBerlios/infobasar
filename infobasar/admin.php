@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.9 2005/01/05 05:24:34 hamatoma Exp $
+// $Id: admin.php,v 1.10 2005/01/06 11:44:33 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -238,9 +238,9 @@ function admParam (&$session, $message){
 	outTableDelim ();
 	guiButton2 ('param_insert', 'Eintragen', ' | ', 'param_change', 'Ändern');
 	echo ' | Eingabefeld: Breite: ';
-	guiTextField ('textarea_width', null, 3, 3);
+	guiTextField (U_TextAreaWidth, null, 3, 3);
 	echo ' Höhe: ';
-	guiTextField ('textarea_height', null, 3, 3);
+	guiTextField (U_TextAreaHeight, null, 3, 3);
 	outTableDelimAndRecordEnd ();
 	outTableEnd ();
 	guiHeadline ($session, 2, 'Parameter von Theme ' . $_POST['param_theme']);
@@ -343,9 +343,9 @@ function admMacro (&$session, $message){
 	outTableDelim ();
 	guiButton2 ('macro_insert', 'Eintragen', ' | ', 'macro_change', 'Ändern');
 	echo ' | Eingabefeld: Breite: ';
-	guiTextField ('textarea_width', null, 3, 3);
+	guiTextField (U_TextAreaWidth, null, 3, 3);
 	echo ' Höhe: ';
-	guiTextField ('textarea_height', null, 3, 3);
+	guiTextField (U_TextAreaHeight, null, 3, 3);
 	outTableDelimAndRecordEnd ();
 	outTableEnd ();
 	guiHeadline ($session, 2, 'Makros von Theme ' . $_POST['macro_theme']);
