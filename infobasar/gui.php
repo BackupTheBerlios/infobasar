@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.27 2005/01/14 03:13:29 hamatoma Exp $
+// $Id: gui.php,v 1.28 2005/01/17 02:27:44 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -666,19 +666,18 @@ function guiStandardHeader (&$session, $title, $pos_header, $pos_body) {
 }
 function guiStandardBodyEnd (&$session, $pos) {
 	$session->trace(TC_Gui1, 'guiStandardBodyEnd');
-	$session->trace (TC_X, "guiStandardBodyEnd" . (0+Th_LoginBodyEnd));
 	$html = guiParam($session, $pos, null);
 	if (!empty ($html))
 		echo $session->replaceMacrosNoHTML($html);
 	else {
 		if (!defined('Th_LoginBodyEnd'))
 			define('Th_LoginBodyEnd', 0);
-		$session->trace (TC_X, "guiStandardBodyEnd: Pos: $pos " . (0+Th_LoginBodyEnd));
+		# $session->trace (TC_X, "guiStandardBodyEnd: Pos: $pos " . (0+Th_LoginBodyEnd));
 		if ($pos != Th_LoginBodyEnd) {
 			guiLine($session, 1);
 			modStandardLinks($session);
 			guiParagraph ($session, 'Laufzeit auf dem Server: ' 
-				. $session->getMacro (TM_RuntimeSecMili), false);
+				. $session->getMacro (TM_RuntimeSecMilli), false);
 			echo TAG_BODY_END;
 		}
 	}
