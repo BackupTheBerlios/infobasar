@@ -1,5 +1,12 @@
 Änderungsliste Hamatomas Infobasar
-$Id: changelog.txt,v 1.4 2004/06/02 00:10:39 hamatoma Exp $
+$Id: changelog.txt,v 1.5 2004/06/08 11:34:05 hamatoma Exp $
+
+Version 0.5.4 vom 2004.06.08
+- F: Doppelte Überschrift in Info
+- F: Erzeugungsdatum bei Text in Seitenneuanlage
+- N: Letzte Änderungen: Tagzahl konfigurierbar
+- F: Zeichenfehler in PHPWiki-Design
+- N: Titelsuche in PHPWiki-Design
 
 Version 0.5.3 vom 2004.06.02
 - PHP-Info aktiviert
