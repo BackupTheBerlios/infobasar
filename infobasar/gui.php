@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.16 2004/12/05 18:44:39 hamatoma Exp $
+// $Id: gui.php,v 1.17 2004/12/26 12:47:12 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -13,148 +13,150 @@ der Funktionalität.
 // --- HTML-Strings:
 function tagStrong($text = null){
 	if ($text == null)
-		return '<strong>';
+		returnTAG_STRONG;
 	else
-		return '<strong>' . $text . '</strong>';
+		return TAG_STRONG . $text . TAG_STRONG_END;
 }
 function outStrong($text = null){
 	if ($text == null)
-		echo '<strong>';
+		echo TAG_STRONG;
 	else {
-		echo '<strong>';
+		echo TAG_STRONG;
 		echo $text;
-		echo '</strong>';
+		echo TAG_STRONG_END;
 	}
 }
 function tagQuotation($text = null){
 	if ($text == null)
-		return '<cite>';
+		return TAG_CITE;
 	else
-		return '<cite>' . $text . '</cite>';
+		return TAG_CITE . $text . TAG_CITE_END;
 }
 function outQuotation($text = null){
 	if ($text == null)
-		echo '<cite>';
+		echo TAG_CITE;
 	else {
-		echo '<cite>';
+		echo TAG_CITE;
 		echo $text;
-		echo '</cite>';
+		echo TAG_CITE_END;
 	}
 }
 function tagStrongEnd(){
-	return '</strong>';
+	return TAG_STRONG;
 }
 function outStrongEnd(){
-	echo '</strong>';
+	echo TAG_STRONG_END;
 }
 
 function tagNewline(){
-	return "<br />\n";
+	return TAG_NEWLINE;
 }
 function outNewline(){
-	echo "<br />\n";
+	echo TAG_NEWLINE;
 }
 function tagParagraph(){
-	return '<p>';
+	return TAG_PARAGRAPH;
 }
 function outParagraph(){
-	echo '<p>';
+	echo TAG_PARAGRAPH;
 }
 function tagParagraphEnd(){
-	return '<p>';
+	return TAG_PARAGRAPH_END;
 }
 function outParagraphEnd(){
-	echo '<p>';
+	echo TAG_PARAGRAPH_END;
 }
 function tagTable($border = 0){
-	return "\n<table border=\"" . (0+$border) . '">'; 
+	return "\n" . TAG_TABLE_OPEN . TAGA_BORDER . (0+$border) . TAG_APO_SUFFIX; 
 }
 function outTable($border = 0, $width = 0){
-	echo "\n<table border=\"";
+	echo "\n";
+	echo TAG_TABLE_OPEN;
+	echo TAGA_BORDER;
 	echo $border;
 	if ($width != null){
-		echo '" width="';
+		echo TAGA_APO_WIDTH;
 		echo $width;
 	}
-	echo '">'; 
+	echo TAG_APO_SUFFIX; 
 }
 function tagTableEnd(){
-	return "</table>\n"; 
+	return TAG_TABLE_END; 
 }
 function outTableEnd(){
-	echo "</table>\n"; 
+	echo TAG_TABLE_END; 
 }
 function tagTableRecord(){
-	return '<tr>';
+	return TAG_TABLE_RECORD;
 }
 function outTableRecord(){
-	echo '<tr>';
+	echo TAG_TABLE_RECORD;
 }
 function tagTableAndRecord($border = 0){
-	return tagTable ($border) . '<tr>';
+	return tagTable ($border) . TAG_TABLE_RECORD;
 }
 function outTableAndRecord($border = 0){
 	outTable ($border);
-	echo '<tr>';
+	echo TAG_TABLE_RECORD;
 }
 function tagTableAndRecordEnd(){
-	return tagTableRecordEnd() . '</table>';
+	return tagTableRecordEnd() . TAG_TABLE_RECORD_END;
 }
 function outTableAndRecordEnd(){
 	outTableRecordEnd();
-	echo "</table>\n";
+	echo TAG_TABLE_END;
 }
 function tagTableRecordEnd(){
-	return '</tr>';
+	return TAG_TABLE_RECORD_END;
 }
 function outTableRecordEnd(){
-	echo '</tr>';
+	echo TAG_TABLE_RECORD_END;
 }
 function tagTableDelim($halignment = AL_None){
 	if ($halignment == AL_None)
-		return '<td>';
+		return TAG_TABLE_DELIM;
 	else
-		return '<td text-align: ' . $alignment . '>';
+		return TAG_TABLE_DELIM_ALIGN . $alignment .TAG_SUFFIX;
 }
 function outTableDelim($halignment = AL_None){
 	if ($halignment == AL_None)
-		echo '<td>';
+		echo TAG_TABLE_DELIM;
 	else{
-		echo '<td text-align: ';
+		echo TAG_TABLE_DELIM_ALIGN;
 		echo $halignment;
-		echo  '>';
+		echo TAG_SUFFIX;
 	}
 }
 function tagTableRecordAndDelim($halignment = AL_None){
-	return '<tr>' . tagTableDelim ($halignment);
+	return TAG_TABLE_RECORD . tagTableDelim ($halignment);
 }
 function outTableRecordAndDelim($halignment = AL_None){
-	echo '<tr>';
+	echo TAG_TABLE_RECORD;
 	outTableDelim ($halignment);
 }
 function tagTableDelimEnd(){
-	return '</td>';
+	return TAG_TABLE_DELIM_END;
 }
 function outTableDelimEnd(){
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 function tagTableDelimAndRecordEnd(){
-	return "</td></tr>\n";
+	return TAG_TABLE_DELIM_RECORD_END;
 }
 function outTableDelimAndRecordEnd(){
-	echo "</td></tr>\n";
+	echo TAG_TABLE_DELIM_RECORD_END;
 }
 function tagTableCellDelim(){
-	return '</td><td>';
+	return TAG_TABLE_DELIM_END_DELIM;
 }
 function outTableCellDelim(){
-	echo '</td><td>';
+	echo TAG_TABLE_DELIM_END_DELIM;
 }
 function tagTableRecordDelim(){
-	return "</tr>\n<tr>";
+	return TAG_TABLE_RECORD_END_RECORD;
 }
 function outTableRecordDelim(){
-	echo "</tr>\n<tr>";
+	echo TAG_TABLE_RECORD_END_RECORD;
 }
 function tagTableCell($text, $halignment = AL_None){
 	return tagTableDelim ($halignment) . htmlentities ($text) . tagTableDelimEnd();
@@ -162,10 +164,10 @@ function tagTableCell($text, $halignment = AL_None){
 function outTableCell($text, $halignment = AL_None){
 	outTableDelim ($halignment);
 	echo $text;
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 function outTableRecordCells ($text1, $text2, $text3 = null){
-	echo '<tr>';
+	echo TAG_TABLE_RECORD;
 	outTableCell ($text1);
 	outTableCell ($text2);
 	if ($text3 != null)
@@ -174,10 +176,10 @@ function outTableRecordCells ($text1, $text2, $text3 = null){
 }
 function outTableCellStrong($text, $halignment = AL_None){
 	outTableDelim ($halignment);
-	echo '<strong>';
+	echo TAG_STRONG;
 	echo $text;
-	echo '</strong>';
-	echo '</td>';
+	echo TAG_STRONG_END;
+	echo TAG_TABLE_DELIM_END;
 }
 function tagTableCellConvert($text, $halignment = AL_None){
 	return tagTableDelim ($halignment) . htmlentities ($text) . tagTableDelimEnd();
@@ -185,7 +187,7 @@ function tagTableCellConvert($text, $halignment = AL_None){
 function outTableCellConvert($text, $halignment = AL_None){
 	outTableDelim ($halignment);
 	echo htmlentities ($text);
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 function outTableTextField ($prefix, $name, $value, $size, 
 		$maxsize=0, $halignment = AL_None){
@@ -193,17 +195,17 @@ function outTableTextField ($prefix, $name, $value, $size,
 		outTableCell ($prefix);
 	outTableDelim($halignment);
 	guiTextField ($name, $value, $size, $maxsize);
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 function outTableTextField2 ($prefix, $name1, $value1, $size1, 
 		$maxsize1, $delim, $name2, $value2, $size2, $maxsize2 = 0){
 	if ($prefix != null)
 		outTableCell ($prefix);
-	echo '<td>';
+	echo TAG_TABLE_DELIM;
 	guiTextField ($name1, $value1, $size1, $maxsize1);
 	echo $delim;
 	guiTextField ($name2, $value2, $size2, $maxsize2);
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 function outTablePasswordfield ($prefix, $name, $value, $size, 
 		$maxsize=0, $halignment = AL_None){
@@ -213,14 +215,14 @@ function outTablePasswordfield ($prefix, $name, $value, $size,
 	if ($value == null)
 		$value = isset ($_POST [$name]) ? $_POST [$name] : '' ;
 	guiPasswordField ($name, $value, $size, $maxsize);
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 function outTableButton ($prefix, $name, $text, $halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiButton ($name, $text);
-	echo '</td>'; 
+	echo TAG_TABLE_DELIM_END; 
 }
 function outTableButton2 ($prefix, $name1, $text1, $delim, $name2, $text2, 
 		$halignment = AL_None){
@@ -230,14 +232,14 @@ function outTableButton2 ($prefix, $name1, $text1, $delim, $name2, $text2,
 	guiButton ($name1, $text1);
 	echo $delim;
 	guiButton ($name2, $text2);
-	echo '</td>'; 
+	echo TAG_TABLE_DELIM_END; 
 }
 function outTableCheckBox ($prefix, $name, $text, $selected = null, $halignment = AL_None){
 	if ($prefix != null)
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiCheckBox ($name, $text, $selected);
-	echo '</td>'; 
+	echo TAG_TABLE_DELIM_END; 
 }
 function outTableComboBox ($prefix, $name, $names, $values, $index_selected,
 		$halignment = AL_None){
@@ -245,7 +247,7 @@ function outTableComboBox ($prefix, $name, $names, $values, $index_selected,
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiComboBox ($name, $names, $values, $index_selected);
-	echo '</td>'; 
+	echo TAG_TABLE_DELIM_END; 
 }
 function outTableInternLink ($session, $prefix, $link, $text = null, $module = null, 
 		$halignment = AL_None){
@@ -253,113 +255,149 @@ function outTableInternLink ($session, $prefix, $link, $text = null, $module = n
 		outTableCell ($prefix);
 	outTableDelim ($halignment);
 	guiInternLink ($session, $link, $text, $module);
-	echo '</td>'; 
+	echo TAG_TABLE_DELIM_END; 
 }
 function outTableRecordInternLink ($session, $suffix, $link, $text = null, $module = null, 
 		$halignment = AL_None){
 	outTableDelim ($halignment);
 	guiInternLink ($session, $link, $text, $module);
-	echo '</td>'; 
+	echo TAG_TABLE_DELIM_END; 
 	if ($suffix != null)
 		outTableCell ($suffix);
-	echo "</tr>\n";
+	echo TAG_TABLE_RECORD_END;
 }
 function outTableAuthorLink ($session, $author){
-	echo '<td>';
+	echo TAG_TABLE_DELIM;
 	guiAuthorLink ($session, $author);
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 function outTableTextArea ($prefix, $name, $content, $width, $height){
 	if ($prefix != null)
 		outTableCell ($prefix);
-	echo '<td>';
+	echo TAG_TABLE_DELIM;
 	guiTextArea ($name, $content, $width, $height);
-	echo '</td>';
+	echo TAG_TABLE_DELIM_END;
 }
 
 // --- Allgemeine Funktionen --------------
 function guiField ($name, $type, $text, $size, $maxlength, $special){
-	echo "<input type=\"$type\" name=\"$name\"";
-	if (! empty ($text))
-		 echo " value=\"$text\"";
-	if ($size > 0)
-		echo " size=\"$size\"";
-	if ($maxlength > 0)
-		echo " maxlength=\"$maxlength\"";
+	echo TAG_INPUT_TYPE;
+	echo $type;
+	echo TAGA_NAME;
+	echo $name;
+	echo TAG_APO;
+	if (! empty ($text)){
+		 echo TAGA_VALUE;
+		 echo $text;
+		 echo TAG_APO;
+	}
+	if ($size > 0){
+		echo TAGA_SIZE;
+		echo $size;
+		echo TAG_APO;
+	}
+	if ($maxlength > 0){
+		echo TAGA_MAXSIZE;
+		echo $maxlength;
+		echo TAG_APO;
+	}
 	if (! empty ($special))
 		echo ' ' . $special;
-	echo ">";
+	echo TAG_SUFFIX;
 }
 function guiFileField ($name){
-	echo '<input name="';
+	echo TAG_INPUT_TYPE;
+	echo TAGAV_FILE;
+	echo TAGA_NAME;
 	echo $name;
-	echo '" type="file">'; 
+	echo TAG_APO_SUFFIX_NEWLINE; 
 }
 function guiHiddenField ($name, $text) {
-	guiField ($name, "hidden", $text, 0, 0, null);
+	guiField ($name, TAGAV_HIDDEN, $text, 0, 0, null);
 }
 function guiTextField ($name, $text, $size, $maxlength = 0){
 	if ($text == null)
 		$text = isset ($_POST [$name]) ? $_POST [$name] : "";
-	guiField ($name, "text", $text, $size, $maxlength, null);
+	guiField ($name, TAGAV_TEXT, $text, $size, $maxlength, null);
 }
 function guiPasswordField ($name, $text, $size, $maxlength){
-	guiField ($name, "password", $text, $size, $maxlength, null);
+	guiField ($name, TAGAV_PASSWORD, $text, $size, $maxlength, null);
 }
 function guiTextArea ($name, $content, $width, $height){
-	echo "<textarea name=\"$name\" cols=\"$width\" rows=\"$height\">\n";
+	echo TAG_TEXTAREA_NAME;
+	echo $name;
+	echo TAGA_APO_COLS;
+	echo $width;
+	echo TAGA_APO_ROWS;
+	echo $height;
+	echo TAG_APO_SUFFIX_NEWLINE;
 	echo $content;
-	echo "</textarea>\n";
+	echo TAG_TEXTAREA_END;
 }
 function guiButton ($name, $text){
-	echo "<input class=\"wikiaction\" name=\"$name\" value=\"$text\" type=\"submit\">";
+	echo TAG_INPUT_WIKIACTION_NAME;
+	echo $name;
+	echo TAGA_APO_VALUE;
+	echo $text;
+	echo TAGA_SUBMIT_END;
 }
 function guiLinkAsButton (&$session, $command, $text){
 	guiInternLink ($session, encodeWikiName ($session, $session->fPageName) 
 		. '?action=' . $command, $text);
 }
 function guiRadioButton ($name, $text, $checked){
-	guiField ($name, "radio", $text, 0, 0,
+	guiField ($name, TAGAV_RADIO, $text, 0, 0,
 		isset ($checked) && $checked ? "checked" : "");
 }
 function guiCheckBox ($name, $text, $checked = false){
 	if ($checked == null)
 		$checked = isset ($_POST [$name]) && $_POST [$name] == C_CHECKBOX_TRUE;
-	guiField ($name, "checkbox", C_CHECKBOX_TRUE, 0, 0,
-		isset ($checked) && $checked ? "checked" : "");
+	guiField ($name, TAGAV_CHECKBOX, C_CHECKBOX_TRUE, 0, 0,
+		isset ($checked) && $checked ? TAGAV_CHECKED : "");
 	echo htmlentities ($text) . " ";
 }
 function guiChecked($session, $name){
 	return isset ($_POST [$name]) && $_POST [$name] == C_CHECKBOX_TRUE;
 }
 function guiComboBox ($name, $options, $values = null, $ix_selected = 0) {
-	echo '<select name="';
+	echo TAG_SELECT_NAME;
 	echo $name;
-	echo '" size="1';
-	echo "\">\n";
+	echo TAGA_APO_SIZE_END;
 	if ($ix_selected == null)
 		$ix_selected = ! isset ($_POST [$name]) 
 			? -1 : indexOf ($options, $_POST [$name]); 
-	foreach ($options as $ix => $text)
-		echo '<option' . ($ix == $ix_selected ? ' selected' : '')
-			. ($values ? ' value="' . $values[$ix] . '"' : '')
-			. '>' . htmlentities ($text) . "\n";
-	echo "</select>\n";
+	foreach ($options as $ix => $text){
+		echo TAG_OPTION;
+		if ($ix == $ix_selected)
+			echo TAGAV_SELECTED;
+		if ($values){
+			echo TAGA_VALUE;
+			echo $values[$ix];
+			echo  TAG_APO;
+		}
+		echo TAG_SUFFIX;
+		echo  htmlentities ($text);
+		echo "\n";
+	}
+	echo TAG_SELECT_END;
 }
 function guiUploadFile (&$session, $prefix, $lastpage = null,
 		$custom_field = null, $custom_value = null,
 		$caption = 'Hochladen', 
 		$button = 'upload_go', $file = 'upload_file', $max_file_size = 100000) {
 	global $last_pagename;
-	echo '<form enctype="multipart/form-data" action="' . $session->fScriptURL
-		. '" method="post">' . "\n";
+	echo TAG_FORM_MULTIPART_POST_ACTION;
+	echo $session->fScriptURL;
+	echo TAG_APO_SUFFIX_NEWLINE;
 	guiHiddenField ('last_pagename', $lastpage ? $lastpage : $last_pagename);
 	if ($custom_field)
 		guiHiddenField ($custom_field, $custom_value);
 	guiHiddenField ('MAX_FILE_SIZE', $max_file_size);
 	if (! empty ($prefix))
 		echo $prefix . ' ';
-	echo '<input name="' . $file . '" type="file">' . "\n";
+	echo TAG_INPUT_FILE_NAME;
+	echo $file;
+	echo TAG_APO_SUFFIX_NEWLINE;
 	echo ' ';
 	guiButton ($button, $caption);
 	guiFinishForm ($session);
@@ -417,7 +455,9 @@ function guiUploadFileAnswerUnique (&$session, $destination,
 
 function guiLine (&$session, $width = 2) {
 	$session->trace (TC_Gui2, "guiLine: $width");
-	echo '<hr style="width: 100%; height: ' . (0+$width) . "px;\">\n";
+	echo TAG_HRULE_HEIGHT;
+	echo (0+$width);
+	echo TAGA_PX_END;
 }
 function guiFinishBody (&$session, $param_no){
 	$session->trace (TC_Gui2, 'guiFinishBody');
@@ -430,69 +470,87 @@ function guiFinishBody (&$session, $param_no){
 	else {
 		guiLine ($session, 1);
 		modStandardLinks ($session);
-		echo "\n</body>\n</html>\n";
+		echo TAG_BODY_HTML_END;
 	}
 }
 function guiParagraph (&$session, $text, $convert){
 	$session->trace (TC_Gui2, 'guiParagraph');
-	echo '<p>';
+	echo TAG_PARAGRAPH;
 	if ($convert)
 		echo textToHtml ($text);
 	else
 		echo $text;
-	echo "</p>\n";
+	echo TAG_PARAGRAPH_END;
 }
 function guiHeader (&$session, $title) {
 	$session->putHeader ();
 	$session->trace (TC_Gui1, 'guiHeader');
-	echo '<head>' . "\r\n";
+	echo TAG_HEAD;
+	echo "\r\n";
 	$value = dbGetText ($session, Th_Header);
 	if (! empty ($value))
 		echo $value;
 	else
-		echo '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">' . "\n";
+		echo TAG_META;
 	$value = dbGetText ($session, Th_CSSFile);
-	if (! empty ($value))
-		echo '<link rel="stylesheet" type="text/css" href="' . $value . '">' . "\n";
-	if (! empty ($title))
-		echo "<title>$title</title>\n</head>\n<body>\n";
+	if (! empty ($value)){
+		echo TAG_LINK_STYLESHEET;
+		echo $value;
+		echo TAG_APO_SUFFIX_NEWLINE;
+	}
+	if (! empty ($title)){
+		echo TAG_TITLE;
+		echo $title;
+		echo TAG_TITLE_END_BODY;
+	}
 	$session->SetHasBody();
-	if ($session->fBodyLines)
-		echo join ("\n", $session->fBodyLines) . "\n";
+	if ($session->fBodyLines){
+		echo join ("\n", $session->fBodyLines);
+		echo "\n";
+	}
 }
 function guiHeadline (&$session, $level, $text) {
 	$session->trace (TC_Gui2, 'guiHeadline');
-	echo "<h$level>" . htmlentities ($text) . "</h$level>\n";
+	echo TAG_PREFIX;
+	echo TAGN_HEADLINE;
+	echo $level;
+	echo TAG_SUFFIX;
+	echo htmlentities ($text);
+	echo TAG_ENDPREFIX;
+	echo TAGN_HEADLINE;
+	echo $level;
+	echo TAG_SUFFIX_NEWLINE;
 }
 function guiStartForm (&$session, $pagename = null) {
 	$session->trace (TC_Gui2, 'guiStartForm');
-	echo '<form action="' . $session->fScriptURL . '" method="post">' . "\n";
+	echo TAG_FORM_POST_ACTION;
+	echo $session->fScriptURL;
+	echo TAG_APO_SUFFIX_NEWLINE;
 	if ($pagename)
 		guiHiddenField ('last_pagename', $pagename);
-}
-function guiStartFormGet (&$session) {
-	$session->trace (TC_Gui2, 'guiStartForm');
-	echo '<form name="form" action="' . $session->fScriptURL . '" method="get">' . "\n";
 }
 function guiFinishForm (&$session){
 	$session->trace (TC_Gui2, 'guiFinishForm');
 	if (! $session->fFormExists) {
 		$session->setFormExists(true);
 	}
-	echo "</form>\n";
+	echo TAG_FORM_END;
 }
 function guiExternLinkString(&$session, $link, $text) {
 	$session->trace (TC_Gui2, 'guiExternLinkString');
 	if (empty ($text))
 		$text = $link;
-	return "<a href=\"$link\">" . htmlToText ($session, $text) . "</a>\n";
+	return TAG_ANCOR_HREF . $link . TAG_APO_SUFFIX . htmlToText ($session, $text) 
+		. TAG_ANCOR_END;
 }
 
 function guiExternLink (&$session, $link, $text) {
 	$session->trace (TC_Gui2, 'guiExternLink');
-	echo "<a href=\"$link\">";
+	echo TAG_ANCOR_HREF;
+	echo $link;
+	echo TAG_APO_SUFFIX;
 	echo htmlToText ($session, $text);
-	echo "</a>\n";
+	echo TAG_ANCOR_END;
 }
 function guiInternLink (&$session, $link, $text, $module = null) {
 	$session->trace (TC_Gui2, 'guiInternLink');
@@ -555,7 +613,9 @@ function guiStandardHeader (&$session, $title, $pos_header, $pos_body){
 	guiHeader ($session, null);
 	$header = dbGetText ($session, $pos_header);
 	if (empty ($header)){
-		echo '<head><title>' . htmlentities ($title) . '</title></head>' . "\n";
+		echo TAG_HEAD_TITLE;
+		echo htmlentities ($title);
+		echo  TAG_TITLE_HEAD_END;
 	} else
 		echo $session->replaceMacrosNoHTML ($header);
 	if ($pos_body > 0) {
@@ -565,8 +625,11 @@ function guiStandardHeader (&$session, $title, $pos_header, $pos_body){
 		else
 			echo $session->replaceMacrosNoHTML ($header);
 	}
-	if ($pos_body == 0)
-		echo '<body><h1>' . $title . '</h1>' . "\n";
+	if ($pos_body == 0){
+		echo TAG_BODY_H1;
+		echo $title;
+		echo TAG_H1_END;
+	}
 }
 function guiStandardBodyEnd (&$session, $pos) {
 	$session->trace (TC_Gui1, 'guiStandardBodyEnd');
@@ -579,10 +642,10 @@ function guiStandardBodyEnd (&$session, $pos) {
 		if ($pos != Th_LoginBodyEnd){
 			guiLine ($session, 1);
 			modStandardLinks ($session);
-			echo '</body>';
+			echo TAG_BODY_END;
 		}
 	}
-	echo "\n" . '</body></html>' . "\n";
+	echo TAG_BODY_HTML_END;
 }
 // --------------------------------
 function guiBacklinks ($session, $page_name) {
@@ -598,16 +661,18 @@ function guiBacklinks ($session, $page_name) {
 		guiParagraph ($session, 'keine Verweise auf ' . $page_name
 			. ' gefunden', false);
 	else {
-		echo '<p>Es gibt folgende Verweise auf ';
+		echo TAG_PARAGRAPH;
+		echo 'Es gibt folgende Verweise auf ';
 		guiInternLink ($session,  encodeWikiName ($session, $name), $page_name);
-		echo '</p>' . "\n" . '<ulist>';
+		echo TAG_PARAGRAPH_END;
+		echo TAG_ULIST;
 		foreach ($ids as $ii => $id) {
 			$page = dbGetRecordById ($session, T_Page, $id, 'name');
-			echo '<li>';
+			echo TAGN_LISTITEM;
 			guiInternLink ($session,  encodeWikiName ($session, $page [0]), $page [0]);
-			echo '</li>';
+			echo TAGN_LISTITEM_END;
 		}
-		echo '</ulist>' . "\n";
+		echo TAG_ULIST_END;
 	}
 }
 
@@ -620,9 +685,9 @@ function guiFormatPage (&$session, $mime, $content) {
 	case M_HTML: echo $content; break;
 	case TT_Text:
 	case M_Text:
-		echo "<pre>\n";
+		echo TAG_PRE;
 		textToHtml ($session, $content);
-		echo "\n</pre>";
+		echo TAG_PRE_END;
 	default:
 		wikiToHtml ($session, $content); break;
 	}
@@ -636,23 +701,31 @@ function guiShowTable (&$session, $headline, $header, $query, $always,
 		$has_table = true;
 		if ($headline)
 			echo $headline . "\n";
-		echo "<table $table_properties>\n";
+		echo TAG_TABLE_OPEN;
+		echo $table_properties;
+		echo TAG_SUFFIX_NEWLINE;
 		if ($header) {
-			echo '<tr>';
-			for ($ii = 0; $ii < count ($header); $ii++)
-				echo '<td><b>' . htmlentities ($header [$ii]) . '</b></td>';
-			echo "</tr>\n";
+			echo TAG_TABLE_RECORD;
+			for ($ii = 0; $ii < count ($header); $ii++){
+				echo TAG_TABLE_DELIM_BOLD;
+				echo htmlentities ($header [$ii]);
+				echo TAG_TABLE_BOLD_DELIM_END;
+			}
+			echo TAG_TABLE_DELIM_END;
 		}
 	}
 	while ($row) {
-		echo '<tr>';
-		for ($ii = 0; $ii < count ($row); $ii++)
-			echo '<td>' . htmlentities ($row [$ii]) . '</td>';
-		echo "</tr>\n";
+		echo TAG_TABLE_RECORD;
+		for ($ii = 0; $ii < count ($row); $ii++){
+			echo TAG_TABLE_DELIM;
+			echo htmlentities ($row [$ii]);
+			echo TAG_TABLE_DELIM_END;
+		}
+		echo TAG_TABLE_RECORD_END;
 		$row = dbNextRecord ($session);
 	}
 	if ($has_table)
-		echo "</table>\n";
+		echo TAG_TABLE_END;
 }
 function guiThreadPageLink (&$session, $thread_id, $page_no, $text) {
 	$session->trace (TC_Gui3, 'guiThreadPageLink');
