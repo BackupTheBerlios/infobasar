@@ -1,6 +1,6 @@
 <?php
 // gui.php: functions for Graphical User Interface
-// $Id: gui.php,v 1.4 2004/05/27 22:44:32 hamatoma Exp $
+// $Id: gui.php,v 1.5 2004/05/31 23:18:27 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -585,7 +585,7 @@ function guiAccount (&$session, $message) {
 	echo "</td></tr>\n<tr><td>Rechte:</td><td>";
 	guiTextField ("account_rights", $account_rights, 64, 64);
 	echo "</td></tr>\n<tr><td>Gesperrt:</td><td>";
-	guiCheckBox ("account_locked", "Gesperrt", $account_locked);
+	guiCheckBox ("account_locked", "Gesperrt", $account_locked == CHECKBOX_TRUE);
 	echo "</td></tr>\n<tr><td>Design:</td><td>";
 	dbGetThemes ($session, $theme_names, $theme_numbers);
 	guiComboBox ('account_theme', $theme_names, $theme_numbers, 
