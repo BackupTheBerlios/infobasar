@@ -1,6 +1,6 @@
 <?php
 // index.php: Start page of the InfoBasar
-// $Id: index.php,v 1.11 2004/10/28 21:15:41 hamatoma Exp $
+// $Id: index.php,v 1.12 2004/10/29 23:26:03 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -118,7 +118,7 @@ if ($do_login){
 	if (isset ($action)) {
 		$session->trace (TC_Init, "index.php: action: $action");
 		switch ($action){
-		case A_Edit: baseEditPage ($session, null); break;
+		case A_Edit: baseEditPage ($session, C_Change); break;
 		case A_Search:	baseSearch ($session, ''); break;
 		case A_PageInfo: basePageInfo ($session); break;
 		case A_ShowText: guiShowPageById ($session, $page_id, $text_id); break;
@@ -132,7 +132,8 @@ if ($do_login){
 		}
 	} elseif (isset ($std_answer) || ! baseCallStandardPage ($session)) {
 		$session->trace (TC_Init, 'index.php: keine Standardseite'
-			. (isset ($edit_save) ? " ($edit_save)" : ' []'));
+			. (isset ($_POST ['edit_save']) 
+				? (" (" . $_POST ['edit_save'] . ")") : ' []'));
 		if (isset ($test))
 			baseTest ($session);
 		else if (substr ($session->fPageName, 0, 1) == '.')
@@ -154,12 +155,14 @@ if ($do_login){
 			baseAccountAnswer ($session, $account_user);
 		elseif (isset ($search_title) || isset ($search_body))
 			baseSearch ($session, null);
-		elseif (isset ($edit_preview))
-			baseEditPage ($session, null);
-		elseif (isset ($edit_save) || isset ($edit_previewandsave) || isset ($edit_upload))
+		elseif (isset ($_POST ['edit_preview']))
+			baseEditPage ($session, C_Preview);
+		elseif (isset ($_POST ['edit_save']) 
+				|| isset ($_POST ['edit_previewandsave']) 
+				|| isset ($_POST ['edit_upload']))
 			baseEditPageAnswerSave ($session);
-		elseif (isset ($edit_cancel))
-			guiShowPageById ($session, $edit_pageid, null);
+		elseif (isset ($_POST ['edit_cancel']))
+			guiShowPageById ($session, $_POST ['edit_pageid'], null);
 		elseif (isset ($posting_preview) || isset ($posting_insert)
 			|| isset ($posting_change))
 			basePostingAnswer ($session);
@@ -207,129 +210,6 @@ function baseShowCurrentPage (&$session){
 		baseHome ($session);
 	}
 }
-function baseEditPage (&$session, $message) {
-	global $edit_preview, $edit_pageid, $edit_textid, $edit_content,
-		$edit_changedat, $edit_changedby, $edit_texttype, $last_pagename,
-		$edit_textidpred;
-
-	$session->trace (TC_Gui1, 'baseEditPage');
-	if (! isset ($last_pagename)) {
-		$last_pagename = $session->fPageName;
-	}
-	if (isset ($edit_content))
-		$edit_content = textAreaToWiki ($session, $edit_content);
-
-	if (! isset ($edit_pageid)) {
-		list ($edit_pageid, $edit_texttype) = dbGetRecordByClause ($session, T_Page,
-			'id,type', 'name=' . dbSqlString ($session, $session->fPageName));
-		$edit_textidpred = dbGetLastText ($session,$edit_pageid);
-		list ($edit_content, $edit_changedat, $edit_changedby)
-			= dbGetRecordById ($session, T_Text, $edit_textidpred,
-				'text,createdat,createdby');
-		$edit_textid = null;
-		
-	}
-	$session->setPageData ($last_pagename, $edit_changedat,
-		$edit_changedby);
-	getUserParam ($session, U_TextAreaWidth, $textarea_width);
-	getUserParam ($session, U_TextAreaHeight, $textarea_height);
-	if ($edit_texttype == TT_Wiki)
-		guiStandardHeader ($session, $session->fPageName . ' (in Bearbeitung)',
-			Th_EditHeaderWiki, Th_EditStartWiki);
-	else
-		guiStandardHeader ($session, $session->fPageName . ' (in Bearbeitung)',
-			Th_EditHeaderHTML, Th_EditStartHTML);
-	if (isset ($edit_preview)) {
-		echo guiParam ($session, Th_PreviewStart, '<h1>Vorschau von '
-			. $session->fPageName
-			. '</h1><p>Warnung: Der Text ist noch nicht gesichert!</p>');
-		guiFormatPage ($session, $edit_texttype, $edit_content);
-		echo guiParam ($session, Th_PreviewEnd, '<h1>Ende der Vorschau</h1>');
-	}
-	#guiStartForm ($session, 'edit');
-	echo '<form enctype="multipart/form-data" action="' . $session->fScriptURL
-		. '" method="post">' . "\n";
-	
-	guiHiddenField ('edit_texttype', $edit_texttype);
-	guiHiddenField ('last_pagename', $last_pagename);
-	guiHiddenField ('edit_pageid', $edit_pageid);
-	guiHiddenField ('edit_textid', $edit_textid);
-	guiHiddenField ('edit_textidpred', $edit_textidpred);
-	guiHiddenField ('edit_changedat', $edit_changedat);
-	guiHiddenField ('edit_changedby', $edit_changedby);
-	echo "<table border=\"0\">\n";
-	if (! empty ($message))
-		echo '<td><strong>' . htmlentities ($message) . '</strong></tr>' . "\n";
-	echo "</td></tr>\n<tr><td>";
-	guiTextArea ("edit_content", $edit_content, $textarea_width,
-		$textarea_height);
-	echo '</td></tr>' . "\n" . '<tr><td><table border="0" width="100%">';
-	echo '<tr><td>'; guiButton ('edit_save', 'Speichern (fertig)');
-	echo '</td><td>'; guiButton ('edit_previewandsave', 'Zwischenspeichern');
-	echo ' '; guiButton ('edit_preview', ' Vorschau');
-	echo '</td><td>'; guiButton ('edit_cancel', ' Verwerfen'); 
-	if (! $session->testFeature (FEATURE_UPLOAD_ALLOWED)){
-		echo ' Breite: '; guiTextField ("textarea_width", $textarea_width, 3, 3);
-		echo " H&ouml;he: ";
-	} else {	
-		echo '</td><td>Breite:</td><td>'; guiTextField ("textarea_width", $textarea_width, 3, 3);
-		echo "</td></tr>\n<tr><td>";
-		echo "Bild einf&uuml;gen:";
-		echo '</td><td>';
-		guiHiddenField ('MAX_FILE_SIZE', 500000);
-		echo '<input name="edit_upload_file" type="file">';
-		echo '</td><td>'; guiButton ('edit_upload', 'Hochladen');
-		echo "</td><td>H&ouml;he:</td><td>";
-	} 
-	guiTextField ("textarea_height", $textarea_height, 3, 3);
-	echo "</td></tr>\n</table>\n</td></tr></table>\n";
-	guiFinishForm ($session, $session);
-	echo '<br/>';
-	guiStandardBodyEnd ($session,
-		$edit_texttype == TT_Wiki ? Th_EditEndWiki : Th_EditEndHTML);
-}
-function baseEditPageAnswerSave (&$session)
-{
-	global $edit_pageid, $edit_textid, $edit_textidpred, $edit_content,
-		$edit_changedat, $edit_changedby, $edit_texttype,
-		$edit_previewandsave, $last_pagename, 
-		$edit_upload, $edit_upload_file, $_FILE;
-
-	$session->trace (TC_Gui1, 'baseEditPageAnswerSave');
-	if (isset ($edit_upload)){
-		$session->trace (TC_Gui1, 'guiEditPageSaveAnswer:');
-		$message = guiUploadFileAnswerUnique ($session, "/pic/",
-			null, 'edit_upload_file', $name);
-		$edit_content .= "\n\n[http:pic/$name $name]\n\n";
-	} else {
-		$edit_content = textAreaToWiki ($session, $edit_content);
-		$new_textid = dbGetLastText ($session, $edit_pageid);
-		$message = '';
-		if ($new_textid > $edit_textidpred 
-			&& (! isset ($edit_textid) || $new_textid > $edit_textid))
-			$message = "+++ Warnung: Seite wurde inzwischen geändert! "
-				. "Bitte Differenz ermitteln und erneut eintragen! "
-				. $new_textid . " /  " . $edit_textidpred;
-		$date = dbSqlDateTime ($session, time ());
-		if (empty ($edit_textid)){
-			$edit_textid = dbInsert ($session, T_Text,
-				'page,type,createdat,changedat,createdby,text',
-				$edit_pageid . ',' . dbSqlString ($session, $edit_texttype)
-					. ",$date,$date," . dbSqlString ($session, $session->fUserName)
-					. ',' . dbSqlString ($session, $edit_content));
-			dbUpdate ($session, T_Text, $new_textid, 'replacedby=' . $edit_textid . ',');
-		} else {
-			dbUpdate ($session, T_Text, $edit_textid, "text=" . dbSqlString ($session, $edit_content) . ",");
-		}
-	}
-	unset ($edit_save);
-	if (empty ($message) && ! isset ($edit_previewandsave) && ! isset ($edit_upload)){
-		guiShowPageById ($session, $edit_pageid, null);
-	} else {
-		baseEditPage ($session, $message, $message);
-	}
-}
-
 function baseLogin (&$session, $message) {
 	global $login_user, $login_email;
 	guiStandardHeader ($session, "Anmeldung f&uuml;r den InfoBasar", Th_LoginHeader,
@@ -618,6 +498,230 @@ function baseHome (&$session) {
 		guiStandardBodyEnd ($session, Th_StandardBodyEnd);
 	}
 }
+function baseEditPage (&$session, $mode, 
+	$message = null,  $message2 = null, $type = M_Undef, $name = null) {
+	if ($mode == C_New){
+		$pageid = 0;
+		$textid = 0;
+		$pagename = $name == null ? "" : $name;
+		$content = $name != null && strpos ($pagename, 'ategorie') == 1
+			? "<?plugin BackLinks?>\n----\nKategorieKategorie" 
+			: "";
+		$changedby = $session->fUserName;
+		$changedat = "";
+		$mimetype = $type; 
+		$textidpred = 0;
+	} elseif (isset ($_POST ['edit_content'])){
+		$pagename = $_POST ['edit_pagename'];
+		$pageid = $_POST ['edit_pageid'];
+		$textid = $_POST ['edit_textid'];
+		$content = textAreaToWiki ($session, $_POST ['edit_content']);
+		$changedby = $_POST ['edit_changedby'];
+		$changedat = $_POST ['edit_changedat'];
+		$mimetype = $_POST ['edit_mimetype'];
+		$textidpred = $_POST ['edit_textidpred'];
+	} else {
+		$pagename = $session->fPageName;
+		list ($pageid, $texttype) = dbGetRecordByClause ($session, T_Page,
+				'id,type', 'name=' . dbSqlString ($session, $pagename));
+		$mimetype = textTypeToMime ($texttype);
+		$textidpred = dbGetLastText ($session,$pageid);
+		list ($content, $changedat, $changedby)
+			= dbGetRecordById ($session, T_Text, $textidpred,
+				'text,createdat,createdby');
+		$textid = null;
+	}
+	$session->setPageData ($pagename, $changedat, $changedby);
+	getUserParam ($session, U_TextAreaWidth, $textarea_width);
+	getUserParam ($session, U_TextAreaHeight, $textarea_height);
+	if ($mode == C_New)
+		$header =  "Neue Seite";
+	else 
+		$header = $pagename . ' (in Bearbeitung)';
+	if ($mimetype == M_Wiki)
+		guiStandardHeader ($session, $header, Th_EditHeaderWiki, Th_EditStartWiki);
+	else
+		guiStandardHeader ($session, $header, Th_EditHeaderHTML, Th_EditStartHTML);
+	if (isset ($_POST ['edit_preview'])) {
+		echo guiParam ($session, Th_PreviewStart, '<h1>Vorschau von '
+			. $session->fPageName
+			. '</h1><p>Warnung: Der Text ist noch nicht gesichert!</p>');
+		guiFormatPage ($session, $mimetype, $content);
+		echo guiParam ($session, Th_PreviewEnd, '<h1>Ende der Vorschau</h1>');
+	}
+	echo '<form enctype="multipart/form-data" action="' . $session->fScriptURL
+		. '" method="post">' . "\n";
+	
+	guiHiddenField ('edit_pagename', $pagename);
+	guiHiddenField ('edit_pageid', $pageid);
+	guiHiddenField ('edit_textid', $textid);
+	guiHiddenField ('edit_textidpred', $textidpred);
+	guiHiddenField ('edit_changedat', $changedat);
+	guiHiddenField ('edit_changedby', $changedby);
+
+	if (! empty ($message))
+		guiParagraph ($session, '<td><strong>' . htmlentities ($message)
+			. '</strong></tr>' . "\n", false);
+	if (! empty ($message2))
+		guiParagraph ($session, '<td><strong>' . htmlentities ($message2) 
+			. '</strong></tr>' . "\n", false);
+	echo "<table border=\"0\">\n";
+	echo "<tr><td><table border=\"0\">\n";
+	if ($mode == C_New){
+		echo "<tr><td>Name:</td><td>";
+		guiTextField ('edit_name', $name, 43, 64);
+		echo "</td></tr>\n";
+	}
+	echo "</td></tr>\n<tr><td>Typ:</td><td>";
+	if ($mode == C_New && $type == M_Undef)
+		guiComboBox ('edit_mimetype', array (M_Wiki, M_HTML), null);
+	else {
+		echo $mimetype;
+		guiHiddenField ('edit_mimetype', $mimetype);
+	}
+	if ($mode == C_New){
+		$templates = dbColumnList ($session, T_Page, 'name', 
+			'name like ' . dbSqlString ($session, 'Vorlage%'));
+		if (count ($templates) > 0){
+			echo "</td></tr>\n<tr><td>Seitenvorlage:</td><td>";
+			guiComboBox('edit_template', $templates, null);
+			echo (' ');
+			guiButton ('edit_appendtemplate', 'Vorlage einkopieren');
+		}
+	}
+	echo "</td></tr></table>\n";
+	echo "</td></tr>\n<tr><td>";	
+	guiTextArea ('edit_content', $content, $textarea_width,
+		$textarea_height);
+	echo '</td></tr>' . "\n" . '<tr><td><table border="0" width="100%">';
+	echo '<tr><td>'; guiButton ('edit_save', 'Speichern (fertig)');
+	echo '</td><td>'; guiButton ('edit_previewandsave', 'Zwischenspeichern');
+	echo ' '; guiButton ('edit_preview', ' Vorschau');
+	echo '</td><td>'; guiButton ('edit_cancel', ' Verwerfen'); 
+	if (! $session->testFeature (FEATURE_UPLOAD_ALLOWED)){
+		echo ' Breite: '; guiTextField ("textarea_width", $textarea_width, 3, 3);
+		echo " H&ouml;he: ";
+	} else {	
+		echo '</td><td>Breite:</td><td>'; guiTextField ("textarea_width", $textarea_width, 3, 3);
+		echo "</td></tr>\n<tr><td>";
+		echo "Bild einf&uuml;gen:";
+		echo '</td><td>';
+		guiHiddenField ('MAX_FILE_SIZE', 500000);
+		echo '<input name="edit_upload_file" type="file">';
+		echo '</td><td>'; guiButton ('edit_upload', 'Hochladen');
+		echo "</td><td>H&ouml;he:</td><td>";
+	} 
+	guiTextField ("textarea_height", $textarea_height, 3, 3);
+	echo "</td></tr>\n</table>\n";
+	echo "</td></tr></table>\n";	
+	
+	guiFinishForm ($session, $session);
+	echo '<br/>';
+	guiStandardBodyEnd ($session,
+		$mimetype == M_Wiki ? Th_EditEndWiki : Th_EditEndHTML);
+}
+function baseEditPageAnswer (&$session, $mode){
+	$session->trace (TC_Gui1, 'baseEditPageAnswer');
+	if (! isset ($_POST ['edit_cancel'])) {
+		$_POST ['edit_name'] = normalizeWikiName ($session, $_POST ['edit_name']);
+		if ($mode == C_LastMode)
+			$mode = $_POST ['edit_mimetype'];
+		$content = $_POST ['edit_content'];
+		$len = strlen ($content);
+		$message = null;
+		$content = textAreaToWiki ($session, $content);
+		$content = extractHtmlBody ($content);
+		if (isset ($_POST ['edit_preview']) 
+			|| isset ($_POST ['edit_appendtemplate']))
+			;
+		elseif (empty ($_POST ['edit_pagename']))
+			$message = '+++ kein Seitenname angegeben';
+		elseif (dbSingleValue ($session,
+				'select count(*) from ' . dbTable ($session, T_Page)
+				. ' where name=' 
+					. dbSqlString ($session, $_POST ['edit_pagename'])) > 0)
+			$message = '+++ Seite existiert schon: ' . $_POST ['edit_pagename'];
+		else {
+			$read_group = 0;
+			$write_group = 0;
+			if (empty ($_POST ['edit_mimetype']))
+				$_POST ['edit_mimetype'] = M_Wiki;
+			$page = dbInsert ($session, T_Page,
+				'name,type,createdat,changedat,readgroup,writegroup',
+				dbSqlString ($session, $_POST ['edit_pagename']) .',' 
+				. dbSqlString ($session, $_POST ['edit_mimetype'])
+				. ',now(),now(),' . $read_group . ',' . $write_group);
+			dbInsert ($session, T_Text, 'page,type,text,createdby,createdat,changedat',
+				$page
+				. "," . dbSqlString ($session, mimeToTextType ($_POST ['edit_mimetype']))
+				. ',' . dbSqlString ($session, $_POST ['edit_content'])
+				. ',' . dbSqlString ($session, $session->fUserName)
+				. ',now(),now()');
+		}
+		$message2 = $len == strlen ($alterpage_content)
+			? '' : 'Es wurde der Rumpf (body) extrahiert.';
+		# $session->SetLocation (encodeWikiName ($session, $alterpage_name));
+	} // ! isset ($alterpage_cancel)
+	if (isset ($alterpage_cancel)){
+		if (! empty ($alterpage_name) && dbPageId ($session, $alterpage_name) > 0)
+			guiShowPage ($session, $alterpage_mime, $alterpage_name,
+				$alterpage_name);
+		else
+			baseHome ($session);
+	} elseif ($message != null || isset ($alterpage_preview)
+		|| isset ($alterpage_appendtemplate))
+		baseAlterPage ($session, $mode, $message, $message2, $alterpage_mime);
+	else
+		guiShowPage ($session, $alterpage_mime, $alterpage_name,
+			$alterpage_name);
+}
+
+function baseEditPageAnswerSave (&$session)
+{
+	global $_FILE;
+
+	$session->trace (TC_Gui1, 'baseEditPageAnswerSave');
+	if (isset ($_POST ['edit_upload'])){
+		$session->trace (TC_Gui1, 'guiEditPageSaveAnswer:');
+		$message = guiUploadFileAnswerUnique ($session, "/pic/",
+			null, 'edit_upload_file', $name);
+		$_POST ['edit_content'] .= "\n\n[http:pic/$name $name]\n\n";
+	} else {
+		$content = textAreaToWiki ($session, $_POST ['edit_content']);
+		$new_textid = dbGetLastText ($session, $_POST ['edit_pageid']);
+		$message = '';
+		if ($new_textid > $_POST ['edit_textidpred'] 
+			&& (! isset ($_POST ['edit_textid']) 
+				|| $new_textid > $_POST ['edit_textid']))
+			$message = "+++ Warnung: Seite wurde inzwischen geändert! "
+				. "Bitte Differenz ermitteln und erneut eintragen! "
+				. $new_textid . " /  " . $_POST ['edit_textidpred'];
+		$date = dbSqlDateTime ($session, time ());
+		if (empty ($_POST ['edit_textid'])){
+			$_POST ['edit_textid'] = dbInsert ($session, T_Text,
+				'page,type,createdat,changedat,createdby,text',
+				$_POST ['edit_pageid'] . ',' 
+					. dbSqlString ($session, 
+						mimeToTextType ($_POST ['edit_mimetype'])
+					. ",$date,$date," 
+					. dbSqlString ($session, $session->fUserName)
+					. ',' . dbSqlString ($session, $_POST ['edit_content'])));
+			dbUpdate ($session, T_Text, $new_textid, 'replacedby=' 
+				. $_POST ['edit_textid'] . ',');
+		} else {
+			dbUpdate ($session, T_Text, $_POST ['edit_textid'],
+				"text=" . dbSqlString ($session, $_POST ['edit_content']) . ",");
+		}
+	}
+	unset ($_POST ['edit_save']);
+	if (empty ($message) && ! isset ($_POST ['edit_previewandsave']) 
+		&& ! isset ($_POST ['edit_upload'])){
+		guiShowPageById ($session, $_POST ['edit_pageid'], null);
+	} else {
+		baseEditPage ($session, $message, $message);
+	}
+}
+
 function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 	global $alterpage_name, $alterpage_content, $textarea_width,
 		$textarea_height, $alterpage_content, $alterpage_mime,
@@ -700,19 +804,17 @@ function baseAlterPage (&$session, $mode, $message, $message2, $type = M_Undef){
 	else
 		guiStandardBodyEnd ($session, Th_EditEndHTML);
 }
+
 function baseNewPageReference (&$session) {
 	global $alterpage_name, $alterpage_content, $textarea_width, $alterpage_mime,
 		 $textarea_height, $alterpage_content, $alterpage_insert, 
 		 $alterpage_appendtemplate;
 	$session->trace (TC_Gui1, 'baseNewPageReference');
-	$alterpage_name = substr ($session->fPageName, 1);
-	if ( ($page = dbPageId ($session, $alterpage_name)) > 0)
+	$name = substr ($session->fPageName, 1);
+	if ( ($page = dbPageId ($session, $name)) > 0)
 		guiShowPageById ($session, $page, null);
 	else {
-		$alterpage_content = strpos ($alterpage_name, 'ategorie') == 1
-			? "<?plugin BackLinks?>\n----\nKategorieKategorie" : "Beschreibung der Seite $alterpage_name\n";
-		$alterpage_mime = M_Wiki;
-		baseAlterPage ($session, C_Auto, 'neue Seite', '');
+		baseEditPage ($session, C_New, null, null, M_Wiki, $name);
 	}
 }
 
