@@ -344,6 +344,6 @@ CREATE TABLE infobasar_text (
 # Daten für Tabelle infobasar_text
 #
 
-INSERT INTO infobasar_text (page, type, text) VALUES (11, 'w', '! Wo finde ich was?\r\n\r\n* Was ist ein [Wiki]\r\n* HilfeFormatierungen\r\n* [http:!home Übersicht]\r\n* [http:!forumhome Foren-Übersicht]\r\n\r\n--------\r\nKategorieOrdnung');
-INSERT INTO infobasar_text (page, type, text) VALUES (12, 'w', '! Probieren geht über studieren\r\nHier darfst Du Dich austoben und [Wiki] in Aktion erleben.\r\n\r\nEinfach ''Bearbeiten'' (oben und unten!) anklicken.\r\n----\r\nKategorieHilfe');
+INSERT INTO infobasar_text (page, type, text) VALUES (11, 'w', '! Wo finde ich was?\r\n\r\n* Was ist ein ["Wiki"]\r\n* HilfeFormatierungen\r\n* [[http:!home|Übersicht]]\r\n* [[http:!forumhome|Foren-Übersicht]]\r\n\r\n--------\r\nKategorieOrdnung');
+INSERT INTO infobasar_text (page, type, text) VALUES (12, 'w', '! Probieren geht über studieren\r\nHier darfst Du Dich austoben und ["Wiki"] in Aktion erleben.\r\n\r\nEinfach ''Bearbeiten'' (oben und unten auf der Seite!) anklicken und los geht\'s!.\r\n----\r\nKategorieHilfe');
 
