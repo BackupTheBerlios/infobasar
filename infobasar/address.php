@@ -1,6 +1,6 @@
 <?php
 // address.php: Module for address administration.
-// $Id: address.php,v 1.7 2004/11/08 13:27:23 hamatoma Exp $
+// $Id: address.php,v 1.8 2004/11/10 00:42:15 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -91,13 +91,15 @@ if ($rc != null) {
 			addressEditBookAnswer ($session);
 		elseif (isset ($_POST ['card_change']) || isset ($_POST ['card_new']))
 			addressEditCardAnswer ($session);
+		elseif (isset ($_POST ['show_search']))
+			addressShowCards ($session);
 		else {
 			#$session->trace (TC_X, 'address_init: fPageName: "' . $session->fPageName . '"');
 			switch ($session->fPageName){
 			case P_ShowBooks: addressShowBooks ($session); break;
 			case P_EditBook: addressEditBook ($session); break;
 			case P_EditCard: addressEditCard ($session); break;
-			case P_ShowCards: addressShowCard ($session); break;
+			case P_ShowCards: addressShowCards ($session); break;
 			default:
 				putHeaderBase ($session);
 			}
@@ -387,5 +389,87 @@ function addressEditCardAnswer (&$session){
 		$message = "Adresskarte $name wurde erstellt.";
 	}
 	addressEditcard ($session, $message);
+}
+function addressShowCards (&$session, $message = null){
+	$session->trace (TC_Gui1, 'addressShowBook:');
+	
+	guiStandardHeader ($session, 'Anzeigen von Adressen',
+		Th_AddressHeader, Th_AddressBodyStart);
+	if ($message <> null)
+		guiParagraph($session, $message, false);
+	guiStartForm ($session, 'search', P_ShowCards);
+	outTable (0);
+	outTableRecordCells ('Suchkriterien:', '');
+	outTableRecord();
+	$books = dbColumnList($session, Tab_Book, 'name', '1');
+	if (! isset ($_POST ['show_book']))
+		$_POST ['show_book'] =  $books [0];
+	outTableComboBox ('Adressbuch:', 'show_book', $books, null, null);
+	$fields = array ('Name', 'Vorname', 'Spitzname', 'EMail', 'PLZ', 'Ort', 
+		'Funktion', 'Notiz');
+	outTableComboBox ('Auswahlkriterium:', 'show_choice', $fields, null, null);
+	outTableTextField ('Suchmuster:', 'show_pattern', null, 16);
+	outTableButton (null, 'show_search', 'Suchen');
+	outTableRecordCells ('Ausgabefelder', '');
+	outTableCheckBox (null, 'show_withlastname', 'Name');
+	outTableCheckBox (null, 'show_withfirstname', 'Vorname');
+	outTableCheckBox (null, 'show_withprivate', 'Privat');
+	outTableCheckBox (null, 'show_withoffice', 'Geschäftlich');
+	outTableCheckBox (null, 'show_withaddress', 'Postadresse');
+	outTableCheckBox (null, 'show_withphone', 'Telefon');
+	outTableCheckBox (null, 'show_withfax', 'Fax');
+	outTableCheckBox (null, 'show_withmobil', 'Mobil');
+	outTableCheckBox (null, 'show_withfunction', 'Funktion');
+	outTableCheckBox (null, 'show_withnote', 'Notiz');
+	outTableRecordEnd();
+	outTableEnd ();
+	guiFinishForm ($session, $session);
+	if (isset ($_POST ['show_pattern'])){
+		$pattern = $_POST ['show_pattern'];
+		if (empty ($pattern))
+			$condidtion = '1';
+		else {
+			$pattern = '%' . $pattern . '%';
+			switch ($_POST ['show_choice']){
+			case 'Name': 
+				$condition = 'lastname like ' . dbSqlString ($session, $pattern);
+				break;
+			case 'Vorname':
+				$condition = 'firstname like ' . dbSqlString ($session, $pattern);
+				break;
+			case 'Spitzname':
+				$condition = 'nickname like ' . dbSqlString ($session, $pattern);
+				break;
+			case 'EMail':
+				$condition = 'emailprivate like ' . dbSqlString ($session, $pattern)
+					. ' or emailprivate2 like ' . dbSqlString ($session, $pattern)
+					. ' or emailoffice like ' . dbSqlString ($session, $pattern)
+					. ' or emailoffice2 like ' . dbSqlString ($session, $pattern);
+				break;
+			case 'PLZ':
+				$condition = 'zip like ' . dbSqlString ($session, $pattern);
+				break;
+			case 'Ort':
+				$condition = 'city like ' . dbSqlString ($session, $pattern);
+				break;
+			case 'Funktion':
+				$condition = 'function like ' . dbSqlString ($session, $pattern);
+				break;
+			case 'Notiz':
+				$condition = 'note like ' . dbSqlString ($session, $pattern);
+				break;
+			default:
+				$condition = '1';
+				break;
+			}
+			$what = 'lastname,firstname,emailprivate,phoneprivate,country,zip,city,street';
+			dbPrintTable ($session, "select $what from " 
+				. dbTable ($session, Tab_Card) . " where $condition",
+				array ('Name', 'Vorname', 'EMail', 'Tel', 'Land', 'PLZ', 'Stadt', 'Strasse'),
+				30);
+		}
+	}
+	guiStandardBodyEnd ($session, Th_AddressBodyEnd);
+	
 }
 ?>
