@@ -1,6 +1,6 @@
 <?php
 // util.php: common utilites
-// $Id: util.php,v 1.10 2004/10/15 23:25:35 hamatoma Exp $
+// $Id: util.php,v 1.11 2004/10/28 21:16:41 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -99,9 +99,14 @@ function normWikiName (&$session, &$name){
 	}
 }
 function writeExternLink ($link, $text, &$status) {
+	$status->fSession->trace (TC_Util2, "writeExternLink: link: $link");
 	if ($text == '')
 		$text = $link;
 	if (preg_match ('/\.(jpg|png|gif|bmp)$/i', $link)) {
+		if (preg_match ('(http:[^/])i', $link)){
+			$link = "http:" . $status->fSession->fScriptBase . "/" . substr ($link, 5);
+			$status->fSession->trace (TC_Util2, "writeExternLink: link: $link");
+		}
 		echo '<img alt="' . $text . '" title="' . $text . '"src="' . $link
 			. '">';
 	} else {
