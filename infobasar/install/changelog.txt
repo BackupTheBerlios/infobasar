@@ -1,0 +1,43 @@
+Änderungsliste Hamatomas Infobasar
+$Id: changelog.txt,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+
+Legende: F(ehler) N(eu)
+
+Version 0.6.1 vom 2004.06.28
+- N: Forum/Admin/Basis: Benutzen von Header-Info "Location": Session->PutHeader()
+- N: kein ob_start()/ob_flush()
+- F: Forum: Antworten
+
+Version 0.6.0 vom 2004.06.13
+- N: module.html (Doku Module für InfoBasar)
+- Umstrukturierung: Aufteilung in 3 Module index.php, forum.php, admin.php
+- N: Laufzeitmessung
+
+Version 0.5.5 vom 2004.06.10
+- F: Entpacken hma-Archiv: Erzeugen überflüssiger Ordner
+- N: Anpassungen an PHP 4.0
+- N: Grundstruktur User-Rechte
+
+Version 0.5.4 vom 2004.06.08
+- F: Doppelte Überschrift in Info
+- F: Erzeugungsdatum bei Text in Seitenneuanlage
+- N: Letzte Änderungen: Tagzahl konfigurierbar
+- F: Zeichenfehler in PHPWiki-Design
+- N: Titelsuche in PHPWiki-Design
+
+Version 0.5.3 vom 2004.06.02
+- PHP-Info aktiviert
+- Installation: Upload von Archiven
+- admin.php:"Einstellungen:"  Upload des Logo
+Version 0.5.2 vom 2004.05.28
+- Copyright und Lizenz
+- Cookie für Login
+- Archive bei Installation
+
+Version 0.5.1 vom 2004.05.26
+- Versionsnummer
+- EMail-Adresse in Einstellungen
+- Generieren und Versenden des Passwortes
+
+Version: 0.5 vom 2004.05.24
+erste Release auf BerliOS

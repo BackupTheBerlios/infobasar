@@ -1,0 +1,19 @@
+# Dateien Infobasar
+# $Id: ib_install.lst,v 1.1 2004/09/15 19:47:42 hamatoma Exp $
+./license
+./db_mysql.php
+./gui.php
+./index.php
+./util.php
+./forum.php
+./pic/logo.png
+./tool/mk_arch.pl
+./docu/overview.html
+./docu/index.html
+./classes.php
+./admin.php
+./infobasar_start.sql
+./install.txt
+./changelog.txt
+./readme.txt
+./release-notes.txt
