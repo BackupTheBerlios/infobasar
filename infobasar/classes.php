@@ -1,6 +1,6 @@
 <?php
 // classes.php: constants and classes
-// $Id: classes.php,v 1.31 2005/01/13 03:49:00 hamatoma Exp $
+// $Id: classes.php,v 1.32 2005/01/14 03:08:49 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 
-define ('PHP_ClassVersion', '0.7.2 (2005.01.13)');
+define ('PHP_ClassVersion', '0.7.3 (2005.01.14)');
 
 define ('PATH_DELIM', '/');
 define ('COOKIE_NAME', 'infobasar');
@@ -82,14 +82,6 @@ define ('TT_Text', 't');
 // Themes: Index in Tabelle param: Einträge als HTML!
 define ('Theme_All', 1);
 
-define ('Param_DBScheme', 10);
-define ('Param_DBBaseContent', 11);
-define ('Param_DBExtensions', 12);
-define ('Param_BasarName', 13);
-define ('Param_UserTitles', 14);
-define ('Param_BaseModule', 15);
-define ('Param_ForumModule', 16);
-
 define ('Theme_Standard', 10);
 
 // Parameter zur Oberflaechengestaltung:
@@ -103,7 +95,8 @@ define ('Th_StandardHeader', 101);
 define ('Th_StandardBodyStart', 102);
 define ('Th_StandardBodyEnd', 103);
 define ('Th_LoginHeader', 105);
-define ('Th_LoginBodyEnd', 106);
+define ('Th_LoginBodyStart', 106);
+define ('Th_LoginBodyEnd', 107);
 
 
 // Modulunabhängig je Design: 150-199
@@ -111,29 +104,32 @@ define ('C_MinIdForThemes', 150); // von 100
 define ('Th_ThemeName', 150);
 define ('Th_Header', 151);
 define ('Th_CSSFile', 152);
-
+define ('Th_MacroPattern', 153);
 
 // Macros:
 define ('Macro_Char', '[');
 define ('Macro_Suffix', ']');
-define ('TM_CurrentDate', '[Date]');
-define ('TM_CurrentDateTime', '[DateTime]');
-define ('TM_CurrentUser', '[User]');
-define ('TM_PageName', '[PageName]');
-define ('TM_PageLink', '[PageLink]');
-define ('TM_PageTitle', '[PageTitle]');
-define ('TM_PageChangedAt', '[PageChangedAt]');
-define ('TM_PageChangedBy', '[PageChangedBy]');
-define ('TM_Theme', '[Theme]');
-define ('TM_Newline', '[newline]');
-define ('TM_BasarName', '[BasarName]');
-define ('TM_RuntimePrefix', '[Runtime');
-define ('TM_RuntimeSecMilli', '[RuntimeSecMilli]');
-define ('TM_RuntimeSecMicro', '[RuntimeSecMicro]');
+define ('TM_CurrentDate', 'Date');
+define ('TM_CurrentDateTime', 'DateTime');
+define ('TM_CurrentUser', 'User');
+define ('TM_PageName', 'PageName');
+define ('TM_PageLink', 'PageLink');
+define ('TM_PageTitle', 'PageTitle');
+define ('TM_PageChangedAt', 'PageChangedAt');
+define ('TM_PageChangedBy', 'PageChangedBy');
+define ('TM_Theme', 'Theme');
+define ('TM_Newline', 'Newline');
+define ('TM_BasarName', 'BasarName');
+define ('TM_RuntimePrefix', 'Runtime');
+define ('TM_RuntimeSecMilli', 'RuntimeSecMilli');
+define ('TM_RuntimeSecMicro', 'RuntimeSecMicro');
+define ('TM_Webmaster', 'Webmaster');
+// obige Aenderungen auch in MACRO_PATTERN_BUILDIN!
 
-define ('TM_MacroPrefix', '[M_');
-define ('TM_StandardMacroPrefix', 'S');
-define ('TM_ThemeMacroPrefix', 'T');
+define ('MACRO_PATTERN_BUILDIN', 'Date|DateTime|User|PageName|PageLink|PageTitle|PageChangedAt'
+	. '|PageChangedBy|Theme|Newline|BasarName|RuntimeSecMilli|RuntimeSecMicro'); 
+define ('MACRO_PATTERN_PREFIX', '/\A((\s|.)*?)\[('); 
+define ('MACRO_PATTERN_SUFFIX', ')\]/m'); // multilined
 
 // Benutzerspezifische Einstellungen:
 define ('U_TextAreaWidth', 'textarea_width');
@@ -195,7 +191,7 @@ define ('FEATURE_SECURE_LOGOUT', 4);
 
 // Alignments:
 define ('AL_None', null);
-define ('AL_Right', 'Right');
+define ('AL_Right', 'right');
 define ('Al_Left', 'left');
 define ('AL_Justify', 'justify');
 define ('AL_Center', 'center');
@@ -208,9 +204,9 @@ define ('TAG_ANCOR_HREF', '<a href="');
 define ('TAG_APO', '"');
 define ('TAG_APO_SUFFIX', '">');
 define ('TAG_APO_SUFFIX_NEWLINE', "\">\n");
-define ('TAG_BODY_END',  '</body>');
-define ('TAG_BODY_H1', '<body><h1>');
-define ('TAG_BODY_HTML_END', "\n</body></html>");
+define ('TAG_BODY_END',  '</div></body>');
+define ('TAG_BODY_H1', '<body><div><h1>');
+define ('TAG_BODY_HTML_END', "\n</div></body></html>\n\n");
 define ('TAG_BOLD_ITALIC', '<b><i>');
 define ('TAG_CITE', '<cite>');
 define ('TAG_CITE_END', '</cite>');
@@ -220,7 +216,7 @@ define ('TAG_DIV_END', '</div>');
 define ('TAG_DOC_TYPE', '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">');
 define ('TAG_ENDPREFIX', '</'); 	
 define ('TAG_FORM_END', "</form>\n");
-define ('TAG_FORM_MULTIPART_POST_ACTION', '<form enctype="multipart/form-data" " method="post" action="');
+define ('TAG_FORM_MULTIPART_POST_ACTION', '<form enctype="multipart/form-data" method="post" action="');
 define ('TAG_FORM_POST_ACTION', '<form method="post" action="');
 define ('TAG_H1_END', "</h1>\n");
 define ('TAG_H1', '<h1>');
@@ -232,7 +228,7 @@ define ('TAG_HEAD_TITLE', '<head><title>');
 define ('TAG_HRULE_HEIGHT', '<hr style="width: 100%; height: ');
 define ('TAG_HRULE', '<hr>');
 define ('TAG_HTML', "\n<html>");
-define ('TAG_HTML_BODY', "\n<html>\n<body>");
+define ('TAG_HTML_BODY', "\n<html>\n<body><div>");
 define ('TAG_IMAGE_ALT', '<img alt="');
 define ('TAG_IMAGE_SOURCE', '" src="');
 define ('TAG_IMAGE_TITLE', '" title="');
@@ -267,7 +263,7 @@ define ('TAG_SUP_END', '</sup>');
 define ('TAG_SUFFIX', '>'); 	
 define ('TAG_SUFFIX_NEWLINE', ">\n"); 	
 define ('TAG_TABLE_BOLD_DELIM_END', '</b></td>');
-define ('TAG_TABLE_DELIM_ALIGN', '<td text-align: ');
+define ('TAG_TABLE_DELIM_ALIGN', '<td style="text-align: ');
 define ('TAG_TABLE_DELIM_BOLD', '<td><b>');
 define ('TAG_TABLE_DELIM_END_DELIM', '</td><td>');
 define ('TAG_TABLE_DELIM_END', '</td>');
@@ -282,7 +278,7 @@ define ('TAG_TEXTAREA_END', "</textarea>\n");
 define ('TAG_TEXTAREA_NAME', '<textarea name="');
 define ('TAG_TT', '<tt>');
 define ('TAG_TT_END', '</tt>');
-define ('TAG_TITLE_END_BODY', "</title>\n</head>\n<body>\n");
+define ('TAG_TITLE_END_BODY', "</title>\n</head>\n<body><div>\n");
 define ('TAG_TITLE_HEAD_END',  "</title></head>\n");
 define ('TAG_TITLE', '<title>');
 define ('TAG_ULIST_END', "</ul>\n");
@@ -359,13 +355,9 @@ class Session {
 	var $fPageChangedAt;
 	var $fPageChangedBy;
 	var $fPageTitle;
-
-	var $fMacroBasarName;
-	var $fMacroScriptBase;
-	var $fMacroStandard;
-	var $fMacroTheme;
-	var $fMacroReplacementKeys; // Liste aller Macros als RegExpr
-	var $fMacroReplacementValues; // Ersatzstrings (mit addslashes()))
+	
+	var $fMacros; // Array als Cache
+	var $fMacroPattern; // Perl-RExpr zur Makroersetzung
 	
 	var $fParamBase; // Basis-Nummer des Moduls in der Param-Tabelle.
 
@@ -412,15 +404,14 @@ class Session {
 		$this->fHasHeader = false;
 		$this->fHasBody = false; // wird in guiHeader() gesetzt.
 		$this->fOutputState = 'Init';
+		$this->fMacros = array ();
+		$this->fMacroPattern = MACRO_PATTERN_PREFIX . MACRO_PATTERN_BUILDIN . MACRO_PATTERN_SUFFIX;
 		$this->fTraceFlags = 0;
 		$this->fVersion = 400;
 		$this->fModuleData = array ();
 		$this->fBodyLines = null;
 		$this->fLocation = "";
 		$this->fFormExists = false;
-		$this->fPageChangedAt = "";
-		$this->fPageChangedBy = "";
-		$this->fPageTitle = "";
 		$this->fUserTheme = Theme_Standard;
 		$this->fLogPageId = null;
 		$this->fIsInParagraph = false;
@@ -445,7 +436,9 @@ class Session {
 					$this->fScriptURL = substr ($this->fPageURL, 0, $pos);
 			}
 		}
-		$this->fPageName = $this->fPageURL;
+		$this->setMacro (TM_PageName, $this->fPageURL);
+		$this->setMacro (TM_PageLink, $this->fPageURL);
+		
 		$this->fScriptFile = $_SERVER['SCRIPT_FILENAME'];
 		$this->fScriptBase = preg_replace ('/\/\w+\.php.*$/', '', $_SERVER['PHP_SELF']);
 		$this->fFileSystemBase =  preg_replace ('/\/\w+\.php.*$/', '', $this->fScriptFile);
@@ -458,8 +451,7 @@ class Session {
 		$this->fTraceFile = "/tmp/trace.log";
 		#$this->fTraceFile = null;
 		$this->fTraceDirect = false;
-		$this->fTraceFlags
-			= 1 * (1 * TC_Util1 + 1 * TC_Util2 + 1 * TC_Util3)
+		$special = 1 * (1 * TC_Util1 + 1 * TC_Util2 + 1 * TC_Util3)
 			+ 0 * (1 * TC_Gui1 + 2 * TC_Gui2 + 0 * TC_Gui3)
 			+ 0 * (1 * TC_Db1 + 1 * TC_Db2 + 0 * TC_Db3)
 			+ 0 * (1 * TC_Session1 + 0 * TC_Session2 + 1 * TC_Session3) 
@@ -468,12 +460,19 @@ class Session {
 			+ 1 * (0 * TC_Convert + 1 * TC_Init + 0 * TC_Diff2)
 			+ TC_Error + TC_Warning + TC_X;
 		$this->fTraceFlags = TC_Error + TC_Warning + TC_X;
-		#$this->fTraceFlags = TC_All;
+		switch (isset ($_GET ['TraceFlags']) ? $_GET ['TraceFlags'] : 0){
+		default: $this->fTraceFlags = TC_Error + TC_Warning + TC_X; break;
+		case 1: $this->fTraceFlags = $special; break;
+		case 2: $this->fTraceFlags = TC_All; break;
+		case -1: $this->fTraceFlags = 0;
+		}
 		$this->fModules = null;
-		$this->fTraceInFile = false;
-		# $this->fTraceInFile = true;
+		$this->fTraceInFile = ! isset ($_GET ['TraceInFile']) || $_GET ['TraceInFile'];
 		$this->trace (TC_Init, "TC: " . $this->fTraceFlags . " InFile: " . ($this->fTraceInFile ? 'f' : 'f'));
 		$this->fTraceFile = "/tmp/trace.log";
+		if (isset ($_GET ['RemoveTraceFile']) && $_GET ['RemoveTraceFile']
+			 && ! empty ($this->fTraceFile) && file_exists ($this->fTraceFile))
+			 unlink ($this->fTraceFile);
 		$this->trace (TC_Init, "Session.Session: fScriptURL: '" . $this->fScriptURL . "' Page: '" 
 			. $this->fPageURL . "' ($pos) <== '" . $uri . "'");
 		$this->trace (TC_Init, "Session.Session: Id: $session_id User: $session_user No: $session_no");
@@ -599,12 +598,15 @@ class Session {
 		$this->fDbInfo = $info; $this->fDbConnection = $connection;
 	}
 	function setUserData ($id, $name, $theme, $width, $height,
-		$maxhits, $postingsperpage, $threadsperpage, $startpage) {
+			$maxhits, $postingsperpage, $threadsperpage, $startpage) {
 		$this->trace (TC_Session1, "setUserData: $id, $name, $theme, $startpage w=$width h=$height");
 		$this->fUserId = $id;
 		$this->fUserName = $name;
 		$this->fUserRights = null; 
 		$this->fUserTheme = $theme;
+		$macros = dbGetAndStoreMacroPattern ($this);
+		$this->fMacroPattern = MACRO_PATTERN_PREFIX . MACRO_PATTERN_BUILDIN 
+			. $macros . MACRO_PATTERN_SUFFIX;
 		$this->fUserTextareaWidth = $width; $this->fUserTextareaHeight = $height;
 		$this->fUserMaxHits = $maxhits;
 		$this->fUserPostingsPerPage = $postingsperpage <= 1
@@ -616,38 +618,21 @@ class Session {
 	function setPageName ($uri){
 		$last = getPostVar ('last_pagename');
 		$this->trace (TC_Init, 'setPageName: ' . $uri . ' last_pagename: (' . $last . ')');
-		$this->fPageName = decodeWikiName ($this,
-			preg_replace ('/\?.*$/', '', $uri));
-		if (strpos ($this->fPageName, '.php') > 0){
-			$this->fPageName = empty ($last) ? P_Undef : $last;
+		$pageurl = decodeWikiName ($this, preg_replace ('/\?.*$/', '', $uri));
+		if (strpos ($pageurl, '.php') > 0){
+			$pageurl = empty ($last) ? P_Undef : $last;
 			if (! empty ($last))
 				$this->setLocation (encodeWikiName ($this, $last));
 		}
-		$this->fPageTitle = $this->fPageName;
-		$this->trace (TC_Init, 'setPageName: PageName: ' . $this->fPageName . TAG_NEWLINE);
+		$this->setMacro (TM_PageName, $pageurl);
+		$this->fPageURL = $pageurl;
+		$this->setMacro (TM_PageLink, $pageurl);
+		$this->setMacro (TM_PageTitle, $pageurl);
+		$this->trace (TC_Init, 'setPageName: PageName: ' . $pageurl . TAG_NEWLINE);
 	}
 	function setPageTitle ($title) {
 		$this->trace (TC_Session1, 'setPageTitle: ' . $title);
-		$this->fPageTitle = $title;
-	}
-	function setMacros () {
-		$this->trace (TC_Init, 'setMacros');
-		if ( ($this->fMacroBasarName = dbGetParam ($this, Theme_All,
-				Param_BasarName)) == '')
-			$this->fMacroBasarName = 'InfoBasar';
-		$this->fMacroScriptBase = dbGetParam ($this, Theme_All, Param_BaseModule);
-		dbReadMacros ($this, Theme_All, TM_MacroPrefix . TM_StandardMacroPrefix,
-			$this->fMacroReplacementKeys = array (),
-			$this->fMacroReplacementValues = array ());
-		dbReadMacros ($this, $this->fUserTheme, 
-			TM_MacroPrefix . TM_ThemeMacroPrefix,
-			$this->fMacroReplacementKeys,
-				$this->fMacroReplacementValues);
-		if ($this->fTraceFlags & TC_Init){
-			$this->trace (TC_Init, 'setMacros-2: ' . count ($this->fMacroReplacementKeys));
-			for ($ii = 0; $ii < count ($this->fMacroReplacementKeys); $ii++)
-				$this->trace (TC_Session3, $this->fMacroReplacementKeys [$ii] . ' -> ' . ($this->fMacroReplacementValues [$ii]));
-		}
+		$this->setMacro (TM_PageTitle, $title);
 	}
 	function setDbResult ($result) { $this->fDbResult = $result; }
 	function hasRight ($area, $kind){
@@ -667,52 +652,39 @@ class Session {
 		return $rc;
 	}
 	function setPageData ($name, $date, $by) {
-		$this->fPageName = $name;
+		$this->getMacro (TM_PageName, $name);
 		if ($date != null){
-			$this->fPageChangedAt = dbSqlDateToText ($this, $date);
-			$this->fPageChangedBy = $by;
+			$this->setMacro (TM_PageChangedAt, dbSqlDateToText ($this, $date));
+			$this->setMacro (TM_PageChangedBy, $by);
 		}
 	}
 	function replaceMacrosNoHTML ($text){
 		$this->trace (TC_Session2, 'replaceMacrosNoHTML: ' . $text);
 		$count = 0;
 		$again = ($pos = strpos ($text, Macro_Char)) >= 0 && is_int ($pos);
-;
-		$this->trace (TC_Session3, 'replaceMacrosNoHTML-2: ' . (0+$again));
+			
+		// Mehrfache Durchlaeufe, da Macros selber Macros enthalten koennen:
 		while ($again) {
 			$again = false;
-			if ( ($pos = strpos ($text, TM_MacroPrefix)) >= 0 && is_int ($pos)) {
-				$text2 = preg_replace ($this->fMacroReplacementKeys,
-					$this->fMacroReplacementValues, $text);
-				$this->trace (TC_Session3, 'replaceMacrosNoHTML-3: ' . $text . ' --> ' . $text2);
-				$text = $text2;
-				if (++$count < 6) 
+			if (getPos ($text, Macro_Char) >= 0) {
+				$old_text = $text;
+				$text = '';
+				// $this->fMacroPattern = '/^((\s|.)*?)\[(macro1|...macroX)\]/';
+				while (strlen ($old_text) > 2 
+						&& preg_match ($this->fMacroPattern, $old_text, $match)){
 					$again = true;
-				else {
+					$text .= $match [1] . $this->getMacro ($match [3]);
+					$old_text = substr ($old_text, strlen ($match [1]) + strlen ($match [3]) + 2);
+				}
+				$text .= $old_text;
+				if (++$count > 6) {
 					$macroname = substr ($text, $pos, 20);
-					$this->trace (TC_Error, 'replaceMacrosNoHTML: zu verschachtelt: Pos: ' . $pos . " Macro: $macroname Text: $text");
+					$this->trace (TC_Error, 'replaceMacrosNoHTML: zu verschachtelt (6): Pos: ' . $pos . " Macro: $macroname Text: $text");
 					break;
 				}
 			}
-			$text = str_replace (TM_CurrentUser, htmlentities ($this->fUserName), $text);
-			$text = str_replace (TM_CurrentDate, strftime ('%Y.%m.%d'), $text);
-			$text = str_replace (TM_CurrentDateTime, strftime ('%Y.%m.%d %H:%M'), $text);
-			$text = str_replace (TM_PageName, $this->fPageName, $text);
-			$text = str_replace (TM_PageLink, 
-				encodeWikiName ($this, $this->fPageName), $text);
-			$text = str_replace (TM_PageTitle, $this->fPageTitle, $text);
-			$text = str_replace (TM_BasarName, $this->fMacroBasarName, $text);
-			$text = str_replace (TM_PageChangedAt, $this->fPageChangedAt, $text);
-			if ( ($pos = strpos ($text, TM_RuntimePrefix)) >= 0 && is_int ($pos)) {
-				$time =  getMicroTime ($this) - $this->fStartTime;
-				$pos = strpos ($time, '.');
-				$text = str_replace (TM_RuntimeSecMilli, substr ($time, 0, $pos + 4), $text);
-				$text = str_replace (TM_RuntimeSecMicro, substr ($time, 0, $pos + 4), $text);
-			}
-			$text = str_replace (TM_PageChangedBy, htmlentities ($this->fPageChangedBy),
-					$text);		
 		}
-		#$this->trace (TC_Session2, 'replaceMacrosNoHTML-e: ' . $text);
+		$this->trace (TC_Session2, 'replaceMacrosNoHTML-e: ' . $text);
 		return $text;
 	}
 	function replaceMacrosHTML ($text){
@@ -721,7 +693,58 @@ class Session {
 		#}
 		return $text;
 	}
-}
+	function setMacro ($name, $value){
+		switch ($name){
+		case TM_PageName: 
+			$value = encodeWikiName ($this, $value);
+			break; 
+		case TM_PageLink: 
+			$value = encodeWikiName ($this, $value); 
+			break; 
+		case TM_PageChangedBy:
+			$value = htmlentities ($value);
+			break; 
+		default: 
+			break;
+		}
+		$this->fMacros [$name] = $value;
+	}
+	function getMacro ($name){
+		$this->trace (TC_Session3, 'getMacro');
+		if (isset ($this->fMacros [$name]))
+			$value = $this->fMacros [$name];
+		else {
+			$value = '';
+			switch ($name){
+			case TM_CurrentUser: $value = htmlentities ($this->fUserName); break; 
+			case TM_CurrentDate: $value = strftime ('%Y.%m.%d'); break; 
+			case TM_CurrentDateTime: $value =strftime ('%Y.%m.%d %H:%M'); break; 
+			case TM_PageTitle: $value = getMacro (TM_BasarName); break; 
+			case TM_Newline: $value = tagNewline; break;
+			case TM_RuntimeSecMilli: case TM_RuntimeSecMicro:
+				$time =  getMicroTime ($this) - $this->fStartTime;
+				$pos = strpos ($time, '.');
+				$value = $name == TM_RuntimeSecMilli ? substr ($time, 0, $pos + 4)
+					: substr ($time, 0, $pos + 4);
+				break; 
+			default: 
+				# $this->trace (TC_X, "getMacro: $name");	
+				$value = dbSingleValue ($this, 'select value from ' 
+					. dbTable ($this, T_Macro) 
+					. ' where name=' . dbSqlString ($this, $name) . ' and '	
+					. '(theme=' . ($this->fUserTheme+0) . ' or theme=' . Theme_All 
+							. ') order by theme desc');
+				# $this->trace (TC_X, "getMacro: $name: $value");	
+				break;
+			}
+			$this->trace (TC_Session2, 'getMacro-2: ' . $name . '=' . $value);
+			if ($name != TM_RuntimeSecMicro && $name != TM_RuntimeSecMicro)
+				$this->fMacros [$name] = $value;
+		}
+		$this->trace (TC_Session3, 'getMacro-3: ' . $name . '=' . $value);
+		return $value;
+	}
+} // class Session
 class LayoutStatus {
 	var $fSession;
 	var $fEmphasisStack;	// String: [ubi]* ; underline bold italic
