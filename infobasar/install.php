@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.10 2004/12/22 17:53:33 hamatoma Exp $
+// $Id: install.php,v 1.11 2004/12/22 18:55:42 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -14,7 +14,7 @@ $start_time = microtime ();
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
 
-define ('Install_Version', '0.6.5 (2004.09.21)');
+define ('Install_Version', '0.6.6 (2004.12.22)');
 define ('PATH_DELIM', '/');
 define ('REXPR_PATH_DELIM', '\/');
 define ('C_ScriptName', 'install.php');
