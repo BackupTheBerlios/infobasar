@@ -1,6 +1,6 @@
 <?php
 // admin.php: Administration of the InfoBasar
-// $Id: admin.php,v 1.5 2004/06/13 10:52:28 hamatoma Exp $
+// $Id: admin.php,v 1.6 2004/06/28 22:06:31 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -11,7 +11,7 @@ InfoBasar sollte nützlich sein, es gibt aber absolut keine Garantie
 der Funktionalität.
 */
 $start_time = microtime ();
-define ('PHP_ModuleVersion', '0.6.0 (2004.06.13)');
+define ('PHP_ModuleVersion', '0.6.1 (2004.06.28)');
 
 set_magic_quotes_runtime(0);
 error_reporting(E_ALL);
@@ -41,9 +41,7 @@ define ('FN_PageExport', 'exp_pages.sql');
 
 include "config.php";
 include "classes.php";
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<?php
+
 $session = new Session ($start_time);
 
 // All requests require the database
