@@ -1,6 +1,6 @@
 <?php
 // forum.php: page handling of forums
-// $Id: forum.php,v 1.6 2005/01/06 16:58:49 hamatoma Exp $
+// $Id: forum.php,v 1.7 2005/01/08 23:53:22 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -56,8 +56,6 @@ define ('P_ForumSearch', 'forumsearch');
 define ('P_ForumHome', 'forumhome');
 define ('P_Forum', 'forum');
 define ('P_Thread', 'thread');
-// Im Basismodul:
-define ('P_Home', '!home');
 
 $session = new Session ($start_time, $session_id, 
 	$_SESSION ['session_user'], $_SESSION ['session_start'], $_SESSION ['session_no'],
