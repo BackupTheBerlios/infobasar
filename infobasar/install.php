@@ -1,6 +1,6 @@
 <?php
 // install.php: Installation of the infobasar
-// $Id: install.php,v 1.16 2005/01/10 19:35:18 hamatoma Exp $
+// $Id: install.php,v 1.17 2005/01/10 22:48:58 hamatoma Exp $
 /*
 Diese Datei ist Teil von InfoBasar.
 Copyright 2004 hamatoma@gmx.de München
@@ -257,7 +257,7 @@ function instShowDir (&$session, $path, $headline = null, $pattern = null,
 	$no = 0;
 	while ($file = readdir ($dir)){
 		if ($file != '.' && $file != '..' 
-			&& $pattern == null || preg_match ($pattern, $file)){
+			&& ($pattern == null || preg_match ($pattern, $file))){
 			$name = $path . $file;
 			echo '<tr><td>';
 			echo htmlentities ($file);
@@ -333,8 +333,6 @@ function instArchive (&$session, $message =  null) {
 	echo ' ';
 	guiCheckBox ('archive_show_dir', 'Anzeigen');
 	guiButton ('archive_show', 'Aktualisieren');
-	echo '</p><p>Kommentare aus PHP-Quellen entfernen: ';
-	guiButton ('archive_strip', 'Optimieren');
 	echo '</p>';
 	guiLine ($session, 2);
 	echo '<p>';
@@ -356,17 +354,6 @@ function instArchiveAnswer (&$session){
 			$message = 'Problem beim Hochladen von ' . $name . ': ' 
 				. $_FILES['archive_uploadfile']['error'];
 		}
-	} elseif (isset ($_POST ['archive_strip'])){
-		$session->trace (TC_Init, 'instArchiveAnswer: archive_strip');
-		$dir_name = preg_replace ('|/[^/]+$|', '', $session->fFileSystemBase);
-		$dir = opendir ($dir_name);
-		while ($file = readdir ($dir)) {
-			if (strpos ($file, '.php') == strlen ($file) - 4){
-				$file = $dir_name . '/' . $file;
-				$message .= '<br/>' . stripPhpSource ($session, $file, $file);
-			}
-		}
-		closedir($dir); 
 	} else {
 		$session->trace (TC_Init, 'instArchiveAnswer: Button-Antworten');
 		foreach ($_POST as $name => $value){
@@ -588,8 +575,12 @@ function instFinish (&$session, $message = null){
 	guiTextField ('inst_passw', '', 32, 0);
 	echo ' ';
 	guiCheckbox ('inst_setpassw', 'Passwort setzen', true);
-	outNewline ();
+	echo '</p><p>';
 	guiCheckbox ('inst_delete', 'Installationsdateien entfernen', true);
+	echo '</p><p>';
+	guiCheckbox ('inst_documentation', 'Dokumentation entfernen', false);
+	echo '</p><p>';
+	guiCheckbox ('inst_optimized', 'Laufzeitoptimierung', true);
 	echo '</p>';
 	instDocu ($session, '<li>Passwort eintragen</li>'
 		. '<li>"Passwort setzen" ist angeklickt</li>'
@@ -597,6 +588,41 @@ function instFinish (&$session, $message = null){
 		'<li>"Passwort setzen" ist <b>nicht</b> angeklickt</li>'
 		. '<li>"Installationsdateien löschen" ist angeklickt</li>');
 	instStandardEnd ($session);
+}
+function instLink (&$session, $source, $target){
+	$message = null;
+	$path = getParentDir ($session, $session->fFileSystemBase);
+	$path_source = $path . $source;  
+	$path_target = $path . $target;  
+	if (file_exists ($path_target) && ! unlink ($path_target))
+		$message = "Löschen missglückt: $path_target";
+	elseif (! symlink ($path_source, $path_target))
+		$message = "Symlink missglückt: $path_target -> $path_source";
+	return $message;
+}
+function instUnlink (&$session, $dir, $pattern){
+	$negate = false;
+	if (ord ($pattern) == ord ('^')){
+		$pattern = substr ($pattern, 1);
+		$negate = true;
+	}
+	$path = ($dir == '.' ? $session->fFileSystemBase 
+		: (getParentDir ($session, $session->fFileSystemBase) . $dir))
+		. PATH_DELIM;
+	$dir = opendir ($path);
+	while ($file = readdir ($dir)){
+		if ($file != '.' && $file != '..' 
+			&& ($pattern == null || ($negate ^ preg_match ($pattern, $file)))){
+			$name = $path . $file;
+			echo $name;
+			echo ' wurde ';
+			if (! unlink ($name))
+				echo '<b>nicht</b> ';
+			echo 'gelöscht';
+			outNewline ();
+		}
+	}
+	closedir ($dir);
 }
 function instExit (&$session){
 	$error = null;
@@ -617,13 +643,35 @@ function instExit (&$session){
 	else {
 		guiHeader ($session, 'Ende');
 		guiHeadline ($session, 2, 'Installation beenden');
-		
+		$error = null;
 		if ($message)
 			guiParagraph ($session, $message, false);
-		if (isset ($inst_delete)){
-			guiParagraph ($session, $session->fScriptFile . ' wurde '
-				. (unlink ($session->fScriptFile) ? ' ' : ' <b>nicht</b>')
-				. 'gelöscht', false);
+		if (guiChecked ($session, 'inst_optimized')){
+			$error = instLink ($session, 'base_opt.php', 'index.php'); 
+			if ($error != null)
+				$message = $error; 
+			else
+				if ( ($error = instLink ($session, 'forum_opt.php', 'forum.php')) == null)
+					$message = "Links auf optimierte Module wurden erstellt";
+				else
+					$message = $error;
+		} else {
+			$error = instLink ($session, 'base_module.php', 'index.php'); 
+			if ($error != null)
+				$message = $error; 
+			else
+				if ( ($error = instLink ($session, 'forum_module.php', 'forum.php')) == null)
+					$message = "Links auf Standard-Module (nicht optimiert) wurden erstellt";
+				else
+					$message = $error;
+		}
+		guiParagraph ($session, $message, false);
+		if ($error == null && guiChecked ($session, 'inst_documentation')){
+			instUnlink ($session, 'docu', '^/index.html/');
+		}
+		if ($error == null && guiChecked ($session, 'inst_delete')){
+			instUnlink ($session, '.', '^/index.html/');
+			instUnlink ($session, 'db', '^/index.html/');
 		}
 		guiParagraph ($session, 'Die Installation ist jetzt beendet.', false);
 		guiLine ($session, 2);
@@ -1185,5 +1233,7 @@ function indexOf ($array, $value){
 		if ($array [$ii] == $value)
 			$ix = $ii;
 }
-
+function getParentDir (&$session, $path){
+	return preg_replace ('![^/]+$!', '', $path);
+}
 ?>
