@@ -1,8 +1,9 @@
 # Dateien Infobasar
-# $Id: ib_update.lst,v 1.4 2005/01/10 18:08:03 hamatoma Exp $
+# $Id: ib_update.lst,v 1.5 2005/01/13 03:31:45 hamatoma Exp $
 ../overwrite/modules.php	../modules.php
 ../db/std_pages.wiki
 ../db/update_0.6_0.7.sql
+../db/design_start.sql
 ../install/license
 ../install/changelog.txt
 ../install/readme.txt
